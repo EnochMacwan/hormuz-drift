@@ -206,19 +206,27 @@ function ensureFieldSrc(grid) {
 function paintFieldSrc(ti, grid) {
   if (ti === fieldSrcTi) return;
   const pix = fieldSrcData.data;
-  /* Image row 0 is north (max lat). CMEMS lats[] is ascending (south -> north),
-   * so row j of the image reads lat index (nLat - 1 - j).                     */
-  for (let row = 0; row < grid.nLat; row += 1) {
-    const j = grid.nLat - 1 - row;
-    for (let i = 0; i < grid.nLon; i += 1) {
+  const nW = grid.nLon;
+  const nH = grid.nLat;
+  const nCells = nW * nH;
+
+  /* Pass 1 — paint water cells, mark land cells. We keep RGB channels
+   * separate so we can BFS-fill land pixels with the nearest water color.
+   * Alpha is 0 for land so bilinear blit lets the Leaflet basemap show
+   * through the coastline without any brown tint smearing into water.    */
+  const isWater = new Uint8Array(nCells);
+  for (let row = 0; row < nH; row += 1) {
+    const j = nH - 1 - row;       // image row 0 = northernmost lat
+    for (let i = 0; i < nW; i += 1) {
       const u = Field.u[ti][j][i];
       const v = Field.v[ti][j][i];
-      const p = (row * grid.nLon + i) * 4;
+      const cellIdx = row * nW + i;
+      const p = cellIdx * 4;
       if (u === null || v === null) {
-        pix[p]     = 60;     // land tint (#3c3326)
-        pix[p + 1] = 51;
-        pix[p + 2] = 38;
-        pix[p + 3] = 255;
+        pix[p]     = 0;   // will be overwritten by BFS fill below
+        pix[p + 1] = 0;
+        pix[p + 2] = 0;
+        pix[p + 3] = 0;   // transparent → basemap shows through
         continue;
       }
       const speed = Math.hypot(u, v);
@@ -230,8 +238,50 @@ function paintFieldSrc(ti, grid) {
       pix[p + 1] = g;
       pix[p + 2] = b;
       pix[p + 3] = Math.round(alpha * 255);
+      isWater[cellIdx] = 1;
     }
   }
+
+  /* Pass 2 — BFS from every water cell outward, copying its RGB (not
+   * alpha) into adjacent land cells. This propagates the nearest water
+   * color across the land mask so bilinear smoothing near coastlines
+   * blends water-hue → water-hue rather than water-hue → black.          */
+  const dist = new Int32Array(nCells).fill(1 << 30);
+  let head = 0;
+  const queue = new Int32Array(nCells);
+  let tail = 0;
+  for (let idx = 0; idx < nCells; idx += 1) {
+    if (isWater[idx]) {
+      dist[idx] = 0;
+      queue[tail++] = idx;
+    }
+  }
+  while (head < tail) {
+    const idx = queue[head++];
+    const y = (idx / nW) | 0;
+    const x = idx - y * nW;
+    const dNext = dist[idx] + 1;
+    const srcP = idx * 4;
+    const srcR = pix[srcP];
+    const srcG = pix[srcP + 1];
+    const srcB = pix[srcP + 2];
+    for (let k = 0; k < 4; k += 1) {
+      const nx = x + (k === 0 ? 1 : k === 1 ? -1 : 0);
+      const ny = y + (k === 2 ? 1 : k === 3 ? -1 : 0);
+      if (nx < 0 || nx >= nW || ny < 0 || ny >= nH) continue;
+      const nIdx = ny * nW + nx;
+      if (dist[nIdx] > dNext) {
+        dist[nIdx] = dNext;
+        const nP = nIdx * 4;
+        pix[nP]     = srcR;   // inherit water color
+        pix[nP + 1] = srcG;
+        pix[nP + 2] = srcB;
+        // pix[nP + 3] stays 0 (land remains transparent)
+        queue[tail++] = nIdx;
+      }
+    }
+  }
+
   fieldSrcCtx.putImageData(fieldSrcData, 0, 0);
   fieldSrcTi = ti;
 }
