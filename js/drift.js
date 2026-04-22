@@ -20,6 +20,12 @@
  */
 
 /* ─── NOAA Leeway categories (downwind + crosswind slope, % of wind) ─── */
+/* Additional maintainer notes:
+ * - This file is the browser model's physics core.
+ * - Drifter handles motion/history for one particle.
+ * - spawnEnsemble expands one release into a spread of particles.
+ * - OilSlick is only a lightweight visual footprint helper.
+ */
 window.LEEWAY_CATEGORIES = [
   {id:'piw_ps',    label:'Person in water — survival suit',         dw:1.5, cw:0.0},
   {id:'piw_heavy', label:'Person in water — heavy clothing',        dw:1.2, cw:0.0},
@@ -43,6 +49,8 @@ window.LEEWAY_CATEGORIES = [
 ];
 
 /* ─── oil presets (density kg/m³, kinematic visc m²/s, evap halflife h) */
+/* These are the lightweight oil presets used by the drift layer. The richer
+   oil catalog that powers the budget chart lives in weathering.js. */
 window.OIL_TYPES = {
   light_crude:  {label:'Light crude (API 40)',          rho:820,  nu:5e-6,   tau_h:12},
   medium_crude: {label:'Medium crude (API 25)',         rho:910,  nu:1e-4,   tau_h:36},
@@ -56,6 +64,7 @@ const EARTH_R = 6371000;       // m
 const DEG     = Math.PI / 180;
 
 // Gaussian random via Box–Muller
+// Gaussian random via Box-Muller so diffusion perturbations are symmetric.
 function randn(){
   let u = 0, v = 0;
   while (u === 0) u = Math.random();
@@ -67,6 +76,8 @@ function mPerDegLon(lat){ return 111412.84*Math.cos(lat*DEG)
                               - 93.5*Math.cos(3*lat*DEG); }
 
 /* ─── Drifter ───────────────────────────────────────────────────────── */
+/* One Lagrangian particle. Each instance stores its own track so the UI can
+   replay the run later without rerunning the model. */
 class Drifter {
   constructor(lon, lat, tSec, opts){
     this.lon0 = lon; this.lat0 = lat; this.t0 = tSec;
@@ -81,12 +92,15 @@ class Drifter {
     this.useWind   = opts.useWind  ?? true;
     this.track     = [[lon, lat, tSec]];    // [lon,lat,t]
     // inter-particle variability: randomise leeway coefficients ±15 %
+    // Add small inter-particle variability so ensembles spread naturally.
     const jitter = 1 + 0.15 * randn();
     this.leeway_dw *= Math.max(0.5, jitter);
     this.leeway_cw *= Math.max(0.5, jitter);
   }
 
   /* total velocity in m/s at a given location & time */
+  /* Combine current, optional leeway, and optional Stokes drift into one
+     instantaneous velocity vector in metres per second. */
   _vel(lon, lat, t){
     const cur = Field.sampleCurrent(lon, lat, t);
     if (!cur) return null;
@@ -97,9 +111,11 @@ class Drifter {
       if (W > 0){
         const wx = wind.u / W, wy = wind.v / W;
         // leeway: downwind along wind + crosswind perpendicular (right)
+        // Leeway = downwind plus a right-hand crosswind component.
         u += this.leeway_dw * W * wx  +  this.leeway_cw * W * (-wy);
         v += this.leeway_dw * W * wy  +  this.leeway_cw * W * ( wx);
         // Stokes drift ≈ 1.6 % wind (Kenyon)
+        // Tiny wind-following Stokes surrogate for extra realism.
         if (this.stokes){ u += 0.016 * wind.u; v += 0.016 * wind.v; }
       }
     }
@@ -110,6 +126,8 @@ class Drifter {
     if (!this.alive) return;
 
     /* RK2 midpoint on ocean+wind velocity */
+    /* RK2 midpoint is more stable than a simple Euler step in a spatially
+       varying current field. */
     const k1 = this._vel(this.lon, this.lat, this.t);
     if (!k1){ this._strand(); return; }
     const dLatMid = (k1.v * dt/2) / mPerDegLat(this.lat);
@@ -121,6 +139,7 @@ class Drifter {
     let dLon = (k2.u * dt) / mPerDegLon(this.lat);
 
     /* random-walk diffusion, σ = √(2 K dt) metres */
+    /* Add unresolved small-scale turbulence as a random walk. */
     const sigma = Math.sqrt(2 * this.K * dt);
     dLat += randn() * sigma / mPerDegLat(this.lat);
     dLon += randn() * sigma / mPerDegLon(this.lat);
@@ -129,11 +148,14 @@ class Drifter {
 
     /* oil evaporation (mass_frac only; spatial oil spreading is computed
        for the slick centroid in OilModel, not per-particle) */
+    /* Track remaining oil fraction per particle only. Bulk oil geometry is
+       handled elsewhere by the slick/budget helpers. */
     if (this.tau_evap){
       this.mass_frac = Math.exp(-this.age / this.tau_evap);
     }
 
     /* record trajectory (throttle storage every ~10 min wall-model time) */
+    /* Decimate stored track points so playback and exports stay lightweight. */
     if (this.track.length === 1 ||
         this.t - this.track[this.track.length-1][2] >= 600){
       this.track.push([this.lon, this.lat, this.t]);
@@ -147,6 +169,7 @@ class Drifter {
 window.Drifter = Drifter;
 
 /* ─── Oil spreading (slick-scale, Fay gravity-viscous regime) ───────── */
+/* Slick-scale helper used by the UI to draw an expanding visual footprint. */
 class OilSlick {
   constructor(volume_m3, oilType){
     this.V0 = volume_m3;
@@ -158,6 +181,7 @@ class OilSlick {
   radius(t_sec){
     if (t_sec <= 0) return 0;
     // Fay 3-regime clamped: short-term gravity-inertial, then gravity-viscous
+    // Blend early/late Fay-style spreading estimates into one simple radius.
     const V = this.V0;
     const r_gi = 1.14 * Math.pow(this.delta * this.g * V * t_sec*t_sec, 0.25);
     const r_gv = 1.5  * Math.pow(
@@ -171,6 +195,7 @@ class OilSlick {
 window.OilSlick = OilSlick;
 
 /* ─── Ensemble launcher ─────────────────────────────────────────────── */
+/* Convert one release definition into an ensemble of jittered particles. */
 function spawnEnsemble({lon, lat, tSec, n, scenario, params}){
   const out = [];
   const radius_m = params.release_radius_m || 50;

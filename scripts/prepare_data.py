@@ -10,6 +10,10 @@ wind drift, Leeway, and Stokes controls.
 """
 
 import json
+# Maintainer note:
+# This is the simplest end-to-end local pipeline in the repo. It takes one
+# CMEMS NetCDF file on disk, optionally enriches it with wind, and writes the
+# JSON cube the browser app knows how to load.
 import sys
 import urllib.request
 from datetime import datetime
@@ -43,7 +47,8 @@ def fetch_wind_openmeteo(cm_times, cm_lats, cm_lons):
     date_start = time_min.strftime('%Y-%m-%d')
     date_end   = time_max.strftime('%Y-%m-%d')
 
-    # Create a grid of query points across the bbox
+    # Create a coarse query mesh across the bbox so the resulting wind field
+    # can retain some spatial structure rather than becoming one constant vector.
     query_lats = np.linspace(LAT_MIN, LAT_MAX, 5)
     query_lons = np.linspace(LON_MIN, LON_MAX, 7)
 
@@ -73,8 +78,9 @@ def fetch_wind_openmeteo(cm_times, cm_lats, cm_lons):
                 ws = np.array(hourly['wind_speed_10m'], dtype=np.float32)
                 wd = np.array(hourly['wind_direction_10m'], dtype=np.float32)
 
-                # Convert speed+direction to u,v components
-                # Met convention: direction is where wind comes FROM, clockwise from N
+                # Convert speed+direction to u,v components. Meteorological
+                # direction is where the wind comes FROM, so the signs invert to
+                # recover the vector pointing where the flow goes TO.
                 wd_rad = np.deg2rad(wd)
                 u10 = -ws * np.sin(wd_rad)
                 v10 = -ws * np.cos(wd_rad)
@@ -108,13 +114,14 @@ def fetch_wind_openmeteo(cm_times, cm_lats, cm_lons):
     # Check we got all grid points
     if len(all_u10) != n_qlat * n_qlon:
         print(f"  Warning: got {len(all_u10)} of {n_qlat*n_qlon} expected grid points.")
-        # Fall back to averaging all points as a uniform field
+        # Fall back to a spatially uniform field so the user still gets
+        # time-varying wind even if some query points fail.
         u_mean = np.nanmean(u_stack, axis=0)  # (n_times,)
         v_mean = np.nanmean(v_stack, axis=0)
 
         # Create uniform field at all CMEMS grid points
         n_cm_times = len(cm_times)
-        # Interpolate to CMEMS times
+        # Interpolate the coarser wind time axis to the exact CMEMS hours.
         cm_pd_times = pd.to_datetime([str(t)[:19] for t in cm_times])
         u_interp = np.interp(
             cm_pd_times.astype(np.int64),
@@ -135,7 +142,8 @@ def fetch_wind_openmeteo(cm_times, cm_lats, cm_lons):
         u_grid = u_stack.reshape(n_qlat, n_qlon, n_t)
         v_grid = v_stack.reshape(n_qlat, n_qlon, n_t)
 
-        # Build xarray for interpolation
+        # Build an xarray Dataset so space+time interpolation can be delegated
+        # to a well-tested library routine instead of hand-coded here.
         ds_wind = xr.Dataset({
             'u10': (['lat', 'lon', 'time'], u_grid),
             'v10': (['lat', 'lon', 'time'], v_grid),
@@ -145,7 +153,7 @@ def fetch_wind_openmeteo(cm_times, cm_lats, cm_lons):
             'time': om_times,
         })
 
-        # Interpolate to CMEMS space+time grid
+        # Interpolate to the final web-model grid in one step.
         cm_pd_times = pd.to_datetime([str(t)[:19] for t in cm_times])
         ds_wind = ds_wind.interp(
             lat=cm_lats,
@@ -163,10 +171,12 @@ def fetch_wind_openmeteo(cm_times, cm_lats, cm_lons):
 
 
 def pack(a):
+    # Preserve missing cells as null and round the rest to keep the JSON small.
     return np.where(np.isnan(a), None, np.round(a, 3)).tolist()
 
 
 def main():
+    # Step 1: load the local CMEMS file and extract the surface current cube.
     print(f"Loading {NC_FILE.name}")
     ds = xr.open_dataset(NC_FILE)
 
@@ -180,6 +190,7 @@ def main():
     print(f"  Window:   {times[0]} -> {times[-1]}")
 
     # ── Fetch wind ────────────────────────────────────────────────────
+    # Step 2: try to enrich the local current cube with wind.
     print("Fetching surface wind ...")
     uw_arr, vw_arr, wind_source = fetch_wind_openmeteo(ds['time'].values, lats, lons)
 
@@ -187,6 +198,7 @@ def main():
     vw = pack(vw_arr) if vw_arr is not None else None
 
     # ── Build JSON payload ────────────────────────────────────────────
+    # Step 3: write the exact schema the front-end expects.
     payload = {
         'meta': {
             'source':        'CMEMS GLOBAL_ANALYSISFORECAST_PHY_001_024 (merged-uv hourly)',

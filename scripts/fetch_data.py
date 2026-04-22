@@ -18,6 +18,10 @@ BBox + time window are the editable knobs at the top of this file.
 """
 
 import json
+# Maintainer note:
+# This script is the automated "data factory" for the browser app. It trims
+# large scientific source datasets down to the compact JSON cube sampled by
+# js/field.js during playback and simulation.
 import os
 import sys
 from datetime import datetime, timedelta, timezone
@@ -92,10 +96,13 @@ def fetch_gfs(times):
 
 
 def pack(a):
+    # JSON has no NaN literal, so missing values become null and the rest are
+    # rounded to keep file size modest.
     return np.where(np.isnan(a), None, np.round(a, 3)).tolist()
 
 
 def main():
+    # Step 1: currents define the canonical grid and time axis for the payload.
     ds_cm = fetch_cmems()
     lats  = ds_cm['latitude'].values.astype(float)
     lons  = ds_cm['longitude'].values.astype(float)
@@ -103,17 +110,21 @@ def main():
     u = ds_cm['utotal'].isel(depth=0).values.astype(np.float32)
     v = ds_cm['vtotal'].isel(depth=0).values.astype(np.float32)
 
+    # Step 2: enrich with wind when possible; otherwise leave uw/vw null so the
+    # front-end can disable wind-specific controls cleanly.
     uw = vw = None
     wind_source = None
     ds_wind = fetch_gfs(ds_cm['time'].values)
     if ds_wind is not None:
         wind_source = 'NCEP GFS 0.25° surface (u10, v10)'
-        # re-grid wind to CMEMS grid via bilinear interp
+        # Re-grid wind onto the exact CMEMS grid so the browser can sample both
+        # forcings through one shared interpolation path.
         w = ds_wind.interp(lat=xr.DataArray(lats, dims='latitude'),
                            lon=xr.DataArray(lons % 360, dims='longitude'))
         uw = pack(w['ugrd10m'].values.astype(np.float32))
         vw = pack(w['vgrd10m'].values.astype(np.float32))
 
+    # Step 3: write the minimal schema the browser actually needs.
     payload = {
         'meta': {
             'source':        'CMEMS GLOBAL_ANALYSISFORECAST_PHY_001_024 (merged-uv hourly)',

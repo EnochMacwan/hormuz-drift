@@ -29,6 +29,12 @@
  *
  * All per-oil data are literature medians ± ~20 %; treat as order-of-magnitude.
  * ───────────────────────────────────────────────────────────────────────── */
+/* Additional maintainer notes:
+ * - This file answers "what happens to the oil mass over time?"
+ * - drift.js handles motion; this file handles bulk fate/accounting.
+ * - OilBudget is intentionally deterministic so repeated runs with the same
+ *   inputs produce the same chart/export outputs.
+ */
 window.ADIOS_OILS = {
 
   arabian_light: {
@@ -242,6 +248,8 @@ window.ADIOS_OILS = {
 };
 
 /* Also keep the old OIL_TYPES as a compatibility shim (used by old presets) */
+/* Compatibility shim so older presets and UI code paths can still reference
+   the smaller OIL_TYPES table. */
 window.OIL_TYPES = {
   light_crude:  window.ADIOS_OILS.arabian_light,
   medium_crude: window.ADIOS_OILS.arabian_medium,
@@ -261,6 +269,8 @@ window.OIL_TYPES = {
  *   // read history as array of snapshots for Plotly
  *   budget.history → [{ t_h, surface%, evap%, disp%, beach%, skim%, burn%, water_pct }]
  * ───────────────────────────────────────────────────────────────────────── */
+/* OilBudget tracks where the original spill volume goes over time:
+   surface, evaporated, dispersed, beached, skimmed, or burned. */
 class OilBudget {
   /**
    * @param {number}  volume_m3   Initial spill volume in cubic metres
@@ -277,6 +287,8 @@ class OilBudget {
     this.resp = responses;
 
     /* State (all in m³ of original oil, NOT including water uptake) */
+    /* State volumes are tracked in m^3 of original oil. Water uptake from
+       emulsification is tracked separately in W. */
     this.t_h       = 0;
     this.evap      = 0;     // evaporated
     this.disp      = 0;     // naturally dispersed
@@ -290,16 +302,19 @@ class OilBudget {
     this.surface   = volume_m3;
 
     /* Fay slick state — needed for burn-rate calculation */
+    /* Slick geometry terms are reused for spread and burn-rate estimates. */
     this.rho_w = 1025; this.nu_w = 1.05e-6; this.g = 9.81;
     this.delta = Math.max(0.02, (this.rho_w - this.oil.rho) / this.rho_w);
 
     /* Snapshot history for plotting */
+    /* History is the interface consumed by Plotly and export helpers. */
     this.history   = [];
     this._snap();
   }
 
   /* ── Fay slick radius at current surface volume ─────────────────────── */
   _slickRadius(vol_m3 = this.surface) {
+    /* Estimate the active slick radius from the remaining floating oil. */
     if (vol_m3 <= 0) return 0;
     const t = Math.max(1, this.t_h * 3600);
     const r_gv = 1.5 * Math.pow(
@@ -319,11 +334,14 @@ class OilBudget {
    * @param {number} windSpeed_ms   Wind speed at 10 m (m/s)
    * @param {number} waveHeight_m   Significant wave height (m), defaults to Hs(U10)
    */
+  /* Advance the full oil budget through one deterministic timestep. */
   step(dt_h, beachedFrac = 0, windSpeed_ms = 5, waveHeight_m = null) {
     const t_new = this.t_h + dt_h;
     const U = Math.max(0, windSpeed_ms);
 
     /* Auto-estimate Hs from Beaufort if not provided */
+    /* If wave height is missing, estimate one from wind so the dispersion term
+       still has a plausible forcing proxy. */
     const Hs = waveHeight_m != null ? waveHeight_m : 0.0248 * U * U;
 
     const surf = this.surface;
@@ -415,6 +433,8 @@ class OilBudget {
    * @param {number}      windSpeed_ms  Mean wind speed
    * @param {number}      waveHeight_m  Significant wave height (optional)
    */
+  /* Replay the whole budget after the drift run is complete so the UI can
+     render a full oil-budget history. */
   static runFull(volume_m3, oilKey, responses, maxH, beachSeries, windSpeed_ms = 5, waveHeight_m = null) {
     const budget = new OilBudget(volume_m3, oilKey, responses);
     const dt = 0.5;   // 30-min timestep for smoother curves
@@ -429,6 +449,7 @@ class OilBudget {
   }
 
   /* -- Summary at current state ------------------------------------------ */
+  /* Compact current-state summary for cards, tooltips, and exports. */
   summary() {
     return {
       surface_pct:    this._pct(this.surface),
@@ -446,6 +467,8 @@ class OilBudget {
   _pct(v) { return this.V0 > 0 ? Math.min(100, (v / this.V0) * 100) : 0; }
 
   _snap() {
+    /* Store normalized percentages because the chart is built around fractions
+       of the original release volume. */
     const s = this.summary();
     this.history.push({
       t_h:       this.t_h,

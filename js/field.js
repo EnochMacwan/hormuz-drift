@@ -8,7 +8,14 @@
  *   Field.times[]                     -> ISO strings (for UI)
  *   Field.grid                        -> {lats, lons, nLat, nLon, dlat, dlon}
  */
+/* Additional maintainer notes:
+ * - This module is the only place that knows the exact JSON forcing schema.
+ * - Other files should treat it as a tiny query engine over the data cube.
+ * - Null is intentional and means land, missing data, or out-of-bounds.
+ * - The interpolation logic is what makes the browser animation feel smooth.
+ */
 window.Field = (() => {
+  /* Exported singleton that caches the forcing payload after load() resolves. */
   const F = {
     loaded:false, meta:null, times:[],
     grid:{lats:null, lons:null, nLat:0, nLon:0, dlat:0, dlon:0,
@@ -19,6 +26,8 @@ window.Field = (() => {
   };
 
   F.load = async function(url = 'data/currents.json'){
+    /* Detect unsupported file:// launches before fetch() emits a more opaque
+       browser-level cross-origin error. */
     if (window.location.protocol === 'file:'){
       throw new Error(
         'This app cannot load data over file://. Start a local server and open http://localhost:8000 instead.'
@@ -27,6 +36,7 @@ window.Field = (() => {
 
     let r;
     try {
+      /* Network failures land here before an HTTP status even exists. */
       r = await fetch(url);
     } catch (err) {
       throw new Error(
@@ -36,6 +46,8 @@ window.Field = (() => {
 
     if (!r.ok) throw new Error(`Failed to load ${url}: ${r.status}`);
     const d = await r.json();
+    /* Normalize the payload once so animation/rendering code can sample it
+       directly without repeated JSON parsing or schema handling. */
     F.meta  = d.meta;
     F.times = d.times;
     F.u = d.u; F.v = d.v;
@@ -54,6 +66,7 @@ window.Field = (() => {
 
   /* ─── bilinear space + linear time on a 3-D (t,lat,lon) grid ─────── */
   function _sample(arr, lon, lat, tSec){
+    /* Core 3-D interpolator for arrays stored as [time][lat][lon]. */
     if (!arr) return null;
     const g = F.grid;
     const i = (lon - g.lonMin) / g.dlon;
@@ -71,6 +84,8 @@ window.Field = (() => {
     const fi = i - i0,        fj = j - j0;
 
     function atT(ti){
+      /* Bilinear interpolation inside one time slice. Returning null when any
+         corner is null prevents accidental blending across coastlines. */
       const a = arr[ti][j0    ][i0    ];
       const b = arr[ti][j0    ][i0 + 1];
       const c = arr[ti][j0 + 1][i0    ];
@@ -85,6 +100,7 @@ window.Field = (() => {
   }
 
   F.sampleCurrent = function(lon, lat, tSec){
+    /* Vector samples are only valid when both u and v are valid. */
     const u = _sample(F.u, lon, lat, tSec);
     const v = _sample(F.v, lon, lat, tSec);
     if (u === null || v === null) return null;
@@ -92,6 +108,7 @@ window.Field = (() => {
   };
 
   F.sampleWind = function(lon, lat, tSec){
+    /* Wind is optional in this project, so null doubles as "no wind field". */
     if (!F.uw || !F.vw) return null;
     const u = _sample(F.uw, lon, lat, tSec);
     const v = _sample(F.vw, lon, lat, tSec);
@@ -101,6 +118,7 @@ window.Field = (() => {
 
   /* convenience: is this (lon,lat) on land / OOB at any time? */
   F.isLand = function(lon, lat){
+    /* Cheap nearest-cell test used by drifters to decide when to strand. */
     const g = F.grid;
     const i = Math.round((lon - g.lonMin) / g.dlon);
     const j = Math.round((lat - g.latMin) / g.dlat);
@@ -110,6 +128,7 @@ window.Field = (() => {
 
   /* integer grid index for a lon/lat (for click-to-plot cell picking) */
   F.nearestCell = function(lon, lat){
+    /* Used by UI actions that want the nearest discrete model cell. */
     const g = F.grid;
     const i = Math.round((lon - g.lonMin) / g.dlon);
     const j = Math.round((lat - g.latMin) / g.dlat);

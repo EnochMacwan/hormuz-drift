@@ -1,8 +1,24 @@
 /* app.js - UI, map, animation, analytics, and orchestration
  * ---------------------------------------------------------------------
  * Depends on: field.js, drift.js, Leaflet, Plotly
+ *
+ * This is the "glue layer" for the entire browser application. It does not
+ * own the physical forcing data (field.js) or the particle equations
+ * themselves (drift.js / weathering.js). Instead it coordinates everything:
+ *
+ * 1. Boot the map and cache DOM references.
+ * 2. Draw the current field and animated background tracers.
+ * 3. Launch ensemble runs and capture snapshots/metrics.
+ * 4. Reconstruct any playback frame from the stored tracks.
+ * 5. Update the UI, charts, exports, and WebGNOME handoff tools.
+ *
+ * When you want to understand "what happens when I press Run?" or "what is
+ * redrawn every animation frame?", this is the file to read.
  */
 
+/* Preset bundles map user-friendly scenario buttons to concrete model inputs.
+   They are intentionally opinionated starting points, not exhaustive physics
+   definitions. */
 const SCENARIO_PRESETS = {
   leeway: [
     { id: "sar_fast", label: "SAR fast response", category: "piw_light", relRadius: 80, diffK: 8, durHours: 24, nEns: 300, useWind: true },
@@ -16,6 +32,9 @@ const SCENARIO_PRESETS = {
   ],
 };
 
+/* Global runtime state for playback, current run output, and UI toggles.
+   This file intentionally uses a small shared-state model instead of a full
+   framework so the browser app stays portable and dependency-light. */
 let tIdx = 0;
 let playing = true;
 let playSpeed = 1.5;
@@ -36,6 +55,8 @@ let bgParticles = [];
 const overlayState = { trails: true, density: true, uncertainty: true };
 const els = {};
 
+/* Leaflet owns the geographic view and projection math. Canvas overlays are
+   layered above it for field rendering, tracers, and drift results. */
 const map = L.map("map", { zoomControl: true, preferCanvas: true }).setView([26.45, 56.1], 9);
 L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
   subdomains: "abcd",
@@ -43,6 +64,11 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
   attribution: "OpenStreetMap | CARTO | Currents: CMEMS",
 }).addTo(map);
 
+/* Three stacked canvases:
+   - field: colorized current vectors
+   - part: ambient background tracers that make the field feel alive
+   - drift: actual scenario output (particles, trails, density, uncertainty)
+*/
 const DualCanvasLayer = L.Layer.extend({
   onAdd(m) {
     this._map = m;
@@ -73,6 +99,8 @@ const DualCanvasLayer = L.Layer.extend({
   size() { return this._map.getSize(); },
 });
 
+/* Timeline helper functions convert between Leaflet/UI-friendly slider indices
+   and the absolute second-based timestamps used by the simulation. */
 function maxDataSec() {
   return Field.t0Unix + (Field.times.length - 1) * Field.dtSec;
 }
@@ -127,6 +155,8 @@ function setStatus(message) {
   els.runStatus.textContent = message || "";
 }
 
+/* Fail loudly in the UI when data cannot be loaded so users are not forced to
+   diagnose the issue from console output alone. */
 function showStartupError(message) {
   setStatus(message);
   els.timeLabel.textContent = "server required";
@@ -138,6 +168,8 @@ function showStartupError(message) {
   Plotly.purge(els.tsPlot);
 }
 
+/* Background particles are purely visual. They make the current field feel
+   alive before a scenario is run and while playback is paused. */
 function randomBgParticle() {
   const grid = Field.grid;
   for (let tries = 0; tries < 30; tries += 1) {
@@ -162,6 +194,8 @@ function makeBgParticles(n) {
   }
 }
 
+/* Advance the ambient tracer particles. These do not affect the simulation;
+   they are a Windy-style visual layer driven directly by the current field. */
 function stepBgParticles(dtReal) {
   const tSec = tIdxToSec(tIdx);
   const dt = dtReal * 3600 * 2;
@@ -184,9 +218,10 @@ function stepBgParticles(dtReal) {
   }
 }
 
-/* Offscreen low-res canvas we paint one pixel per CMEMS cell into,
- * then blit onto the visible canvas with bilinear smoothing so the
- * ~50 px grid cells become a continuous gradient.                   */
+/* Offscreen low-res field buffer:
+ * we paint one pixel per model cell, then scale/blit it to the visible canvas.
+ * That is much cheaper than repainting thousands of screen-sized quads every
+ * frame and still produces a smooth-looking current layer. */
 let fieldSrc = null;       // HTMLCanvasElement sized (nLon, nLat)
 let fieldSrcCtx = null;
 let fieldSrcData = null;   // cached ImageData for fast rewrites
@@ -202,6 +237,7 @@ function ensureFieldSrc(grid) {
   fieldSrcTi = -1;
 }
 
+/* Paint a single time slice of the current field into the offscreen buffer. */
 function paintFieldSrc(ti, grid) {
   if (ti === fieldSrcTi) return;
   const pix = fieldSrcData.data;
@@ -285,6 +321,7 @@ function paintFieldSrc(ti, grid) {
   fieldSrcTi = ti;
 }
 
+/* Draw the colorized current field for the current playback instant. */
 function drawField() {
   if (!fieldLayer || !Field.loaded) {
     return;
@@ -327,6 +364,9 @@ function drawField() {
   ctx.restore();
 }
 
+/* Draw streak-style background tracers by fading the previous frame slightly
+   and then drawing new short segments. That repeated partial fade is what
+   creates the visible trail effect. */
 function drawBgParticles() {
   if (!fieldLayer) {
     return;
@@ -354,6 +394,8 @@ function drawBgParticles() {
   ctx.stroke();
 }
 
+/* Some drifters only append to track periodically, so this helper forces the
+   final state to exist in each track before playback reconstruction begins. */
 function ensureFinalTrackSamples(ensemble) {
   for (const drifter of ensemble) {
     const last = drifter.track[drifter.track.length - 1];
@@ -363,6 +405,8 @@ function ensureFinalTrackSamples(ensemble) {
   }
 }
 
+/* Reconstruct a particle location at an arbitrary playback time by sampling
+   between stored track points rather than rerunning the integrator live. */
 function sampleTrackPosition(drifter, tSec) {
   if (tSec <= drifter.t0) {
     return { lon: drifter.lon0, lat: drifter.lat0, ageSec: 0, stranded: false, massFrac: 1 };
@@ -407,6 +451,8 @@ function sampleTrackPosition(drifter, tSec) {
   };
 }
 
+/* Reduce a cloud of particles into centroid/spread/stranding metrics for UI
+   cards, uncertainty drawing, and analytics plots. */
 function summarizePoints(points, tSec) {
   if (!points.length) {
     return {
@@ -481,6 +527,8 @@ function summarizePoints(points, tSec) {
   };
 }
 
+/* Build one snapshot of the ensemble at a requested time by sampling the saved
+   tracks of every particle. */
 function snapshotFromEnsemble(ensemble, tSec) {
   const points = ensemble.map((drifter) => ({
     lon: drifter.lon,
@@ -492,6 +540,8 @@ function snapshotFromEnsemble(ensemble, tSec) {
   return summarizePoints(points, tSec);
 }
 
+/* Playback cache. This is called constantly while scrubbing/playing, so frames
+   are memoized to avoid repeated whole-ensemble reconstruction work. */
 function getRunFrame(tSec) {
   if (!activeRun || !activeRun.ensemble.length) {
     return null;
@@ -529,6 +579,8 @@ function getRunFrame(tSec) {
   return value;
 }
 
+/* Density is drawn as a soft heat/glow layer so the ensemble reads as a cloud
+   rather than a pile of equally important dots. */
 function drawDensity(ctx, points) {
   const stride = Math.max(1, Math.ceil(points.length / 900));
   const radiusPx = points.length > 1200 ? 16 : points.length > 600 ? 22 : 28;
@@ -552,6 +604,7 @@ function drawDensity(ctx, points) {
   ctx.restore();
 }
 
+/* Trajectory tails show where currently visible particles came from. */
 function drawTrails(ctx, tSec) {
   if (!activeRun) {
     return;
@@ -592,6 +645,8 @@ function drawTrails(ctx, tSec) {
   ctx.restore();
 }
 
+/* Uncertainty ellipse is a compact visual summary of the cloud orientation and
+   spread, useful when hundreds of particles would otherwise look noisy. */
 function drawUncertaintyEllipse(ctx, metrics) {
   if (!metrics || !metrics.ellipse || !Number.isFinite(metrics.centroidLat) || !Number.isFinite(metrics.centroidLon)) {
     return;
@@ -612,6 +667,8 @@ function drawUncertaintyEllipse(ctx, metrics) {
   ctx.restore();
 }
 
+/* Release marker anchors the user spatially once the ensemble has moved away
+   from the original release point. */
 function drawReleaseMarker(ctx) {
   if (!releasePoint) {
     return;
@@ -634,6 +691,8 @@ function drawReleaseMarker(ctx) {
   ctx.restore();
 }
 
+/* Master overlay renderer for scenario output. This composites density, tails,
+   uncertainty, active particles, stranded particles, and oil footprint cues. */
 function drawDrift() {
   if (!fieldLayer) {
     return;
@@ -684,6 +743,8 @@ function drawDrift() {
   drawReleaseMarker(ctx);
 }
 
+/* Persist a lightweight summary snapshot so results plots/exporters do not
+   need to resample the entire ensemble from scratch later. */
 function recordSnapshot(run, tSec) {
   const metrics = snapshotFromEnsemble(run.ensemble, tSec);
   const snapshot = {
@@ -702,6 +763,7 @@ function recordSnapshot(run, tSec) {
   }
 }
 
+/* Read the current scenario form into one canonical parameter object. */
 function collectScenarioParams() {
   const params = {
     release_radius_m: Number(els.relRadius.value),
@@ -717,6 +779,8 @@ function collectScenarioParams() {
   return params;
 }
 
+/* Read the response-option panel into the compact structure consumed by the
+   oil-budget model and WebGNOME handoff helpers. */
 function collectResponses() {
   return {
     skimming: {
@@ -741,6 +805,7 @@ function collectResponses() {
   };
 }
 
+/* Render the stacked oil-budget chart after a completed oil run. */
 function renderOilBudgetPlot() {
   if (!oilBudgetModel || !oilBudgetModel.history.length) {
     els.oilBudgetCard.style.display = "none";
@@ -793,6 +858,11 @@ function renderOilBudgetPlot() {
   els.exportBudgetCsvBtn.style.display = "";
 }
 
+/* Main simulation entry point.
+ * Important: the browser does not integrate particles in real time during
+ * playback. Instead, pressing Run precomputes the ensemble forward, stores
+ * tracks/snapshots, and then the UI plays back those stored results smoothly.
+ */
 function runEnsemble() {
   if (!releasePoint) {
     setStatus("Click on the sea to set a release point first.");
@@ -903,6 +973,8 @@ function runEnsemble() {
   }, 10);
 }
 
+/* Reset scenario output while keeping the base field, release controls, and
+   ambient tracer animation alive. */
 function clearRun() {
   clearInterval(runTimer);
   runTimer = null;
@@ -920,6 +992,7 @@ function clearRun() {
   Plotly.purge(els.oilBudgetPlot);
 }
 
+/* Populate the metric cards for the current playback instant. */
 function updateResultsPanel(force) {
   if (!activeRun) {
     els.results.innerHTML = '<div class="result-card wide"><span class="result-label">Run state</span><span class="result-value">No active simulation</span><span class="result-subvalue">Run a scenario to chart stranding, spread, and uncertainty over time.</span></div>';
@@ -978,6 +1051,7 @@ function updateResultsPanel(force) {
     </div>`;
 }
 
+/* Build the time-series analytics chart from stored snapshots. */
 function renderResultsPlot() {
   if (!activeRun || !activeRun.snapshots.length) {
     Plotly.purge(els.tsPlot);
@@ -1009,6 +1083,7 @@ function renderResultsPlot() {
   }, { displayModeBar: false, responsive: true });
 }
 
+/* Move the chart cursor to match the current playback time. */
 function updatePlotCursor(force) {
   if (!activeRun || !activeRun.snapshots.length) {
     return;
@@ -1024,6 +1099,7 @@ function updatePlotCursor(force) {
   });
 }
 
+/* Paint the color wheel legend used to decode current direction hues. */
 function paintWheel() {
   const canvas = els.colorWheel;
   canvas.width = canvas.height = 56;
@@ -1083,6 +1159,7 @@ function hslToRgb(h, s, l) {
   return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
 
+/* Small helper for all text-based downloads (JSON, CSV, PyGNOME script). */
 function downloadText(filename, text, mimeType) {
   const blob = new Blob([text], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -1095,6 +1172,7 @@ function downloadText(filename, text, mimeType) {
   URL.revokeObjectURL(url);
 }
 
+/* Serialize the current UI state into a shareable query-string model. */
 function buildShareParams() {
   const params = new URLSearchParams();
   params.set("scenario", activeScenario);
@@ -1138,6 +1216,8 @@ async function copyShareLink() {
   setStatus("Share link copied.");
 }
 
+/* Export the currently active run in machine-readable form for offline
+   analysis or handoff. */
 function exportRunJson() {
   const payload = {
     scenario: activeScenario,
@@ -1162,6 +1242,7 @@ function exportRunJson() {
   setStatus("Exported run JSON.");
 }
 
+/* Export the snapshot time series in spreadsheet-friendly format. */
 function exportRunCsv() {
   if (!activeRun || !activeRun.snapshots.length) {
     setStatus("Run a scenario before exporting CSV.");
@@ -1184,6 +1265,7 @@ function exportRunCsv() {
   setStatus("Exported run CSV.");
 }
 
+/* Oil-specific export for the weathering/budget time history. */
 function exportOilBudgetCsv() {
   if (!oilBudgetModel || !oilBudgetModel.history.length) {
     setStatus("Run an oil scenario first.");
@@ -1212,6 +1294,9 @@ function updatePlayButton() {
 
 /* ── WebGNOME Integration ──────────────────────────────────────────────────── */
 
+/* WebGNOME bridge helpers intentionally do not try to auto-run NOAA tooling;
+   they package the current scenario and point the user toward the official
+   stack for higher-fidelity spill analysis. */
 function openWebgnome() {
   window.open("https://gnome.orr.noaa.gov/#config", "_blank", "noopener");
   const wgStatus = document.getElementById("wg-status");
@@ -1377,6 +1462,7 @@ function hideWgModal() {
 }
 
 
+/* Keep the release summary card in sync with the current map click. */
 function updateReleaseInfo() {
   if (!releasePoint) {
     els.releaseInfo.textContent = "Click on the map to set release point.";
@@ -1396,6 +1482,7 @@ function updateTimelinePill() {
   els.timeWindowLabel.textContent = `Viewing ${formatRunOffset((viewSec - activeRun.startSec) / 3600)} of ${activeRun.durationHours} h`;
 }
 
+/* Populate scenario-specific select boxes from the model lookup tables. */
 function buildLeewayOptions() {
   els.leewayCat.innerHTML = LEEWAY_CATEGORIES.map((category) => `<option value="${category.id}">${category.label} (dw ${category.dw}% | cw ${category.cw}%)</option>`).join("");
 }
@@ -1412,6 +1499,7 @@ function buildPresetOptions(preferredId) {
   applyPreset(nextId, false);
 }
 
+/* Push a preset's canned values into the live form controls. */
 function applyPreset(presetId, announce = true) {
   const preset = SCENARIO_PRESETS[activeScenario].find((entry) => entry.id === presetId);
   if (!preset) {
@@ -1429,6 +1517,7 @@ function applyPreset(presetId, announce = true) {
   updateStoryCard();
 }
 
+/* Switch between SAR and oil modes and show/hide the matching controls. */
 function setScenario(scenario, preservePreset) {
   activeScenario = scenario;
   document.querySelectorAll(".scenario-tabs button").forEach((button) => {
@@ -1441,6 +1530,7 @@ function setScenario(scenario, preservePreset) {
   updateStoryCard();
 }
 
+/* Wind controls depend on both dataset availability and scenario mode. */
 function syncWindControls() {
   if (Field.hasWind) {
     els.useWind.disabled = false;
@@ -1459,6 +1549,7 @@ function updateStoryCard() {
   return;
 }
 
+/* Restore UI state from the query string so scenarios can be shared. */
 function applyStateFromUrl() {
   const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
   if (!hash) {
@@ -1486,6 +1577,7 @@ function applyStateFromUrl() {
   updateStoryCard();
 }
 
+/* Jump the playback head relative to the current time. */
 function seekHours(deltaHours) {
   let nextSec = tIdxToSec(tIdx) + deltaHours * 3600;
   if (activeRun) {
@@ -1501,6 +1593,10 @@ function seekHours(deltaHours) {
 }
 
 let lastTickTime = performance.now();
+/* Main requestAnimationFrame loop.
+ * This does the screen-time work only: advance playback, redraw layers, and
+ * refresh metrics. The expensive physical run itself happens inside runEnsemble.
+ */
 function tick(now) {
   const dt = Math.max(0, Math.min((now - lastTickTime) / 1000, 0.1));
   lastTickTime = now;
@@ -1530,6 +1626,8 @@ function tick(now) {
   requestAnimationFrame(tick);
 }
 
+/* Cache all frequently used DOM nodes once so the rest of the file can work
+   with direct references instead of repeated querySelector lookups. */
 function collectDomRefs() {
   Object.assign(els, {
     clearBtn: document.getElementById("clearBtn"),
@@ -1598,6 +1696,7 @@ function collectDomRefs() {
   });
 }
 
+/* Attach all event handlers after DOM refs have been collected. */
 function wireUi() {
   els.timeSlider.oninput = (event) => {
     tIdx = Number(event.target.value);
@@ -1674,6 +1773,8 @@ function wireUi() {
   };
 }
 
+/* One-time startup orchestration for map, data, controls, legend, and the
+   initial background animation. */
 async function boot() {
   collectDomRefs();
   wireUi();
