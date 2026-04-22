@@ -146,7 +146,7 @@ function randomBgParticle() {
     const lat = grid.latMin + Math.random() * (grid.latMax - grid.latMin);
     const cur = Field.sampleCurrent(lon, lat, tIdxToSec(tIdx));
     if (cur) {
-      return { lon, lat, age: 40 + Math.random() * 80 };
+      return { lon, lat, age: 320 + Math.random() * 420 };
     }
   }
   return {
@@ -335,7 +335,7 @@ function drawBgParticles() {
   const ctx = fieldLayer.partCtx();
   const size = fieldLayer.size();
   ctx.globalCompositeOperation = "destination-out";
-  ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
   ctx.fillRect(0, 0, size.x, size.y);
   ctx.globalCompositeOperation = "source-over";
   ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
