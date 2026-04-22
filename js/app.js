@@ -185,35 +185,92 @@ function stepBgParticles(dtReal) {
   }
 }
 
+/* Offscreen low-res canvas we paint one pixel per CMEMS cell into,
+ * then blit onto the visible canvas with bilinear smoothing so the
+ * ~50 px grid cells become a continuous gradient.                   */
+let fieldSrc = null;       // HTMLCanvasElement sized (nLon, nLat)
+let fieldSrcCtx = null;
+let fieldSrcData = null;   // cached ImageData for fast rewrites
+let fieldSrcTi  = -1;      // which time index is currently in fieldSrc
+
+function ensureFieldSrc(grid) {
+  if (fieldSrc && fieldSrc.width === grid.nLon && fieldSrc.height === grid.nLat) return;
+  fieldSrc = document.createElement("canvas");
+  fieldSrc.width  = grid.nLon;
+  fieldSrc.height = grid.nLat;
+  fieldSrcCtx = fieldSrc.getContext("2d");
+  fieldSrcData = fieldSrcCtx.createImageData(grid.nLon, grid.nLat);
+  fieldSrcTi = -1;
+}
+
+function paintFieldSrc(ti, grid) {
+  if (ti === fieldSrcTi) return;
+  const pix = fieldSrcData.data;
+  /* Image row 0 is north (max lat). CMEMS lats[] is ascending (south -> north),
+   * so row j of the image reads lat index (nLat - 1 - j).                     */
+  for (let row = 0; row < grid.nLat; row += 1) {
+    const j = grid.nLat - 1 - row;
+    for (let i = 0; i < grid.nLon; i += 1) {
+      const u = Field.u[ti][j][i];
+      const v = Field.v[ti][j][i];
+      const p = (row * grid.nLon + i) * 4;
+      if (u === null || v === null) {
+        pix[p]     = 60;     // land tint (#3c3326)
+        pix[p + 1] = 51;
+        pix[p + 2] = 38;
+        pix[p + 3] = 255;
+        continue;
+      }
+      const speed = Math.hypot(u, v);
+      const dir   = Math.atan2(v, u);
+      const hue   = ((dir + Math.PI) / (2 * Math.PI)) * 360;
+      const alpha = Math.min(speed / 0.8, 0.78);
+      const [r, g, b] = hslToRgb(hue / 360, 0.88, 0.56);
+      pix[p]     = r;
+      pix[p + 1] = g;
+      pix[p + 2] = b;
+      pix[p + 3] = Math.round(alpha * 255);
+    }
+  }
+  fieldSrcCtx.putImageData(fieldSrcData, 0, 0);
+  fieldSrcTi = ti;
+}
+
 function drawField() {
   if (!fieldLayer || !Field.loaded) {
     return;
   }
-  const ctx = fieldLayer.fieldCtx();
+  const ctx  = fieldLayer.fieldCtx();
   const size = fieldLayer.size();
-  const ti = Math.floor(tIdx);
+  const ti   = Math.floor(tIdx);
   const grid = Field.grid;
+
+  ensureFieldSrc(grid);
+  paintFieldSrc(ti, grid);
+
   ctx.clearRect(0, 0, size.x, size.y);
 
-  for (let j = 0; j < grid.nLat; j += 1) {
-    for (let i = 0; i < grid.nLon; i += 1) {
-      const nw = map.latLngToContainerPoint([grid.lats[j] + grid.dlat / 2, grid.lons[i] - grid.dlon / 2]);
-      const se = map.latLngToContainerPoint([grid.lats[j] - grid.dlat / 2, grid.lons[i] + grid.dlon / 2]);
-      const u = Field.u[ti][j][i];
-      const v = Field.v[ti][j][i];
-      if (u === null || v === null) {
-        ctx.fillStyle = "#3c3326";
-        ctx.fillRect(nw.x, nw.y, se.x - nw.x, se.y - nw.y);
-        continue;
-      }
-      const speed = Math.hypot(u, v);
-      const dir = Math.atan2(v, u);
-      const hue = ((dir + Math.PI) / (2 * Math.PI)) * 360;
-      const alpha = Math.min(speed / 0.8, 0.78);
-      ctx.fillStyle = `hsla(${Math.round(hue)}, 88%, 56%, ${alpha.toFixed(3)})`;
-      ctx.fillRect(nw.x, nw.y, se.x - nw.x, se.y - nw.y);
-    }
-  }
+  /* Destination rect aligned so that each source-pixel CENTER lands on its
+   * corresponding grid point. Grid point (i,j) = (lons[i], lats[j]).
+   * Pixel center in image coords is (i + 0.5, row + 0.5) where row = nLat-1-j.
+   *   X0,Y0 = screen coords of NW-most grid point (lats[nLat-1], lons[0])
+   *   X1,Y1 = screen coords of SE-most grid point (lats[0],       lons[nLon-1])
+   * dWidth  = nLon * (X1 - X0) / (nLon - 1)
+   * dHeight = nLat * (Y1 - Y0) / (nLat - 1)                                 */
+  const nw = map.latLngToContainerPoint([grid.lats[grid.nLat - 1], grid.lons[0]]);
+  const se = map.latLngToContainerPoint([grid.lats[0],             grid.lons[grid.nLon - 1]]);
+  const spanX = se.x - nw.x;
+  const spanY = se.y - nw.y;
+  const dW = (grid.nLon * spanX) / (grid.nLon - 1);
+  const dH = (grid.nLat * spanY) / (grid.nLat - 1);
+  const dX = nw.x - (0.5 * spanX) / (grid.nLon - 1);
+  const dY = nw.y - (0.5 * spanY) / (grid.nLat - 1);
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(fieldSrc, dX, dY, dW, dH);
+  ctx.restore();
 
   ctx.save();
   ctx.fillStyle = "rgba(0, 0, 0, 0.13)";
