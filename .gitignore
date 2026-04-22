@@ -1,0 +1,38 @@
+# ── Legacy prototypes (superseded by index.html + js/) ──────────────
+#    kept on disk for reference; excluded from the shipped repo
+graphify.py
+graphify-out/
+map_currents.m
+download_CMEMS/
+Hormuz_currents_interactive.html
+scripts/build_graphify.py
+Hormuz_1000m_24h.avi
+
+# ── Raw forcing source ──────────────────────────────────────────────
+#    CMEMS NetCDF is regeneratable via scripts/fetch_data.py and is
+#    not required at runtime — the browser loads data/currents.json.
+*.nc
+
+# ── Editor / CLI tool state ─────────────────────────────────────────
+.codex/
+.claude/*
+!.claude/launch.json
+
+# ── Python ──────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# ── OS junk ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Local scratch ───────────────────────────────────────────────────
+*.log
+*.tmp

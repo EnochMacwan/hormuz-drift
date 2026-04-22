@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Hormuz Drift - Interactive Particle Tracking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body class="panel-open">
+<div id="app">
+
+  <div id="banner">
+    <b>Research / educational use only.</b>
+    Not certified for operational SAR or oil-spill response. Physics are a simplified approximation of OpenDrift -
+    <a href="README.md">README and caveats</a>.
+  </div>
+
+  <div id="map-shell">
+    <div id="map"></div>
+
+    <div id="map-story" class="glass">
+      <div class="eyebrow">Strait of Hormuz drift lab</div>
+      <h1>Track drift, uncertainty, and shoreline risk in one live view.</h1>
+      <p id="story-copy">
+        Place a release point on the water, choose a scenario preset, and run the ensemble to reveal particle paths,
+        density, spread, and stranding risk through time.
+      </p>
+      <div class="story-chips">
+        <span class="chip" id="storyScenario">Man overboard</span>
+        <span class="chip" id="storyWind">Currents only</span>
+        <span class="chip" id="storyRange">Loading data window</span>
+      </div>
+      <div class="story-actions">
+        <button id="panelToggle" class="ghost">Controls</button>
+        <button id="focusBtn" class="ghost">Focus mode</button>
+      </div>
+    </div>
+
+    <div id="map-legend" class="glass">
+      <div><b>Current direction</b></div>
+      <div class="hint">Hue = direction. Opacity = speed.</div>
+      <canvas id="color-wheel"></canvas>
+      <div class="hint" style="margin-top:4px">
+        Brown = land. Gold = active particles. Coral = stranded. Cyan = uncertainty.
+      </div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <div class="row controls-top">
+      <div class="control-cluster">
+        <button id="playBtn">Pause</button>
+        <button id="jumpBack24" class="ghost small">-24h</button>
+        <button id="jumpBack6" class="ghost small">-6h</button>
+        <button id="jumpForward6" class="ghost small">+6h</button>
+        <button id="jumpForward24" class="ghost small">+24h</button>
+      </div>
+      <span id="time-window-label" class="tag">Playback follows the forcing timeline.</span>
+    </div>
+
+    <div class="row scrub-row">
+      <span id="time-label">loading...</span>
+      <input id="timeSlider" type="range" min="0" max="0" value="0" step="1"/>
+    </div>
+
+    <div class="row controls-bottom">
+      <label>Speed</label>
+      <input id="speedSlider" type="range" min="0.1" max="8" step="0.1" value="1.5"/>
+      <span id="speed-label" class="val">1.5x</span>
+      <label>Tracers</label>
+      <input id="nSlider" type="range" min="0" max="5000" step="100" value="2000"/>
+      <span id="n-label" class="val">2000</span>
+    </div>
+
+    <div class="dim" id="data-meta">-</div>
+  </div>
+
+  <aside id="side">
+    <div class="side-header">
+      <div>
+        <div class="eyebrow">Scenario builder</div>
+        <h2>Hormuz Drift</h2>
+      </div>
+      <button id="closePanelBtn" class="ghost small">Close</button>
+    </div>
+
+    <div class="section-card intro-card">
+      <p class="lede">
+        This browser model combines CMEMS surface currents, optional wind drift, and a particle ensemble to explore
+        incident evolution over time.
+      </p>
+      <div class="quick-stats">
+        <div class="stat-card">
+          <span class="stat-label">Release</span>
+          <strong id="release-info">Click on the map to set release point.</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Wind forcing</span>
+          <strong id="wind-note">-</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h3>Scenario</h3>
+      <div class="scenario-tabs">
+        <button data-scenario="leeway" class="active">Man overboard</button>
+        <button data-scenario="oil">Oil spill</button>
+      </div>
+
+      <div class="row">
+        <label>Preset</label>
+        <select id="scenarioPreset"></select>
+      </div>
+
+      <div id="leeway-params">
+        <div class="row">
+          <label>Object</label>
+          <select id="leewayCat"></select>
+        </div>
+        <div class="hint">
+          NOAA leeway categories combine downwind and crosswind response for different SAR targets.
+        </div>
+      </div>
+
+      <div id="oil-params" style="display:none">
+        <div class="row">
+          <label>Oil type</label>
+          <select id="oilType"></select>
+        </div>
+        <div class="row">
+          <label>Volume (m³)</label>
+          <input id="oilVol" type="number" min="0.1" max="100000" step="0.1" value="10"/>
+        </div>
+        <div id="oil-props" class="oil-props-strip">
+          <div class="op-cell"><span class="op-label">API</span><span id="op-api">—</span></div>
+          <div class="op-cell"><span class="op-label">Density</span><span id="op-rho">—</span></div>
+          <div class="op-cell"><span class="op-label">Max evap.</span><span id="op-evap">—</span></div>
+          <div class="op-cell"><span class="op-label">Emulsion</span><span id="op-emuls">—</span></div>
+          <div class="op-cell sara-cell"><span class="op-label">SARA</span><div id="op-sara" class="sara-bar"><div id="sara-S" class="sara-seg" title="Saturates"></div><div id="sara-A" class="sara-seg" title="Aromatics"></div><div id="sara-R" class="sara-seg" title="Resins"></div><div id="sara-As" class="sara-seg" title="Asphaltenes"></div></div></div>
+        </div>
+        <div class="hint" style="margin-top:6px">ADIOS-style oil catalog. Evaporation via Fingas (1998) log model. Emulsification via Mackay (1980).</div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h3>Release and physics</h3>
+      <div class="row">
+        <label>Jitter (m)</label>
+        <input id="relRadius" type="number" min="0" max="5000" step="10" value="100"/>
+      </div>
+      <div class="row">
+        <label>Diffusion K</label>
+        <input id="diffK" type="number" min="0" max="500" step="1" value="10"/>
+      </div>
+      <div class="row">
+        <label>Duration (h)</label>
+        <input id="durHours" type="number" min="1" max="240" step="1" value="24"/>
+      </div>
+      <div class="row">
+        <label>Ensemble size</label>
+        <input id="nEns" type="number" min="10" max="5000" step="10" value="300"/>
+      </div>
+      <div class="row toggle-row">
+        <label for="useWind">Wind drift</label>
+        <input id="useWind" type="checkbox" checked/>
+        <span id="windStatus" class="tag">Waiting for data</span>
+      </div>
+    </div>
+
+    <!-- Response Options (WebGNOME equivalent) -->
+    <div class="section-card" id="response-card" style="display:none">
+      <h3>Response options</h3>
+      <div class="response-tabs">
+        <button class="resp-tab active" data-resp="skimming">⛽ Skimming</button>
+        <button class="resp-tab" data-resp="burning">🔥 Burning</button>
+        <button class="resp-tab" data-resp="dispersant">💧 Dispersant</button>
+      </div>
+
+      <!-- Skimming -->
+      <div id="resp-skimming" class="resp-panel">
+        <div class="row toggle-row">
+          <label for="skimActive">Enable</label>
+          <input id="skimActive" type="checkbox"/>
+          <span class="tag">Mechanical recovery</span>
+        </div>
+        <div class="row resp-param"><label>Start (h)</label><input id="skimStart" type="number" min="0" max="240" value="2" step="0.5"/></div>
+        <div class="row resp-param"><label>End (h)</label><input id="skimEnd" type="number" min="0" max="240" value="12" step="0.5"/></div>
+        <div class="row resp-param"><label>Rate (m³/h)</label><input id="skimRate" type="number" min="0.1" max="500" value="5" step="0.5"/></div>
+        <div class="row resp-param"><label>Efficiency %</label><input id="skimEff" type="number" min="1" max="100" value="30" step="1"/></div>
+        <div class="hint">Typical field efficiency 10–40 %. Reduced on high-viscosity emulsions.</div>
+      </div>
+
+      <!-- Burning -->
+      <div id="resp-burning" class="resp-panel" style="display:none">
+        <div class="row toggle-row">
+          <label for="burnActive">Enable</label>
+          <input id="burnActive" type="checkbox"/>
+          <span class="tag">In-situ burning</span>
+        </div>
+        <div class="row resp-param"><label>Start (h)</label><input id="burnStart" type="number" min="0" max="240" value="1" step="0.5"/></div>
+        <div class="row resp-param"><label>End (h)</label><input id="burnEnd" type="number" min="0" max="240" value="4" step="0.5"/></div>
+        <div class="row resp-param"><label>Efficiency %</label><input id="burnEff" type="number" min="1" max="100" value="90" step="1"/></div>
+        <div class="hint">ISB burn rate ≈ 3.5 mm/min. Less effective on emulsions (water fraction &gt; 25 %).</div>
+      </div>
+
+      <!-- Chemical Dispersant -->
+      <div id="resp-dispersant" class="resp-panel" style="display:none">
+        <div class="row toggle-row">
+          <label for="dispActive">Enable</label>
+          <input id="dispActive" type="checkbox"/>
+          <span class="tag">Chemical dispersant</span>
+        </div>
+        <div class="row resp-param"><label>Start (h)</label><input id="dispStart" type="number" min="0" max="240" value="0" step="0.5"/></div>
+        <div class="row resp-param"><label>End (h)</label><input id="dispEnd" type="number" min="0" max="240" value="24" step="0.5"/></div>
+        <div class="row resp-param"><label>Effectiveness %</label><input id="dispEff" type="number" min="1" max="100" value="50" step="1"/></div>
+        <div class="hint">Corexit-class. Most effective on light to medium crudes (API 20–35). Ineffective on HFO.</div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h3>Visual overlays</h3>
+      <div class="toggle-grid">
+        <label class="check-pill"><input id="showTrails" type="checkbox" checked/> Trails</label>
+        <label class="check-pill"><input id="showDensity" type="checkbox" checked/> Density</label>
+        <label class="check-pill"><input id="showUncertainty" type="checkbox" checked/> Uncertainty</label>
+      </div>
+      <div class="hint">
+        Density and uncertainty are derived from the current playback time, not just the final state.
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h3>Run and share</h3>
+      <div class="action-grid">
+        <button id="runBtn" class="primary">Run scenario</button>
+        <button id="clearBtn" class="danger">Clear</button>
+        <button id="copyLinkBtn" class="ghost">Copy share link</button>
+        <button id="exportJsonBtn" class="ghost">Export JSON</button>
+        <button id="exportCsvBtn" class="ghost">Export CSV</button>
+        <button id="exportBudgetCsvBtn" class="ghost" style="grid-column:1/-1;display:none">Export oil budget CSV</button>
+      </div>
+      <div id="run-status"></div>
+    </div>
+
+    <!-- Oil Budget (WebGNOME core output) -->
+    <div class="section-card" id="oil-budget-card" style="display:none">
+      <div class="budget-header">
+        <h3>Oil budget</h3>
+        <div class="budget-legend">
+          <span class="bl-dot" style="background:#f4a340"></span>Surface
+          <span class="bl-dot" style="background:#ff7043"></span>Evaporated
+          <span class="bl-dot" style="background:#42a5f5"></span>Dispersed
+          <span class="bl-dot" style="background:#ef5350"></span>Beached
+          <span class="bl-dot" style="background:#66bb6a"></span>Skimmed
+          <span class="bl-dot" style="background:#1a1a1a"></span>Burned
+        </div>
+      </div>
+      <div id="oil-budget-plot" aria-label="Oil budget stacked chart"></div>
+      <div id="oil-budget-summary" class="budget-summary-grid"></div>
+      <div class="hint" id="emulsion-note" style="margin-top:8px"></div>
+    </div>
+
+    <div class="section-card">
+      <h3>Results</h3>
+      <div id="results"><div class="hint">No active simulation.</div></div>
+      <div id="ts-plot" aria-label="Run analytics chart"></div>
+    </div>
+
+    <div class="section-card webgnome-card">
+      <div class="webgnome-header">
+        <div>
+          <div class="eyebrow">NOAA Official Tool</div>
+          <h3>WebGNOME Integration</h3>
+        </div>
+        <img src="https://response.restoration.noaa.gov/themes/custom/orr/images/logo-noaa-orr.svg" alt="NOAA ORR" class="noaa-logo" onerror="this.style.display='none'"/>
+      </div>
+      <p class="hint">Transfer your current scenario to <strong>WebGNOME</strong> — NOAA's full oil weathering model with ADIOS chemistry, 3D transport, and operational output formats.</p>
+      <div class="webgnome-feature-list">
+        <div class="wg-feat"><span class="wg-feat-icon">🔬</span><span>Full ADIOS oil weathering (evaporation, emulsion, dispersion)</span></div>
+        <div class="wg-feat"><span class="wg-feat-icon">🌊</span><span>Upload your CMEMS NetCDF directly as a current mover</span></div>
+        <div class="wg-feat"><span class="wg-feat-icon">📊</span><span>Oil budget charts, beached mass, and response planning output</span></div>
+      </div>
+      <div class="action-grid webgnome-actions">
+        <button id="openWebgnomeBtn" class="primary wg-primary">Open WebGNOME ↗</button>
+        <button id="downloadPygnomeBtn" class="ghost">Download PyGNOME script</button>
+        <button id="webgnomeHelpBtn" class="ghost small" style="grid-column:1/-1;">View setup instructions</button>
+      </div>
+      <div id="wg-status" class="hint" style="margin-top:6px;"></div>
+    </div>
+
+    <div class="section-card">
+      <h3>Data provenance</h3>
+      <div class="hint">
+        Generated with the <a href="https://marine.copernicus.eu">Copernicus Marine Service</a> via
+        <code>copernicusmarine</code>. Tiles by OpenStreetMap and CARTO.
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- WebGNOME Instructions Modal -->
+<div id="webgnome-modal" class="wg-modal-overlay" style="display:none;">
+  <div class="wg-modal">
+    <div class="wg-modal-head">
+      <h2>Setting up WebGNOME with Hormuz data</h2>
+      <button id="closeWgModal" class="ghost small">✕</button>
+    </div>
+    <div class="wg-modal-body">
+      <div class="wg-step">
+        <span class="wg-step-num">1</span>
+        <div>
+          <strong>Open WebGNOME Manual Setup</strong>
+          <p>Click <em>Open WebGNOME ↗</em> above. In WebGNOME, choose <strong>Manual Setup</strong> from the home screen.</p>
+        </div>
+      </div>
+      <div class="wg-step">
+        <span class="wg-step-num">2</span>
+        <div>
+          <strong>Add your CMEMS currents file</strong>
+          <p>In WebGNOME: <em>Setup → Movers → Add a Mover → Grid Current</em>. Upload the file:<br/>
+          <code class="wg-code">cmems_mod_glo_phy_anfc_merged-uv_PT1H-i_...nc</code><br/>
+          (found in your project root folder). WebGNOME reads CF-compliant NetCDF natively.</p>
+        </div>
+      </div>
+      <div class="wg-step">
+        <span class="wg-step-num">3</span>
+        <div>
+          <strong>Add wind forcing</strong>
+          <p>Go to <em>Movers → Add a Mover → Wind</em>. Either enter a constant wind or use <strong>GOODS</strong> to fetch GFS wind for the Hormuz region (lat 23–30 N, lon 53–60 E).</p>
+        </div>
+      </div>
+      <div class="wg-step">
+        <span class="wg-step-num">4</span>
+        <div>
+          <strong>Place the spill</strong>
+          <p>Go to <em>Spills → Add a Spill → Instantaneous</em>. Set the lat/lon to match your release point from this model. Set the start time to match the data window.</p>
+        </div>
+      </div>
+      <div class="wg-step">
+        <span class="wg-step-num">5</span>
+        <div>
+          <strong>Select oil type from ADIOS</strong>
+          <p>For oil scenarios: <em>Spills → select your spill → Oil → Browse ADIOS database</em>. Search for the oil type matching your scenario (e.g. <em>Arabian Medium</em> for Hormuz crude).</p>
+        </div>
+      </div>
+      <div class="wg-step">
+        <span class="wg-step-num">6</span>
+        <div>
+          <strong>Run and compare</strong>
+          <p>Click <em>Run Model</em>. WebGNOME outputs an oil budget chart, trajectory animation, and beached mass — use these to validate and extend your Hormuz Drift results.</p>
+        </div>
+      </div>
+      <div class="wg-tip">
+        <strong>💡 Tip:</strong> For scripted / repeatable runs, download the <em>PyGNOME script</em> button above and run it locally with <code>python pygnome_hormuz.py</code> after <code>pip install gnome</code>.
+      </div>
+    </div>
+    <div class="wg-modal-foot">
+      <a href="https://gnome.orr.noaa.gov" target="_blank" rel="noopener" class="ghost" style="display:inline-block;padding:8px 16px;border:1px solid rgba(149,186,255,0.3);border-radius:6px;color:#95baff;text-decoration:none;font-size:13px;">Open WebGNOME ↗</a>
+      <button id="closeWgModal2" class="ghost">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="js/field.js"></script>
+<script src="js/drift.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
