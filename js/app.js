@@ -132,7 +132,6 @@ function showStartupError(message) {
   els.timeLabel.textContent = "server required";
   els.dataMeta.textContent = "Open this app through http://localhost:8000, not file://";
   els.releaseInfo.textContent = "Startup failed. Use start_local_server.bat or python -m http.server 8000.";
-  els.storyCopy.textContent = "Data could not be loaded. Start a local server and reopen the app over http://localhost:8000.";
   els.results.innerHTML = '<div class="result-card wide"><span class="result-label">Startup</span><span class="result-value">Data unavailable</span><span class="result-subvalue">This page was opened without a local web server.</span></div>';
   els.runBtn.disabled = true;
   els.useWind.disabled = true;
@@ -1447,31 +1446,17 @@ function syncWindControls() {
     els.useWind.disabled = false;
     els.useWind.checked = true;
     els.windStatus.textContent = "Wind ready";
-    els.storyWind.textContent = "Currents + wind";
     els.windNote.textContent = `Wind loaded: ${Field.meta.wind_source}`;
   } else {
     els.useWind.checked = false;
     els.useWind.disabled = true;
     els.windStatus.textContent = "No wind in this dataset";
-    els.storyWind.textContent = "Currents only";
     els.windNote.textContent = "Current package is currents-only. The daily refresh pipeline can attach GFS wind when available.";
   }
 }
 
 function updateStoryCard() {
-  const preset = selectedPreset();
-  els.storyScenario.textContent = preset ? preset.label : getScenarioLabel(activeScenario);
-  els.storyWind.textContent = els.useWind.checked && Field.hasWind ? "Currents + wind" : "Currents only";
-  if (Field.loaded) {
-    els.storyRange.textContent = `${Field.times.length} h forcing window`;
-  }
-  if (activeRun) {
-    els.storyCopy.textContent = `Playback is tied to a ${activeRun.ensemble.length}-member ${getScenarioLabel(activeRun.scenario).toLowerCase()} ensemble. Use the overlays to compare tracks, density, and uncertainty across the active run window.`;
-  } else if (releasePoint) {
-    els.storyCopy.textContent = `Release set at ${releasePoint.lat.toFixed(4)} N, ${releasePoint.lon.toFixed(4)} E. Pick a preset, then run the ensemble to see spread, density, and shoreline outcomes.`;
-  } else {
-    els.storyCopy.textContent = "Place a release point on the water, choose a scenario preset, and run the ensemble to reveal particle paths, density, spread, and stranding risk through time.";
-  }
+  return;
 }
 
 function applyStateFromUrl() {
@@ -1583,10 +1568,6 @@ function collectDomRefs() {
     showUncertainty: document.getElementById("showUncertainty"),
     speedLabel: document.getElementById("speed-label"),
     speedSlider: document.getElementById("speedSlider"),
-    storyCopy: document.getElementById("story-copy"),
-    storyRange: document.getElementById("storyRange"),
-    storyScenario: document.getElementById("storyScenario"),
-    storyWind: document.getElementById("storyWind"),
     timeLabel: document.getElementById("time-label"),
     timeSlider: document.getElementById("timeSlider"),
     timeWindowLabel: document.getElementById("time-window-label"),
@@ -1717,7 +1698,6 @@ async function boot() {
 
   els.timeSlider.max = Field.times.length - 1;
   els.dataMeta.textContent = `${Field.meta.source} | ${Field.times[0]} to ${Field.times[Field.times.length - 1]} UTC | ${Field.times.length} hourly frames`;
-  els.storyRange.textContent = `${Field.times.length} h forcing window`;
   updateReleaseInfo();
   updateStoryCard();
   applyStateFromUrl();

@@ -106,46 +106,17 @@ code { font-family: "IBM Plex Mono", "Consolas", monospace; }
   box-shadow: var(--shadow);
 }
 
-#map-story {
+#map-actions {
   position: absolute;
   top: 22px;
   left: 22px;
   z-index: 900;
-  width: min(460px, calc(100% - 44px));
-  padding: 18px 20px 18px;
-  border-radius: 22px;
-  overflow: hidden;
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 18px;
 }
 
-#map-story::after {
-  content: "";
-  position: absolute;
-  inset: auto -10% -44% auto;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(100, 232, 255, 0.3), transparent 68%);
-  pointer-events: none;
-}
-
-.eyebrow {
-  margin-bottom: 8px;
-  color: var(--accent-2);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-#map-story h1 {
-  margin: 0;
-  max-width: 10ch;
-  font-family: "Fraunces", Georgia, serif;
-  font-size: clamp(1.9rem, 3vw, 3rem);
-  line-height: 0.98;
-  letter-spacing: -0.04em;
-}
-
-#map-story p,
 .hint,
 .dim,
 .lede {
@@ -153,23 +124,11 @@ code { font-family: "IBM Plex Mono", "Consolas", monospace; }
   line-height: 1.55;
 }
 
-#map-story p {
-  margin: 12px 0 0;
-  font-size: 13px;
-  max-width: 52ch;
-}
-
-.story-chips,
 .toggle-grid,
 .action-grid,
 .quick-stats {
   display: grid;
   gap: 10px;
-}
-
-.story-chips {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: 16px;
 }
 
 .chip,
@@ -194,12 +153,6 @@ code { font-family: "IBM Plex Mono", "Consolas", monospace; }
   min-height: 0;
   padding: 7px 10px;
   white-space: nowrap;
-}
-
-.story-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 14px;
 }
 
 #map-legend {
@@ -537,10 +490,6 @@ body.focus-mode #banner {
   opacity: 0.22;
 }
 
-body.focus-mode #map-story {
-  transform: translateY(-6px);
-}
-
 #panelToggle,
 #closePanelBtn { display: none; }
 
@@ -549,8 +498,7 @@ body.focus-mode #map-story {
     grid-template-columns: minmax(0, 1fr) 380px;
   }
 
-  .toggle-grid,
-  .story-chips {
+  .toggle-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -590,16 +538,10 @@ body.focus-mode #map-story {
   #panelToggle,
   #closePanelBtn { display: inline-flex; }
 
-  #map-story {
+  #map-actions {
     top: 16px;
     left: 16px;
-    width: calc(100% - 32px);
-    padding: 16px;
-  }
-
-  #map-story h1 {
-    max-width: none;
-    font-size: clamp(1.7rem, 7vw, 2.6rem);
+    padding: 8px;
   }
 
   #map-legend {
@@ -628,7 +570,7 @@ body.focus-mode #map-story {
     font-size: 11px;
   }
 
-  #map-story,
+  #map-actions,
   #map-legend,
   #side,
   #controls {
