@@ -338,8 +338,9 @@ function drawBgParticles() {
   ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
   ctx.fillRect(0, 0, size.x, size.y);
   ctx.globalCompositeOperation = "source-over";
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.75)";
-  ctx.lineWidth = 1.05;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.lineCap    = "round";
+  ctx.lineWidth  = 2.2;
   ctx.beginPath();
   for (const particle of bgParticles) {
     if (!particle.prevOK) {
