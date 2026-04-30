@@ -249,25 +249,33 @@ function stepBgParticles(dtReal) {
  * we paint one pixel per model cell, then scale/blit it to the visible canvas.
  * That is much cheaper than repainting thousands of screen-sized quads every
  * frame and still produces a smooth-looking current layer. */
-let fieldSrc = null;       // HTMLCanvasElement sized (nLon, nLat)
-let fieldSrcCtx = null;
-let fieldSrcData = null;   // cached ImageData for fast rewrites
-let fieldSrcTi  = -1;      // which time index is currently in fieldSrc
+/* Two small offscreen canvases let the visible current field cross-fade
+   between adjacent hourly frames instead of snapping from color to color. */
+const fieldSrcBuffers = [
+  { canvas: null, ctx: null, data: null, ti: -1 },
+  { canvas: null, ctx: null, data: null, ti: -1 },
+];
 
 function ensureFieldSrc(grid) {
-  if (fieldSrc && fieldSrc.width === grid.nLon && fieldSrc.height === grid.nLat) return;
-  fieldSrc = document.createElement("canvas");
-  fieldSrc.width  = grid.nLon;
-  fieldSrc.height = grid.nLat;
-  fieldSrcCtx = fieldSrc.getContext("2d");
-  fieldSrcData = fieldSrcCtx.createImageData(grid.nLon, grid.nLat);
-  fieldSrcTi = -1;
+  if (
+    fieldSrcBuffers[0].canvas &&
+    fieldSrcBuffers[0].canvas.width === grid.nLon &&
+    fieldSrcBuffers[0].canvas.height === grid.nLat
+  ) return;
+  fieldSrcBuffers.forEach((buffer) => {
+    buffer.canvas = document.createElement("canvas");
+    buffer.canvas.width = grid.nLon;
+    buffer.canvas.height = grid.nLat;
+    buffer.ctx = buffer.canvas.getContext("2d");
+    buffer.data = buffer.ctx.createImageData(grid.nLon, grid.nLat);
+    buffer.ti = -1;
+  });
 }
 
 /* Paint a single time slice of the current field into the offscreen buffer. */
-function paintFieldSrc(ti, grid) {
-  if (ti === fieldSrcTi) return;
-  const pix = fieldSrcData.data;
+function paintFieldSrc(ti, grid, buffer) {
+  if (ti === buffer.ti) return;
+  const pix = buffer.data.data;
   const nW = grid.nLon;
   const nH = grid.nLat;
   const nCells = nW * nH;
@@ -343,8 +351,8 @@ function paintFieldSrc(ti, grid) {
     }
   }
 
-  fieldSrcCtx.putImageData(fieldSrcData, 0, 0);
-  fieldSrcTi = ti;
+  buffer.ctx.putImageData(buffer.data, 0, 0);
+  buffer.ti = ti;
 }
 
 /* Draw the colorized current field for the current playback instant. */
@@ -358,11 +366,16 @@ function drawField() {
   if (!overlayState.currents) {
     return;
   }
-  const ti   = Math.floor(tIdx);
+  const ti0 = clamp(Math.floor(tIdx), 0, Field.times.length - 1);
+  const ti1 = clamp(ti0 + 1, 0, Field.times.length - 1);
+  const blend = clamp(tIdx - ti0, 0, 1);
   const grid = Field.grid;
 
   ensureFieldSrc(grid);
-  paintFieldSrc(ti, grid);
+  paintFieldSrc(ti0, grid, fieldSrcBuffers[0]);
+  if (blend > 0 && ti1 !== ti0) {
+    paintFieldSrc(ti1, grid, fieldSrcBuffers[1]);
+  }
 
   /* Destination rect aligned so that each source-pixel CENTER lands on its
    * corresponding grid point. Grid point (i,j) = (lons[i], lats[j]).
@@ -383,7 +396,11 @@ function drawField() {
   ctx.save();
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(fieldSrc, dX, dY, dW, dH);
+  ctx.drawImage(fieldSrcBuffers[0].canvas, dX, dY, dW, dH);
+  if (blend > 0 && ti1 !== ti0) {
+    ctx.globalAlpha = blend;
+    ctx.drawImage(fieldSrcBuffers[1].canvas, dX, dY, dW, dH);
+  }
   ctx.restore();
 
   ctx.save();

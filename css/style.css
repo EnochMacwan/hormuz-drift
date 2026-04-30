@@ -37,6 +37,7 @@
   --surface: rgba(255, 255, 255, 0.82);
   --surface-strong: rgba(255, 255, 255, 0.96);
   --shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  --color-ease: 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Border-box sizing keeps panel math stable once padding and borders mix with
@@ -79,6 +80,29 @@ body::before {
 
 a { color: var(--accent); }
 code { font-family: "IBM Plex Mono", "Consolas", monospace; }
+
+a,
+button,
+input,
+select,
+.tag,
+.glass,
+.section-card,
+.stat-card,
+.preset-card,
+.check-pill,
+.result-card,
+.resp-tab,
+.insight-pill,
+.budget-stat {
+  transition:
+    background-color var(--color-ease),
+    border-color var(--color-ease),
+    color var(--color-ease),
+    box-shadow var(--color-ease),
+    opacity var(--color-ease),
+    transform var(--color-ease);
+}
 
 /* Master application grid: disclaimer banner on top, map left, side panel
    right, playback rail below the map. */
@@ -321,7 +345,13 @@ button {
   line-height: 1;
   padding: 11px 14px;
   cursor: pointer;
-  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, opacity 160ms ease;
+  transition:
+    transform var(--color-ease),
+    background-color var(--color-ease),
+    border-color var(--color-ease),
+    color var(--color-ease),
+    box-shadow var(--color-ease),
+    opacity var(--color-ease);
 }
 
 button:hover:not(:disabled) {
