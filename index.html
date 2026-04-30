@@ -19,9 +19,9 @@
 <title>Hormuz Drift - Interactive Particle Tracking</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="css/style.css?v=3"/>
+<link rel="stylesheet" href="css/style.css?v=4"/>
 </head>
 <body class="panel-open">
 <div id="app">
@@ -53,7 +53,7 @@
       <div class="hint">Hue = direction. Opacity = speed.</div>
       <canvas id="color-wheel"></canvas>
       <div class="hint" style="margin-top:4px">
-        Brown = land. Gold = active particles. Coral = stranded. Cyan = uncertainty.
+        Brown = land. Orange = active particles. Hot red = stranded. Cyan = uncertainty.
       </div>
     </div>
   </div>
@@ -271,12 +271,12 @@
       <div class="budget-header">
         <h3>Oil budget</h3>
         <div class="budget-legend">
-          <span class="bl-dot" style="background:#d4a017"></span>Surface
-          <span class="bl-dot" style="background:#a86008"></span>Evaporated
-          <span class="bl-dot" style="background:#00b8f0"></span>Dispersed
-          <span class="bl-dot" style="background:#904800"></span>Beached
-          <span class="bl-dot" style="background:#587890"></span>Skimmed
-          <span class="bl-dot" style="background:#173247"></span>Burned
+          <span class="bl-dot" style="background:#FF7F00"></span>Surface
+          <span class="bl-dot" style="background:#FFA040"></span>Evaporated
+          <span class="bl-dot" style="background:#00AAE7"></span>Dispersed
+          <span class="bl-dot" style="background:#0081b0"></span>Beached
+          <span class="bl-dot" style="background:#00FFCC"></span>Skimmed
+          <span class="bl-dot" style="background:#001220"></span>Burned
         </div>
       </div>
       <div id="oil-budget-plot" aria-label="Oil budget stacked chart"></div>
@@ -397,6 +397,6 @@
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/field.js?v=4"></script>
 <script src="js/drift.js?v=4"></script>
-<script src="js/app.js?v=7"></script>
+<script src="js/app.js?v=8"></script>
 </body>
 </html>

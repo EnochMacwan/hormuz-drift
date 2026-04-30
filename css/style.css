@@ -19,24 +19,24 @@
 /* Global design tokens. These are the quickest levers for reskinning the UI
    without touching individual selectors deeper in the file. */
 :root {
-  --bg: #eef8fc;
-  --bg-deep: #b0d8e8;
+  --bg: #f8f9fa;
+  --bg-deep: #001220;
   --panel: rgba(255, 255, 255, 0.88);
   --panel-strong: rgba(255, 255, 255, 0.95);
-  --panel-soft: rgba(216, 240, 248, 0.88);
-  --line: rgba(40, 80, 112, 0.2);
-  --line-strong: rgba(0, 184, 240, 0.42);
-  --text: #173247;
-  --muted: #587890;
-  --muted-2: #6f8fa3;
-  --accent: #00b8f0;
-  --accent-2: #285070;
-  --gold: #d4a017;
-  --danger: #a86008;
-  --ink: #173247;
+  --panel-soft: rgba(248, 249, 250, 0.88);
+  --line: rgba(0, 0, 0, 0.06);
+  --line-strong: rgba(0, 170, 231, 0.3);
+  --text: #202124;
+  --muted: #5f6368;
+  --muted-2: #9aa0a6;
+  --accent: #00AAE7;
+  --accent-2: #0081b0;
+  --gold: #FF7F00;
+  --danger: #FF3366;
+  --ink: #202124;
   --surface: rgba(255, 255, 255, 0.82);
   --surface-strong: rgba(255, 255, 255, 0.96);
-  --shadow: 0 18px 55px rgba(40, 80, 112, 0.18);
+  --shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
 }
 
 /* Border-box sizing keeps panel math stable once padding and borders mix with
@@ -50,11 +50,11 @@ html, body {
   padding: 0;
   height: 100%;
   background:
-    radial-gradient(circle at top left, rgba(0, 184, 240, 0.18), transparent 28%),
-    radial-gradient(circle at top right, rgba(212, 160, 23, 0.13), transparent 36%),
-    linear-gradient(180deg, #f7fcff 0%, #d8f0f8 100%);
+    radial-gradient(circle at 70% 30%, rgba(0, 170, 231, 0.18), transparent 32%),
+    radial-gradient(circle at top left, rgba(0, 45, 80, 0.32), transparent 38%),
+    linear-gradient(180deg, #001220 0%, #002D50 36%, #f8f9fa 100%);
   color: var(--text);
-  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow: hidden;
 }
 
@@ -103,7 +103,7 @@ code { font-family: "IBM Plex Mono", "Consolas", monospace; }
   align-items: center;
   gap: 10px;
   padding: 10px 18px;
-  background: linear-gradient(90deg, rgba(23, 50, 71, 0.96), rgba(0, 184, 240, 0.9));
+  background: linear-gradient(90deg, rgba(0, 170, 231, 0.96), rgba(0, 129, 176, 0.94));
   border-bottom: 1px solid rgba(255, 255, 255, 0.32);
   font-size: 12px;
   color: #f7fff9;
@@ -119,9 +119,7 @@ code { font-family: "IBM Plex Mono", "Consolas", monospace; }
   position: relative;
   min-width: 0;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 20% 10%, rgba(0, 184, 240, 0.13), transparent 32%),
-    linear-gradient(180deg, rgba(239, 250, 255, 0.94), rgba(176, 216, 232, 1));
+  background: radial-gradient(circle at 70% 30%, #002D50 0%, #001220 100%);
 }
 
 #map { position: absolute; inset: 0; }
@@ -177,7 +175,7 @@ code { font-family: "IBM Plex Mono", "Consolas", monospace; }
   gap: 8px;
   min-height: 34px;
   padding: 8px 12px;
-  border: 1px solid rgba(40, 80, 112, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
   color: var(--ink);
@@ -218,7 +216,7 @@ code { font-family: "IBM Plex Mono", "Consolas", monospace; }
   position: relative;
   min-width: 0;
   padding: 18px;
-  background: linear-gradient(180deg, rgba(248, 253, 255, 0.97), rgba(232, 247, 252, 0.98));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(248, 249, 250, 0.98));
   border-left: 1px solid var(--line);
   overflow-y: auto;
 }
@@ -232,7 +230,7 @@ code { font-family: "IBM Plex Mono", "Consolas", monospace; }
   gap: 10px;
   min-width: 0;
   padding: 14px 18px 16px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(216, 240, 248, 0.96));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 249, 250, 0.96));
   border-top: 1px solid var(--line);
 }
 
@@ -245,7 +243,7 @@ code { font-family: "IBM Plex Mono", "Consolas", monospace; }
 
 #side h2 {
   margin: 0;
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 1.8rem;
   letter-spacing: 0;
 }
@@ -263,7 +261,7 @@ h3 {
   margin-top: 14px;
   padding: 16px;
   border-radius: 22px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(239, 250, 255, 0.88));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 249, 250, 0.9));
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
 }
@@ -279,7 +277,7 @@ h3 {
   padding: 12px 14px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(40, 80, 112, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .stat-card strong {
@@ -324,7 +322,7 @@ h3 {
   width: 100%;
   padding: 9px 10px;
   border-radius: 12px;
-  border: 1px solid rgba(40, 80, 112, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   background: rgba(255, 255, 255, 0.9);
   color: var(--text);
   font: inherit;
@@ -341,7 +339,7 @@ h3 {
    destructive clears. */
 button {
   appearance: none;
-  border: 1px solid rgba(40, 80, 112, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.82);
   color: var(--ink);
@@ -357,7 +355,7 @@ button {
 button:hover:not(:disabled) {
   transform: translateY(-1px);
   border-color: var(--line-strong);
-  background: rgba(232, 247, 252, 0.96);
+  background: rgba(248, 249, 250, 0.96);
 }
 
 button:disabled {
@@ -366,18 +364,18 @@ button:disabled {
 }
 
 button.primary {
-  border-color: rgba(0, 184, 240, 0.45);
-  background: linear-gradient(135deg, rgba(0, 184, 240, 0.96), rgba(40, 80, 112, 0.86));
+  border-color: rgba(0, 170, 231, 0.45);
+  background: linear-gradient(135deg, rgba(0, 170, 231, 0.96), rgba(0, 129, 176, 0.9));
   color: #ffffff;
 }
 
 button.primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(0, 192, 240, 0.98), rgba(23, 50, 71, 0.9));
+  background: linear-gradient(135deg, rgba(0, 170, 231, 0.98), rgba(0, 129, 176, 0.95));
 }
 
 button.danger {
-  border-color: rgba(168, 96, 8, 0.38);
-  background: rgba(168, 96, 8, 0.12);
+  border-color: rgba(255, 51, 102, 0.38);
+  background: rgba(255, 51, 102, 0.12);
   color: var(--danger);
 }
 
@@ -431,8 +429,8 @@ button.small { padding: 9px 12px; }
 }
 
 .scenario-tabs button.active {
-  background: linear-gradient(135deg, rgba(0, 184, 240, 0.18), rgba(176, 216, 232, 0.2));
-  border-color: rgba(0, 184, 240, 0.38);
+  background: linear-gradient(135deg, rgba(0, 170, 231, 0.12), rgba(0, 129, 176, 0.1));
+  border-color: rgba(0, 170, 231, 0.3);
 }
 
 .toggle-grid {
@@ -473,7 +471,7 @@ button.small { padding: 9px 12px; }
   padding: 12px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(40, 80, 112, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .result-card.wide {
@@ -510,7 +508,7 @@ button.small { padding: 9px 12px; }
   margin-top: 14px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(40, 80, 112, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 canvas.overlay { position: absolute; top: 0; left: 0; pointer-events: none; }
@@ -521,14 +519,14 @@ canvas.overlay { position: absolute; top: 0; left: 0; pointer-events: none; }
 }
 
 .leaflet-control-zoom {
-  border: 1px solid rgba(40, 80, 112, 0.16) !important;
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
   box-shadow: none !important;
 }
 
 .leaflet-control-zoom a {
   background: rgba(255, 255, 255, 0.9) !important;
   color: var(--text) !important;
-  border-bottom-color: rgba(40, 80, 112, 0.12) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.06) !important;
 }
 
 .leaflet-popup-content-wrapper,
@@ -652,8 +650,8 @@ body.focus-mode #banner {
 /* ── WebGNOME Integration Card ─────────────────────────────────────────────── */
 
 .webgnome-card {
-  border-color: rgba(40, 80, 112, 0.18);
-  background: linear-gradient(160deg, rgba(232, 247, 252, 0.92), rgba(255, 255, 255, 0.88));
+  border-color: rgba(0, 0, 0, 0.06);
+  background: linear-gradient(160deg, rgba(248, 249, 250, 0.96), rgba(255, 255, 255, 0.9));
   position: relative;
   overflow: hidden;
 }
@@ -666,7 +664,7 @@ body.focus-mode #banner {
   width: 160px;
   height: 160px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 184, 240, 0.16), transparent 70%);
+  background: radial-gradient(circle, rgba(0, 170, 231, 0.12), transparent 70%);
   pointer-events: none;
 }
 
@@ -713,14 +711,14 @@ body.focus-mode #banner {
 }
 
 button.wg-primary {
-  border-color: rgba(0, 184, 240, 0.42);
-  background: linear-gradient(135deg, rgba(0, 184, 240, 0.95), rgba(40, 80, 112, 0.84));
+  border-color: rgba(0, 170, 231, 0.42);
+  background: linear-gradient(135deg, rgba(0, 170, 231, 0.95), rgba(0, 129, 176, 0.88));
   color: #ffffff;
   font-weight: 700;
 }
 
 button.wg-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(0, 192, 240, 0.98), rgba(23, 50, 71, 0.9));
+  background: linear-gradient(135deg, rgba(0, 170, 231, 0.98), rgba(0, 129, 176, 0.95));
 }
 
 /* ── WebGNOME Instructions Modal ───────────────────────────────────────────── */
@@ -732,7 +730,7 @@ button.wg-primary:hover:not(:disabled) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(23, 50, 71, 0.46);
+  background: rgba(0, 18, 32, 0.46);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   padding: 20px;
@@ -744,9 +742,9 @@ button.wg-primary:hover:not(:disabled) {
   display: flex;
   flex-direction: column;
   border-radius: 28px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(232, 247, 252, 0.99));
-  border: 1px solid rgba(40, 80, 112, 0.22);
-  box-shadow: 0 32px 80px rgba(23, 50, 71, 0.24), 0 0 0 1px rgba(0, 184, 240, 0.08);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(248, 249, 250, 0.99));
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 170, 231, 0.08);
   overflow: hidden;
 }
 
@@ -755,12 +753,12 @@ button.wg-primary:hover:not(:disabled) {
   align-items: center;
   justify-content: space-between;
   padding: 22px 24px 18px;
-  border-bottom: 1px solid rgba(40, 80, 112, 0.12);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .wg-modal-head h2 {
   margin: 0;
-  font-family: "Fraunces", Georgia, serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 1.4rem;
   letter-spacing: 0;
   color: var(--ink);
@@ -789,11 +787,11 @@ button.wg-primary:hover:not(:disabled) {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(0, 184, 240, 0.94), rgba(40, 80, 112, 0.86));
+  background: linear-gradient(135deg, rgba(0, 170, 231, 0.94), rgba(0, 129, 176, 0.88));
   color: #ffffff;
   font-weight: 800;
   font-size: 15px;
-  box-shadow: 0 0 0 4px rgba(0, 184, 240, 0.12);
+  box-shadow: 0 0 0 4px rgba(0, 170, 231, 0.12);
 }
 
 .wg-step strong {
@@ -815,8 +813,8 @@ button.wg-primary:hover:not(:disabled) {
   margin-top: 4px;
   padding: 3px 8px;
   border-radius: 6px;
-  background: rgba(0, 184, 240, 0.08);
-  border: 1px solid rgba(40, 80, 112, 0.18);
+  background: rgba(0, 170, 231, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   font-size: 11px;
   color: var(--accent);
   font-family: "IBM Plex Mono", "Consolas", monospace;
@@ -826,8 +824,8 @@ button.wg-primary:hover:not(:disabled) {
 .wg-tip {
   padding: 14px 16px;
   border-radius: 16px;
-  background: rgba(176, 216, 232, 0.24);
-  border: 1px solid rgba(40, 80, 112, 0.16);
+  background: rgba(0, 170, 231, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   font-size: 12.5px;
   color: var(--muted);
   line-height: 1.5;
@@ -844,7 +842,7 @@ button.wg-primary:hover:not(:disabled) {
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 24px 20px;
-  border-top: 1px solid rgba(40, 80, 112, 0.1);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 /* ── Response Options ──────────────────────────────────────────────────────── */
@@ -863,8 +861,8 @@ button.wg-primary:hover:not(:disabled) {
 }
 
 .resp-tab.active {
-  background: linear-gradient(135deg, rgba(0, 184, 240, 0.16), rgba(176, 216, 232, 0.2));
-  border-color: rgba(0, 184, 240, 0.34);
+  background: linear-gradient(135deg, rgba(0, 170, 231, 0.12), rgba(0, 129, 176, 0.1));
+  border-color: rgba(0, 170, 231, 0.3);
 }
 
 .resp-panel { animation: fadeIn 180ms ease; }
@@ -883,7 +881,7 @@ button.wg-primary:hover:not(:disabled) {
   height: 260px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(40, 80, 112, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .budget-header {
@@ -922,7 +920,7 @@ button.wg-primary:hover:not(:disabled) {
   padding: 10px 12px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(40, 80, 112, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .budget-stat .bs-label {
