@@ -160,14 +160,6 @@ function updateBodyState() {
   document.body.classList.toggle("focus-mode", focusMode);
 }
 
-function setPanelOpen(open) {
-  document.body.classList.toggle("panel-open", open);
-  document.body.classList.toggle("panel-closed", !open);
-  if (els.panelToggle) {
-    els.panelToggle.textContent = open ? "Hide Mission Control" : "Mission Control";
-  }
-}
-
 function setStatus(message) {
   els.runStatus.textContent = message || "";
 }
@@ -1602,7 +1594,6 @@ function tick(now) {
 function collectDomRefs() {
   Object.assign(els, {
     clearBtn: document.getElementById("clearBtn"),
-    closePanelBtn: document.getElementById("closePanelBtn"),
     controlScenario: document.getElementById("controlScenario"),
     copyLinkBtn: document.getElementById("copyLinkBtn"),
     dataMeta: document.getElementById("data-meta"),
@@ -1633,7 +1624,6 @@ function collectDomRefs() {
     oilParams: document.getElementById("oil-params"),
     oilType: document.getElementById("oilType"),
     oilVol: document.getElementById("oilVol"),
-    panelToggle: document.getElementById("panelToggle"),
     playBtn: document.getElementById("playBtn"),
     presetCards: document.getElementById("presetCards"),
     progressDetail: document.getElementById("progress-detail"),
@@ -1760,8 +1750,6 @@ function wireUi() {
   bindLayer("oilRadius", [els.layerOilRadius]);
   els.useWind.onchange = updateStoryCard;
 
-  els.panelToggle.onclick = () => setPanelOpen(!document.body.classList.contains("panel-open"));
-  els.closePanelBtn.onclick = () => setPanelOpen(false);
   els.focusBtn.onclick = () => {
     focusMode = !focusMode;
     els.focusBtn.textContent = focusMode ? "Exit focus" : "Focus mode";

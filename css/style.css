@@ -96,10 +96,6 @@ code { font-family: "IBM Plex Mono", "Consolas", monospace; }
   transition: grid-template-columns 240ms var(--ease-out, ease);
 }
 
-body.panel-closed #app {
-  grid-template-columns: minmax(820px, 1fr) 0;
-}
-
 /* High-contrast banner so the educational/non-operational warning is visible
    even in screenshots or when the side panel is hidden. */
 #banner {
@@ -194,14 +190,6 @@ body.panel-closed #app {
   overflow-y: auto;
   overflow-x: hidden;
   transition: opacity 200ms ease, transform 240ms ease, padding 240ms ease, border-color 240ms ease;
-}
-
-body.panel-closed #side {
-  opacity: 0;
-  padding-inline: 0;
-  border-left-color: transparent;
-  pointer-events: none;
-  transform: translateX(24px);
 }
 
 /* Bottom playback rail tuned for repeated interaction and tight spacing. */
@@ -742,9 +730,6 @@ body.focus-mode #controls,
 body.focus-mode #banner {
   opacity: 0.22;
 }
-
-#panelToggle,
-#closePanelBtn { display: inline-flex; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

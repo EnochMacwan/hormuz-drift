@@ -21,9 +21,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="css/style.css?v=7"/>
+<link rel="stylesheet" href="css/style.css?v=8"/>
 </head>
-<body class="panel-closed">
+<body>
 <div id="app">
 
   <!-- Persistent research disclaimer. Kept outside the side panel so it
@@ -45,7 +45,6 @@
   <div id="controls">
     <div class="row controls-top">
       <div class="control-cluster">
-        <button id="panelToggle" class="ghost">Mission Control</button>
         <button id="playBtn">Pause</button>
         <button id="quickRunRailBtn" class="primary" disabled>Run current preset</button>
         <button id="focusBtn" class="ghost">Focus mode</button>
@@ -89,7 +88,6 @@
         <div class="eyebrow">Mission Control</div>
         <h2>Hormuz Drift</h2>
       </div>
-      <button id="closePanelBtn" class="ghost small">Close</button>
     </div>
 
     <div class="section-card intro-card" id="mission-summary">
@@ -333,6 +331,6 @@
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/field.js?v=4"></script>
 <script src="js/drift.js?v=4"></script>
-<script src="js/app.js?v=11"></script>
+<script src="js/app.js?v=12"></script>
 </body>
 </html>
