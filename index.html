@@ -16,22 +16,31 @@
 -->
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Live Simulation of Oil Spill & Drifter Trajectories at Strait of Hormuz</title>
+<title>Tridel | Live Simulation of Oil Spill & Drifter Trajectories at Strait of Hormuz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="css/style.css?v=10"/>
+<link rel="icon" type="image/png" href="assets/tridel.png"/>
+<link rel="stylesheet" href="css/style.css?v=11"/>
 </head>
 <body>
 <div id="app">
 
-  <!-- Persistent research disclaimer. Kept outside the side panel so it
-       remains visible even when the desktop mission drawer is closed. -->
+  <!-- Persistent Tridel masthead and research disclaimer. -->
   <div id="banner">
-    <b>Research / educational use only.</b>
-    Not certified for operational SAR or oil-spill response. Physics are based on OpenDRIFT -
-    <a href="README.md">README and caveats</a>.
+    <div class="brand-lockup" aria-label="Tridel">
+      <img src="assets/tridel.png" alt="Tridel" class="brand-logo"/>
+      <div>
+        <span class="brand-name">TRIDEL</span>
+        <span class="brand-subtitle">Maritime Intelligence Lab</span>
+      </div>
+    </div>
+    <div class="banner-copy">
+      <b>Live Simulation of Oil Spill & Drifter Trajectories at Strait of Hormuz</b>
+      <span>Research / educational use only. Not certified for operational SAR or oil-spill response. Physics are based on OpenDRIFT.</span>
+      <a href="README.md">README and caveats</a>
+    </div>
   </div>
 
   <!-- Map region. Leaflet owns #map itself; all controls live outside the map
@@ -84,16 +93,19 @@
        scenario type, data availability, and whether a run has been computed. -->
   <aside id="side">
     <div class="side-header">
-      <div>
-        <div class="eyebrow">Mission Control</div>
-        <h2>Live Simulation of Oil Spill & Drifter Trajectories at Strait of Hormuz</h2>
+      <div class="side-brand">
+        <img src="assets/tridel.png" alt="" class="side-logo" aria-hidden="true"/>
+        <div>
+          <div class="eyebrow">Tridel Mission Control</div>
+          <h2>Live Simulation of Oil Spill & Drifter Trajectories at Strait of Hormuz</h2>
+        </div>
       </div>
     </div>
 
     <div class="section-card intro-card" id="mission-summary">
       <p class="lede">
-        Explore live oil-spill and drifter trajectories using CMEMS surface currents, optional wind drift,
-        and a particle ensemble over the Strait of Hormuz.
+        A Tridel research page for exploring live oil-spill and drifter trajectories using CMEMS surface
+        currents, optional wind drift, and a particle ensemble over the Strait of Hormuz.
       </p>
       <div class="quick-stats">
         <div class="stat-card">
