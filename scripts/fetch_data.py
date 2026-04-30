@@ -69,7 +69,7 @@ def fetch_cmems():
         start_datetime=t0.isoformat(), end_datetime=t1.isoformat(),
         output_filename=str(out),
         username=user, password=pw,
-        force_download=True, overwrite_output_data=True,
+        overwrite=True,
     )
     return xr.open_dataset(out)
 
