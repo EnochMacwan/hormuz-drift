@@ -1216,7 +1216,7 @@ function paintColorWheel() {
   const canvas = els.colorWheel;
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
-  const cssSize = 72;
+  const cssSize = 96;
   canvas.width = cssSize * dpr;
   canvas.height = cssSize * dpr;
   canvas.style.width = `${cssSize}px`;
@@ -1224,43 +1224,50 @@ function paintColorWheel() {
 
   const ctx = canvas.getContext("2d");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const radius = cssSize / 2;
+  const center = cssSize / 2;
+  const diskRadius = 31;
   const image = ctx.createImageData(cssSize, cssSize);
   const pix = image.data;
 
   for (let y = 0; y < cssSize; y += 1) {
     for (let x = 0; x < cssSize; x += 1) {
-      const dx = x + 0.5 - radius;
-      const dy = y + 0.5 - radius;
+      const dx = x + 0.5 - center;
+      const dy = y + 0.5 - center;
       const dist = Math.hypot(dx, dy);
       const p = (y * cssSize + x) * 4;
-      if (dist > radius - 1) {
+      if (dist > diskRadius) {
         pix[p + 3] = 0;
         continue;
       }
       const hue = directionHue(dx, dy);
-      const lightness = 0.6 - (dist / radius) * 0.08;
+      const lightness = 0.6 - (dist / diskRadius) * 0.08;
       const [r, g, b] = hslToRgb(hue / 360, 0.88, lightness);
       pix[p] = r;
       pix[p + 1] = g;
       pix[p + 2] = b;
-      pix[p + 3] = Math.round(235 - (dist / radius) * 45);
+      pix[p + 3] = Math.round(235 - (dist / diskRadius) * 45);
     }
   }
 
   ctx.putImageData(image, 0, 0);
   ctx.beginPath();
-  ctx.arc(radius, radius, radius - 1, 0, Math.PI * 2);
+  ctx.arc(center, center, center - 2, 0, Math.PI * 2);
   ctx.strokeStyle = "rgba(255, 255, 255, 0.82)";
   ctx.lineWidth = 2;
   ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(center, center, diskRadius + 1, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(0, 18, 32, 0.16)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
   ctx.fillStyle = "rgba(0, 18, 32, 0.72)";
-  ctx.font = "700 10px Inter, sans-serif";
+  ctx.font = "800 13px Inter, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("N", radius, 12);
-  ctx.fillText("E", cssSize - 10, radius + 4);
-  ctx.fillText("S", radius, cssSize - 6);
-  ctx.fillText("W", 10, radius + 4);
+  ctx.textBaseline = "middle";
+  ctx.fillText("N", center, 12);
+  ctx.fillText("E", cssSize - 12, center);
+  ctx.fillText("S", center, cssSize - 12);
+  ctx.fillText("W", 12, center);
 }
 
 /* Small helper for all text-based downloads (JSON and CSV). */
