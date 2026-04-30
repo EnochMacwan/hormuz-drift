@@ -129,6 +129,11 @@ function formatRunOffset(hours) {
   return `${hours >= 0 ? "+" : "-"}${Math.abs(hours).toFixed(1)} h`;
 }
 
+function directionHue(screenX, screenY) {
+  const angle = Math.atan2(screenY, screenX);
+  return ((angle + Math.PI) / (2 * Math.PI)) * 360;
+}
+
 function getScenarioLabel(scenario) {
   return scenario === "oil" ? "Oil spill" : "Man overboard";
 }
@@ -265,8 +270,7 @@ function paintFieldSrc(ti, grid) {
         continue;
       }
       const speed = Math.hypot(u, v);
-      const dir   = Math.atan2(v, u);
-      const hue   = ((dir + Math.PI) / (2 * Math.PI)) * 360;
+      const hue   = directionHue(u, -v);
       const alpha = Math.min(speed / 0.8, 0.78);
       const [r, g, b] = hslToRgb(hue / 360, 0.88, 0.56);
       pix[p]     = r;
@@ -1116,8 +1120,7 @@ function paintWheel() {
         image.data[idx + 3] = 0;
         continue;
       }
-      const ang = Math.atan2(dy, dx);
-      const hue = ((ang + Math.PI) / (2 * Math.PI)) * 360;
+      const hue = directionHue(dx, dy);
       const rgb = hslToRgb(hue / 360, 0.88, 0.56);
       image.data[idx] = rgb[0];
       image.data[idx + 1] = rgb[1];
