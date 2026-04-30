@@ -1210,6 +1210,59 @@ function hslToRgb(h, s, l) {
   return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
 
+/* Paint the Mission Control legend for the same hue mapping used by currents.
+   Keeping it in the side rail avoids putting another floating object on map. */
+function paintColorWheel() {
+  const canvas = els.colorWheel;
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const cssSize = 72;
+  canvas.width = cssSize * dpr;
+  canvas.height = cssSize * dpr;
+  canvas.style.width = `${cssSize}px`;
+  canvas.style.height = `${cssSize}px`;
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const radius = cssSize / 2;
+  const image = ctx.createImageData(cssSize, cssSize);
+  const pix = image.data;
+
+  for (let y = 0; y < cssSize; y += 1) {
+    for (let x = 0; x < cssSize; x += 1) {
+      const dx = x + 0.5 - radius;
+      const dy = y + 0.5 - radius;
+      const dist = Math.hypot(dx, dy);
+      const p = (y * cssSize + x) * 4;
+      if (dist > radius - 1) {
+        pix[p + 3] = 0;
+        continue;
+      }
+      const hue = directionHue(dx, dy);
+      const lightness = 0.6 - (dist / radius) * 0.08;
+      const [r, g, b] = hslToRgb(hue / 360, 0.88, lightness);
+      pix[p] = r;
+      pix[p + 1] = g;
+      pix[p + 2] = b;
+      pix[p + 3] = Math.round(235 - (dist / radius) * 45);
+    }
+  }
+
+  ctx.putImageData(image, 0, 0);
+  ctx.beginPath();
+  ctx.arc(radius, radius, radius - 1, 0, Math.PI * 2);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.82)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = "rgba(0, 18, 32, 0.72)";
+  ctx.font = "700 10px Inter, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("N", radius, 12);
+  ctx.fillText("E", cssSize - 10, radius + 4);
+  ctx.fillText("S", radius, cssSize - 6);
+  ctx.fillText("W", 10, radius + 4);
+}
+
 /* Small helper for all text-based downloads (JSON and CSV). */
 function downloadText(filename, text, mimeType) {
   const blob = new Blob([text], { type: mimeType });
@@ -1632,6 +1685,7 @@ function collectDomRefs() {
     nLabel: document.getElementById("n-label"),
     nSlider: document.getElementById("nSlider"),
     layerCurrents: document.getElementById("layerCurrents"),
+    colorWheel: document.getElementById("colorWheel"),
     layerDensity: document.getElementById("layerDensity"),
     layerOilRadius: document.getElementById("layerOilRadius"),
     layerRelease: document.getElementById("layerRelease"),
@@ -1795,6 +1849,7 @@ async function boot() {
   buildLeewayOptions();
   buildOilOptions();
   buildPresetOptions();
+  paintColorWheel();
   setScenario("leeway", true);
   syncWindControls();
   syncLayerInputs();

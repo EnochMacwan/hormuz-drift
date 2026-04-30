@@ -22,7 +22,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="icon" type="image/png" href="assets/tridel.png"/>
-<link rel="stylesheet" href="css/style.css?v=12"/>
+<link rel="stylesheet" href="css/style.css?v=13"/>
 </head>
 <body>
 <div id="app">
@@ -272,6 +272,14 @@
       <div class="hint">
         Density, uncertainty, and the oil radius are derived from the current playback time, not just the final state.
       </div>
+      <div class="color-wheel-card" aria-label="Current direction color identification wheel">
+        <canvas id="colorWheel" width="72" height="72"></canvas>
+        <div class="color-wheel-copy">
+          <strong>Current direction colors</strong>
+          <span>Hue identifies flow direction. Opacity increases with current speed.</span>
+          <span class="wheel-key">Orange = particles, red = stranded, cyan = uncertainty.</span>
+        </div>
+      </div>
     </div>
 
     <!-- Run/start/clear/export affordances for the active scenario. -->
@@ -342,6 +350,6 @@
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/field.js?v=4"></script>
 <script src="js/drift.js?v=4"></script>
-<script src="js/app.js?v=14"></script>
+<script src="js/app.js?v=15"></script>
 </body>
 </html>
