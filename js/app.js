@@ -597,9 +597,9 @@ function drawDensity(ctx, points) {
     }
     const p = map.latLngToContainerPoint([point.lat, point.lon]);
     const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radiusPx);
-    gradient.addColorStop(0, "rgba(100, 232, 255, 0.22)");
-    gradient.addColorStop(0.55, "rgba(88, 166, 255, 0.12)");
-    gradient.addColorStop(1, "rgba(88, 166, 255, 0)");
+    gradient.addColorStop(0, "rgba(121, 189, 67, 0.24)");
+    gradient.addColorStop(0.55, "rgba(0, 122, 112, 0.14)");
+    gradient.addColorStop(1, "rgba(0, 122, 112, 0)");
     ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(p.x, p.y, radiusPx, 0, 2 * Math.PI);
@@ -615,7 +615,7 @@ function drawTrails(ctx, tSec) {
   }
   const stride = Math.max(1, Math.ceil(activeRun.ensemble.length / 700));
   ctx.save();
-  ctx.strokeStyle = "rgba(255, 211, 109, 0.28)";
+  ctx.strokeStyle = "rgba(196, 149, 47, 0.34)";
   ctx.lineWidth = 1.1;
   ctx.beginPath();
 
@@ -661,8 +661,8 @@ function drawUncertaintyEllipse(ctx, metrics) {
   ctx.save();
   ctx.translate(center.x, center.y);
   ctx.rotate(-metrics.ellipse.angleRad);
-  ctx.strokeStyle = "rgba(100, 232, 255, 0.9)";
-  ctx.fillStyle = "rgba(100, 232, 255, 0.08)";
+  ctx.strokeStyle = "rgba(0, 122, 112, 0.9)";
+  ctx.fillStyle = "rgba(0, 122, 112, 0.08)";
   ctx.lineWidth = 1.4;
   ctx.beginPath();
   ctx.ellipse(0, 0, Math.abs(east.x - center.x), Math.abs(north.y - center.y), 0, 0, 2 * Math.PI);
@@ -679,8 +679,8 @@ function drawReleaseMarker(ctx) {
   }
   const p = map.latLngToContainerPoint([releasePoint.lat, releasePoint.lon]);
   ctx.save();
-  ctx.strokeStyle = "#ffffff";
-  ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+  ctx.strokeStyle = "#007a70";
+  ctx.fillStyle = "rgba(0, 122, 112, 0.08)";
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(p.x, p.y, 8, 0, 2 * Math.PI);
@@ -721,7 +721,7 @@ function drawDrift() {
         const center = map.latLngToContainerPoint([releasePoint.lat, releasePoint.lon]);
         const edge = map.latLngToContainerPoint([releasePoint.lat, releasePoint.lon + radiusM / mPerDegLon(releasePoint.lat)]);
         ctx.save();
-        ctx.strokeStyle = "rgba(255, 179, 71, 0.66)";
+        ctx.strokeStyle = "rgba(196, 149, 47, 0.72)";
         ctx.lineWidth = 1.4;
         ctx.setLineDash([8, 5]);
         ctx.beginPath();
@@ -737,7 +737,7 @@ function drawDrift() {
     const radius = frame.points.length > 1800 ? 1.6 : frame.points.length > 900 ? 2 : 2.4;
     for (const point of frame.points) {
       const p = map.latLngToContainerPoint([point.lat, point.lon]);
-      ctx.fillStyle = point.stranded ? "rgba(255, 141, 114, 0.9)" : activeRun.scenario === "oil" ? `rgba(22, 26, 28, ${Math.max(0.35, point.massFrac)})` : "rgba(255, 211, 109, 0.94)";
+      ctx.fillStyle = point.stranded ? "rgba(185, 87, 67, 0.9)" : activeRun.scenario === "oil" ? `rgba(16, 39, 34, ${Math.max(0.35, point.massFrac)})` : "rgba(196, 149, 47, 0.94)";
       ctx.beginPath();
       ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
       ctx.fill();
@@ -821,34 +821,34 @@ function renderOilBudgetPlot() {
   const x = h.map((s) => s.t_h);
 
   const traces = [
-    { x, y: h.map((s) => s.surface), name: "Surface",    stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(244, 163, 64, 0.8)"  },
-    { x, y: h.map((s) => s.evap),    name: "Evaporated", stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(255, 112, 67, 0.7)"  },
-    { x, y: h.map((s) => s.disp),    name: "Dispersed",  stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(66, 165, 245, 0.7)"  },
-    { x, y: h.map((s) => s.beach),   name: "Beached",    stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(239, 83, 80, 0.7)"   },
-    { x, y: h.map((s) => s.skim),    name: "Skimmed",    stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(102, 187, 106, 0.7)" },
-    { x, y: h.map((s) => s.burn),    name: "Burned",     stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(26, 26, 26, 0.7)"    },
+    { x, y: h.map((s) => s.surface), name: "Surface",    stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(196, 149, 47, 0.82)" },
+    { x, y: h.map((s) => s.evap),    name: "Evaporated", stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(185, 87, 67, 0.72)"  },
+    { x, y: h.map((s) => s.disp),    name: "Dispersed",  stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(0, 122, 112, 0.68)"  },
+    { x, y: h.map((s) => s.beach),   name: "Beached",    stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(132, 71, 57, 0.68)"  },
+    { x, y: h.map((s) => s.skim),    name: "Skimmed",    stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(121, 189, 67, 0.72)" },
+    { x, y: h.map((s) => s.burn),    name: "Burned",     stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(16, 39, 34, 0.7)"    },
   ];
 
   Plotly.newPlot(els.oilBudgetPlot, traces, {
     autosize: true,
     margin: { l: 40, r: 14, t: 10, b: 36 },
-    paper_bgcolor: "rgba(4,13,24,0)",
-    plot_bgcolor: "rgba(4,13,24,0)",
-    font: { family: "Space Grotesk, sans-serif", color: "#dbe8fb", size: 11 },
-    xaxis: { title: "Hours", showgrid: true, gridcolor: "rgba(149,186,255,0.08)", zeroline: false },
-    yaxis: { title: "% of spill", range: [0, 100], showgrid: true, gridcolor: "rgba(149,186,255,0.08)", zeroline: false },
+    paper_bgcolor: "rgba(255,255,255,0)",
+    plot_bgcolor: "rgba(255,255,255,0)",
+    font: { family: "Space Grotesk, sans-serif", color: "#102722", size: 11 },
+    xaxis: { title: "Hours", showgrid: true, gridcolor: "rgba(0,104,94,0.11)", zeroline: false },
+    yaxis: { title: "% of spill", range: [0, 100], showgrid: true, gridcolor: "rgba(0,104,94,0.11)", zeroline: false },
     legend: { orientation: "h", y: 1.14, x: 0, font: { size: 10 } },
   }, { displayModeBar: false, responsive: true });
 
   // Summary stats
   const final = oilBudgetModel.summary();
   els.oilBudgetSummary.innerHTML = [
-    ["Surface",    formatPercent(final.surface_pct),  "#f4a340"],
-    ["Evaporated", formatPercent(final.evap_pct),     "#ff7043"],
-    ["Dispersed",  formatPercent(final.disp_pct),     "#42a5f5"],
-    ["Beached",    formatPercent(final.beach_pct),    "#ef5350"],
-    ["Skimmed",    formatPercent(final.skim_pct),     "#66bb6a"],
-    ["Burned",     formatPercent(final.burn_pct),     "#1a1a1a"],
+    ["Surface",    formatPercent(final.surface_pct),  "#c4952f"],
+    ["Evaporated", formatPercent(final.evap_pct),     "#b95743"],
+    ["Dispersed",  formatPercent(final.disp_pct),     "#007a70"],
+    ["Beached",    formatPercent(final.beach_pct),    "#844739"],
+    ["Skimmed",    formatPercent(final.skim_pct),     "#79bd43"],
+    ["Burned",     formatPercent(final.burn_pct),     "#102722"],
   ].map(([label, value, color]) =>
     `<div class="budget-stat"><span class="bs-label">${label}</span><span class="bs-value" style="color:${color}">${value}</span></div>`
   ).join("");
@@ -1065,25 +1065,25 @@ function renderResultsPlot() {
   const snapshots = activeRun.snapshots;
   const x = snapshots.map((snapshot) => new Date(snapshot.tSec * 1000));
   const traces = [
-    { x, y: snapshots.map((snapshot) => (snapshot.drifting / activeRun.ensemble.length) * 100), type: "scatter", mode: "lines", name: "Drifting %", line: { color: "#ffd36d", width: 3 }, hovertemplate: "%{y:.0f}% drifting<extra></extra>" },
-    { x, y: snapshots.map((snapshot) => snapshot.sigmaKm), type: "scatter", mode: "lines", name: "Spread (km)", yaxis: "y2", line: { color: "#64e8ff", width: 2.2 }, hovertemplate: "%{y:.2f} km spread<extra></extra>" },
+    { x, y: snapshots.map((snapshot) => (snapshot.drifting / activeRun.ensemble.length) * 100), type: "scatter", mode: "lines", name: "Drifting %", line: { color: "#c4952f", width: 3 }, hovertemplate: "%{y:.0f}% drifting<extra></extra>" },
+    { x, y: snapshots.map((snapshot) => snapshot.sigmaKm), type: "scatter", mode: "lines", name: "Spread (km)", yaxis: "y2", line: { color: "#007a70", width: 2.2 }, hovertemplate: "%{y:.2f} km spread<extra></extra>" },
   ];
   if (activeRun.scenario === "oil") {
-    traces.push({ x, y: snapshots.map((snapshot) => snapshot.massLeftPct), type: "scatter", mode: "lines", name: "Mass left %", line: { color: "#ff8d72", width: 2, dash: "dot" }, hovertemplate: "%{y:.0f}% mass left<extra></extra>" });
+    traces.push({ x, y: snapshots.map((snapshot) => snapshot.massLeftPct), type: "scatter", mode: "lines", name: "Mass left %", line: { color: "#b95743", width: 2, dash: "dot" }, hovertemplate: "%{y:.0f}% mass left<extra></extra>" });
   }
 
   const markerTime = new Date(clamp(tIdxToSec(tIdx), activeRun.startSec, activeRun.endSec) * 1000);
   Plotly.newPlot(els.tsPlot, traces, {
     autosize: true,
     margin: { l: 44, r: 44, t: 20, b: 36 },
-    paper_bgcolor: "rgba(4,13,24,0)",
-    plot_bgcolor: "rgba(4,13,24,0)",
-    font: { family: "Space Grotesk, sans-serif", color: "#dbe8fb", size: 11 },
-    xaxis: { showgrid: true, gridcolor: "rgba(149,186,255,0.08)", zeroline: false },
-    yaxis: { title: "Drifting / mass (%)", rangemode: "tozero", showgrid: true, gridcolor: "rgba(149,186,255,0.08)", zeroline: false },
+    paper_bgcolor: "rgba(255,255,255,0)",
+    plot_bgcolor: "rgba(255,255,255,0)",
+    font: { family: "Space Grotesk, sans-serif", color: "#102722", size: 11 },
+    xaxis: { showgrid: true, gridcolor: "rgba(0,104,94,0.11)", zeroline: false },
+    yaxis: { title: "Drifting / mass (%)", rangemode: "tozero", showgrid: true, gridcolor: "rgba(0,104,94,0.11)", zeroline: false },
     yaxis2: { title: "Spread (km)", overlaying: "y", side: "right", rangemode: "tozero", showgrid: false, zeroline: false },
     legend: { orientation: "h", y: 1.12, x: 0 },
-    shapes: [{ type: "line", x0: markerTime, x1: markerTime, y0: 0, y1: 1, yref: "paper", line: { color: "#ffffff", width: 1, dash: "dot" } }],
+    shapes: [{ type: "line", x0: markerTime, x1: markerTime, y0: 0, y1: 1, yref: "paper", line: { color: "#007a70", width: 1, dash: "dot" } }],
   }, { displayModeBar: false, responsive: true });
 }
 
@@ -1099,7 +1099,7 @@ function updatePlotCursor(force) {
   }
   lastPlotMarkerKey = key;
   Plotly.relayout(els.tsPlot, {
-    shapes: [{ type: "line", x0: new Date(currentSec * 1000), x1: new Date(currentSec * 1000), y0: 0, y1: 1, yref: "paper", line: { color: "#ffffff", width: 1, dash: "dot" } }],
+    shapes: [{ type: "line", x0: new Date(currentSec * 1000), x1: new Date(currentSec * 1000), y0: 0, y1: 1, yref: "paper", line: { color: "#007a70", width: 1, dash: "dot" } }],
   });
 }
 
