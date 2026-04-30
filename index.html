@@ -22,7 +22,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="icon" type="image/png" href="assets/tridel.png"/>
-<link rel="stylesheet" href="css/style.css?v=13"/>
+<link rel="stylesheet" href="css/style.css?v=14"/>
 </head>
 <body>
 <div id="app">
@@ -204,6 +204,32 @@
         <input id="useWind" type="checkbox" checked/>
         <span id="windStatus" class="tag">Waiting for data</span>
       </div>
+      <div class="term-grid">
+        <div class="term-card">
+          <strong>Release point</strong>
+          <span>The map click where particles, people, or oil are introduced into the model.</span>
+        </div>
+        <div class="term-card">
+          <strong>Jitter</strong>
+          <span>Initial scatter radius around the release point. Higher values represent less certainty about the exact start location.</span>
+        </div>
+        <div class="term-card">
+          <strong>Diffusion K</strong>
+          <span>Random-walk mixing strength in m²/s. Larger K spreads the ensemble faster to mimic unresolved turbulence.</span>
+        </div>
+        <div class="term-card">
+          <strong>Duration</strong>
+          <span>How many hours the scenario runs forward from the selected release time.</span>
+        </div>
+        <div class="term-card">
+          <strong>Ensemble size</strong>
+          <span>Number of simulated particles. More particles produce smoother probability patterns but run slower.</span>
+        </div>
+        <div class="term-card">
+          <strong>Wind drift</strong>
+          <span>Adds wind-driven leeway and Stokes-style surface drift when the loaded dataset includes wind vectors.</span>
+        </div>
+      </div>
     </div>
 
     <!-- Browser-side approximations of operational response actions. -->
@@ -336,8 +362,9 @@
     <div class="section-card">
       <h3>Data provenance</h3>
       <div class="hint">
-        Generated with the <a href="https://marine.copernicus.eu">Copernicus Marine Service</a> via
-        <code>copernicusmarine</code>. Tiles by OpenStreetMap and CARTO.
+        Currents come from <a href="https://marine.copernicus.eu">Copernicus Marine Service</a> CMEMS surface
+        velocity fields. Wind vectors are embedded when the dataset refresh includes Open-Meteo/GFS or NCEP GFS
+        forcing. Tiles by OpenStreetMap and CARTO.
       </div>
     </div>
   </aside>

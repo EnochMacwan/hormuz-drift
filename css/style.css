@@ -300,6 +300,33 @@ img {
   color: var(--muted-2);
 }
 
+.term-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.term-card {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 170, 231, 0.12);
+}
+
+.term-card strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.term-card span {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
 /* Right-hand analysis/control rail. Scrollable because this panel can grow
    much taller than the viewport once advanced sections are open. */
 #side {
