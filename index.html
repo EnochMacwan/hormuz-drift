@@ -21,13 +21,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="css/style.css?v=5"/>
+<link rel="stylesheet" href="css/style.css?v=6"/>
 </head>
-<body class="panel-open">
+<body class="panel-closed">
 <div id="app">
 
   <!-- Persistent research disclaimer. Kept outside the side panel so it
-       remains visible even when the panel is closed on smaller screens. -->
+       remains visible even when the desktop mission drawer is closed. -->
   <div id="banner">
     <b>Research / educational use only.</b>
     Not certified for operational SAR or oil-spill response. Physics are a simplified approximation of OpenDrift -
@@ -41,9 +41,38 @@
 
     <!-- Compact action bar that keeps the map-first workflow usable even when
          the main control panel is collapsed. -->
-    <div id="map-actions" class="glass">
-      <button id="panelToggle" class="ghost">Controls</button>
+    <div id="map-actions" class="glass mission-strip">
+      <button id="panelToggle" class="ghost">Mission Control</button>
+      <span id="quickScenario" class="map-pill">Man overboard</span>
+      <button id="quickRunBtn" class="primary" disabled>Run</button>
+      <button id="quickPlayBtn" class="ghost">Pause</button>
       <button id="focusBtn" class="ghost">Focus mode</button>
+    </div>
+
+    <!-- Branded orientation card shown once per browser session. -->
+    <div id="heroOverlay" class="hero-overlay glass">
+      <div class="hero-kicker">Tridel drift lab</div>
+      <h1>Track shoreline risk from live currents.</h1>
+      <p>
+        Set a release point, choose a mission preset, and run an ensemble to see spread,
+        stranding risk, oil budget, and export-ready outputs.
+      </p>
+      <div class="hero-actions">
+        <button id="heroOpenControls" class="primary">Open mission control</button>
+        <button id="heroDismiss" class="ghost">Hide intro</button>
+      </div>
+    </div>
+
+    <!-- Desktop layer dock. These toggles affect visualization only, not model physics. -->
+    <div id="map-layer-controls" class="glass layer-dock">
+      <div class="layer-title">Layers</div>
+      <label><input id="layerCurrents" type="checkbox" checked/> Currents</label>
+      <label><input id="layerTracers" type="checkbox" checked/> Tracers</label>
+      <label><input id="layerTrails" type="checkbox" checked/> Trails</label>
+      <label><input id="layerDensity" type="checkbox" checked/> Density</label>
+      <label><input id="layerUncertainty" type="checkbox" checked/> Uncertainty</label>
+      <label><input id="layerRelease" type="checkbox" checked/> Release</label>
+      <label><input id="layerOilRadius" type="checkbox" checked/> Oil radius</label>
     </div>
 
     <!-- Legend explaining the canvas color language. The wheel graphic is
@@ -64,26 +93,34 @@
     <div class="row controls-top">
       <div class="control-cluster">
         <button id="playBtn">Pause</button>
+        <button id="quickRunRailBtn" class="primary" disabled>Run current preset</button>
+        <span id="controlScenario" class="tag">Man overboard</span>
+      </div>
+      <span id="time-window-label" class="tag">Playback follows the forcing timeline.</span>
+    </div>
+
+    <div class="row scrub-row timeline-head">
+      <span id="time-label">loading...</span>
+      <span id="timeline-current" class="tag">Waiting for data</span>
+    </div>
+
+    <div class="timeline-shell">
+      <input id="timeSlider" type="range" min="0" max="0" value="0" step="1"/>
+      <div id="timeline-events" class="timeline-events" aria-hidden="true"></div>
+      <div class="timeline-ticks" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div class="timeline-meta">
+      <span id="timeline-start">Start -</span>
+      <div class="control-cluster">
         <button id="jumpBack24" class="ghost small">-24h</button>
         <button id="jumpBack6" class="ghost small">-6h</button>
         <button id="jumpForward6" class="ghost small">+6h</button>
         <button id="jumpForward24" class="ghost small">+24h</button>
       </div>
-      <span id="time-window-label" class="tag">Playback follows the forcing timeline.</span>
-    </div>
-
-    <div class="row scrub-row">
-      <span id="time-label">loading...</span>
-      <input id="timeSlider" type="range" min="0" max="0" value="0" step="1"/>
-    </div>
-
-    <div class="row controls-bottom">
-      <label>Speed</label>
-      <input id="speedSlider" type="range" min="0.1" max="8" step="0.1" value="1.5"/>
-      <span id="speed-label" class="val">1.5x</span>
-      <label>Tracers</label>
-      <input id="nSlider" type="range" min="0" max="5000" step="100" value="2000"/>
-      <span id="n-label" class="val">2000</span>
+      <span id="timeline-end">End -</span>
     </div>
 
     <div class="dim" id="data-meta">-</div>
@@ -94,13 +131,13 @@
   <aside id="side">
     <div class="side-header">
       <div>
-        <div class="eyebrow">Scenario builder</div>
+        <div class="eyebrow">Mission Control</div>
         <h2>Hormuz Drift</h2>
       </div>
       <button id="closePanelBtn" class="ghost small">Close</button>
     </div>
 
-    <div class="section-card intro-card">
+    <div class="section-card intro-card" id="mission-summary">
       <p class="lede">
         This browser model combines CMEMS surface currents, optional wind drift, and a particle ensemble to explore
         incident evolution over time.
@@ -126,10 +163,11 @@
         <button data-scenario="oil">Oil spill</button>
       </div>
 
-      <div class="row">
+      <div class="row sr-only">
         <label>Preset</label>
         <select id="scenarioPreset"></select>
       </div>
+      <div id="presetCards" class="preset-card-grid"></div>
 
       <div id="leeway-params">
         <div class="row">
@@ -158,6 +196,22 @@
           <div class="op-cell sara-cell"><span class="op-label">SARA</span><div id="op-sara" class="sara-bar"><div id="sara-S" class="sara-seg" title="Saturates"></div><div id="sara-A" class="sara-seg" title="Aromatics"></div><div id="sara-R" class="sara-seg" title="Resins"></div><div id="sara-As" class="sara-seg" title="Asphaltenes"></div></div></div>
         </div>
         <div class="hint" style="margin-top:6px">ADIOS-style oil catalog. Evaporation via Fingas (1998) log model. Emulsification via Mackay (1980).</div>
+      </div>
+    </div>
+
+    <!-- Advanced playback and ambient tracer tuning lives in the drawer so the
+         default map view stays focused on Run, Pause, Scenario, and Time. -->
+    <div class="section-card">
+      <h3>Playback tuning</h3>
+      <div class="row">
+        <label>Speed</label>
+        <input id="speedSlider" type="range" min="0.1" max="8" step="0.1" value="1.5"/>
+        <span id="speed-label" class="val">1.5x</span>
+      </div>
+      <div class="row">
+        <label>Tracers</label>
+        <input id="nSlider" type="range" min="0" max="5000" step="100" value="2000"/>
+        <span id="n-label" class="val">2000</span>
       </div>
     </div>
 
@@ -258,10 +312,20 @@
       <div class="action-grid">
         <button id="runBtn" class="primary">Run scenario</button>
         <button id="clearBtn" class="danger">Clear</button>
-        <button id="copyLinkBtn" class="ghost">Copy share link</button>
-        <button id="exportJsonBtn" class="ghost">Export JSON</button>
-        <button id="exportCsvBtn" class="ghost">Export CSV</button>
-        <button id="exportBudgetCsvBtn" class="ghost" style="grid-column:1/-1;display:none">Export oil budget CSV</button>
+        <details id="exportMenu" class="export-menu">
+          <summary>Export / Share</summary>
+          <button id="copyLinkBtn" class="ghost">Share scenario link</button>
+          <button id="exportJsonBtn" class="ghost">Download scenario JSON</button>
+          <button id="exportCsvBtn" class="ghost">Download trajectory CSV</button>
+          <button id="exportBudgetCsvBtn" class="ghost" style="display:none">Download oil budget CSV</button>
+        </details>
+      </div>
+      <div id="run-progress" class="run-progress" hidden>
+        <div class="progress-copy">
+          <strong id="progress-label">Preparing simulation</strong>
+          <span id="progress-detail">Particles queued</span>
+        </div>
+        <div class="progress-track"><span id="progress-fill"></span></div>
       </div>
       <div id="run-status"></div>
     </div>
@@ -281,6 +345,7 @@
       </div>
       <div id="oil-budget-plot" aria-label="Oil budget stacked chart"></div>
       <div id="oil-budget-summary" class="budget-summary-grid"></div>
+      <div id="oil-budget-insights" class="budget-insights"></div>
       <div class="hint" id="emulsion-note" style="margin-top:8px"></div>
     </div>
 
@@ -397,6 +462,6 @@
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/field.js?v=4"></script>
 <script src="js/drift.js?v=4"></script>
-<script src="js/app.js?v=9"></script>
+<script src="js/app.js?v=10"></script>
 </body>
 </html>

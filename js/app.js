@@ -52,7 +52,15 @@ let lastResultsKey = null;
 let lastPlotMarkerKey = null;
 let bgParticles = [];
 
-const overlayState = { trails: true, density: true, uncertainty: true };
+const overlayState = {
+  currents: true,
+  tracers: true,
+  trails: true,
+  density: true,
+  uncertainty: true,
+  release: true,
+  oilRadius: true,
+};
 const els = {};
 
 /* Leaflet owns the geographic view and projection math. Canvas overlays are
@@ -154,10 +162,31 @@ function updateBodyState() {
 
 function setPanelOpen(open) {
   document.body.classList.toggle("panel-open", open);
+  document.body.classList.toggle("panel-closed", !open);
+  if (els.panelToggle) {
+    els.panelToggle.textContent = open ? "Hide Mission Control" : "Mission Control";
+  }
 }
 
 function setStatus(message) {
   els.runStatus.textContent = message || "";
+}
+
+function setRunProgress(percent, label, detail) {
+  if (!els.runProgress) {
+    return;
+  }
+  els.runProgress.hidden = false;
+  els.progressFill.style.width = `${clamp(percent, 0, 100)}%`;
+  els.progressLabel.textContent = label;
+  els.progressDetail.textContent = detail || "";
+}
+
+function hideRunProgress() {
+  if (els.runProgress) {
+    els.runProgress.hidden = true;
+    els.progressFill.style.width = "0%";
+  }
 }
 
 /* Fail loudly in the UI when data cannot be loaded so users are not forced to
@@ -169,6 +198,8 @@ function showStartupError(message) {
   els.releaseInfo.textContent = "Startup failed. Use start_local_server.bat or python -m http.server 8000.";
   els.results.innerHTML = '<div class="result-card wide"><span class="result-label">Startup</span><span class="result-value">Data unavailable</span><span class="result-subvalue">This page was opened without a local web server.</span></div>';
   els.runBtn.disabled = true;
+  if (els.quickRunBtn) els.quickRunBtn.disabled = true;
+  if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = true;
   els.useWind.disabled = true;
   Plotly.purge(els.tsPlot);
 }
@@ -332,13 +363,15 @@ function drawField() {
   }
   const ctx  = fieldLayer.fieldCtx();
   const size = fieldLayer.size();
+  ctx.clearRect(0, 0, size.x, size.y);
+  if (!overlayState.currents) {
+    return;
+  }
   const ti   = Math.floor(tIdx);
   const grid = Field.grid;
 
   ensureFieldSrc(grid);
   paintFieldSrc(ti, grid);
-
-  ctx.clearRect(0, 0, size.x, size.y);
 
   /* Destination rect aligned so that each source-pixel CENTER lands on its
    * corresponding grid point. Grid point (i,j) = (lons[i], lats[j]).
@@ -377,6 +410,10 @@ function drawBgParticles() {
   }
   const ctx = fieldLayer.partCtx();
   const size = fieldLayer.size();
+  if (!overlayState.tracers) {
+    ctx.clearRect(0, 0, size.x, size.y);
+    return;
+  }
   ctx.globalCompositeOperation = "destination-out";
   ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
   ctx.fillRect(0, 0, size.x, size.y);
@@ -674,7 +711,7 @@ function drawUncertaintyEllipse(ctx, metrics) {
 /* Release marker anchors the user spatially once the ensemble has moved away
    from the original release point. */
 function drawReleaseMarker(ctx) {
-  if (!releasePoint) {
+  if (!releasePoint || !overlayState.release) {
     return;
   }
   const p = map.latLngToContainerPoint([releasePoint.lat, releasePoint.lon]);
@@ -714,7 +751,7 @@ function drawDrift() {
     if (overlayState.trails) {
       drawTrails(ctx, frame.tSec);
     }
-    if (activeRun.scenario === "oil" && oilSlickModel && releasePoint) {
+    if (overlayState.oilRadius && activeRun.scenario === "oil" && oilSlickModel && releasePoint) {
       const ageSec = frame.tSec - activeRun.startSec;
       if (ageSec > 0) {
         const radiusM = oilSlickModel.radius(ageSec);
@@ -813,6 +850,7 @@ function collectResponses() {
 function renderOilBudgetPlot() {
   if (!oilBudgetModel || !oilBudgetModel.history.length) {
     els.oilBudgetCard.style.display = "none";
+    els.oilBudgetInsights.innerHTML = "";
     return;
   }
   els.oilBudgetCard.style.display = "";
@@ -853,6 +891,19 @@ function renderOilBudgetPlot() {
     `<div class="budget-stat"><span class="bs-label">${label}</span><span class="bs-value" style="color:${color}">${value}</span></div>`
   ).join("");
 
+  const responses = collectResponses();
+  const activeResponses = [
+    responses.skimming.active ? `Skimming ${responses.skimming.startH}-${responses.skimming.endH} h` : null,
+    responses.burning.active ? `Burning ${responses.burning.startH}-${responses.burning.endH} h` : null,
+    responses.dispersant.active ? `Dispersant ${responses.dispersant.startH}-${responses.dispersant.endH} h` : null,
+  ].filter(Boolean);
+  els.oilBudgetInsights.innerHTML = [
+    `<span class="insight-pill">Final floating: ${formatPercent(final.surface_pct)}</span>`,
+    `<span class="insight-pill">Beached: ${formatPercent(final.beach_pct)}</span>`,
+    `<span class="insight-pill">Water: ${final.water_pct.toFixed(0)}%</span>`,
+    ...(activeResponses.length ? activeResponses.map((label) => `<span class="insight-pill active">${label}</span>`) : ['<span class="insight-pill muted">No response actions enabled</span>']),
+  ].join("");
+
   // Emulsion note
   els.emulsionNote.textContent = final.water_pct > 5
     ? `Emulsion: ${final.water_pct.toFixed(0)}% water content (mousse). Increases effective volume and reduces burn/skim efficiency.`
@@ -870,6 +921,7 @@ function renderOilBudgetPlot() {
 function runEnsemble() {
   if (!releasePoint) {
     setStatus("Click on the sea to set a release point first.");
+    hideRunProgress();
     return;
   }
 
@@ -913,6 +965,7 @@ function runEnsemble() {
   const snapshotEvery = Math.max(1, Math.round(3600 / dt));
   let done = 0;
   setStatus(`Running ${particleCount} particles across ${durationHours} h...`);
+  setRunProgress(0, "Preparing simulation", `${particleCount} particles | ${durationHours} h window`);
 
   runTimer = setInterval(() => {
     const batch = Math.min(30, steps - done);
@@ -926,7 +979,9 @@ function runEnsemble() {
       }
     }
 
-    setStatus(`Simulating ${Math.round((done / steps) * 100)}%...`);
+    const progress = Math.round((done / steps) * 100);
+    setStatus(`Simulating ${progress}%...`);
+    setRunProgress(progress, "Running ensemble", `${done} / ${steps} integration steps complete`);
     if (done >= steps) {
       clearInterval(runTimer);
       runTimer = null;
@@ -934,6 +989,7 @@ function runEnsemble() {
       recordSnapshot(activeRun, activeRun.endSec);
       activeRun.summary = snapshotFromEnsemble(ensemble, activeRun.endSec);
       setStatus(`Done. ${activeRun.summary.drifting} drifting, ${activeRun.summary.stranded} stranded.`);
+      setRunProgress(100, "Simulation complete", `${activeRun.summary.drifting} drifting | ${activeRun.summary.stranded} stranded`);
 
       /* ── Oil Budget integration ───────────────────────────── */
       if (activeRun.scenario === "oil") {
@@ -965,6 +1021,7 @@ function runEnsemble() {
         oilBudgetModel = null;
         els.oilBudgetCard.style.display = "none";
         els.exportBudgetCsvBtn.style.display = "none";
+        els.oilBudgetInsights.innerHTML = "";
       }
 
       tIdx = secToTIdx(startSec);
@@ -987,13 +1044,25 @@ function clearRun() {
   oilBudgetModel = null;
   resetFrameCache();
   setStatus("");
+  hideRunProgress();
   updateTimelinePill();
   updateResultsPanel(true);
   renderResultsPlot();
   updateStoryCard();
   els.oilBudgetCard.style.display = "none";
   els.exportBudgetCsvBtn.style.display = "none";
+  els.oilBudgetInsights.innerHTML = "";
   Plotly.purge(els.oilBudgetPlot);
+}
+
+function buildAnalystSummary(metrics, frame) {
+  const strandedPct = metrics.total ? (metrics.stranded / metrics.total) * 100 : 0;
+  const risk = strandedPct >= 25 ? "high" : strandedPct >= 8 ? "elevated" : "low";
+  const ageHours = (frame.tSec - activeRun.startSec) / 3600;
+  const oilPhrase = activeRun.scenario === "oil" && Number.isFinite(metrics.massLeftPct)
+    ? ` Estimated floating mass is ${formatPercent(metrics.massLeftPct)}.`
+    : "";
+  return `At ${formatRunOffset(ageHours)}, shoreline risk is ${risk}: ${metrics.drifting} particles remain drifting, ${metrics.stranded} are stranded, and the cloud spread is ${fmt(metrics.sigmaKm, 2)} km.${oilPhrase}`;
 }
 
 /* Populate the metric cards for the current playback instant. */
@@ -1028,6 +1097,11 @@ function updateResultsPanel(force) {
     </div>` : "";
 
   els.results.innerHTML = `
+    <div class="result-card wide analyst-card">
+      <span class="result-label">Analyst summary</span>
+      <span class="result-value">${activeRun.scenario === "oil" ? "Oil trajectory assessment" : "Search drift assessment"}</span>
+      <span class="result-subvalue">${buildAnalystSummary(metrics, frame)}</span>
+    </div>
     <div class="result-card">
       <span class="result-label">Particles</span>
       <span class="result-value">${metrics.total}</span>
@@ -1293,6 +1367,27 @@ function exportOilBudgetCsv() {
 
 function updatePlayButton() {
   els.playBtn.textContent = playing ? "Pause" : "Play";
+  if (els.quickPlayBtn) {
+    els.quickPlayBtn.textContent = playing ? "Pause" : "Play";
+  }
+}
+
+function syncLayerInputs() {
+  const pairs = [
+    ["currents", els.layerCurrents],
+    ["tracers", els.layerTracers],
+    ["trails", els.layerTrails],
+    ["trails", els.showTrails],
+    ["density", els.layerDensity],
+    ["density", els.showDensity],
+    ["uncertainty", els.layerUncertainty],
+    ["uncertainty", els.showUncertainty],
+    ["release", els.layerRelease],
+    ["oilRadius", els.layerOilRadius],
+  ];
+  pairs.forEach(([key, input]) => {
+    if (input) input.checked = overlayState[key];
+  });
 }
 
 /* ── WebGNOME Integration ──────────────────────────────────────────────────── */
@@ -1464,25 +1559,75 @@ function hideWgModal() {
   if (modal) modal.style.display = "none";
 }
 
+function updateScenarioBadges() {
+  const preset = selectedPreset();
+  const scenarioText = `${getScenarioLabel(activeScenario)}${preset ? ` | ${preset.label}` : ""}`;
+  if (els.quickScenario) els.quickScenario.textContent = scenarioText;
+  if (els.controlScenario) els.controlScenario.textContent = scenarioText;
+}
 
 /* Keep the release summary card in sync with the current map click. */
 function updateReleaseInfo() {
   if (!releasePoint) {
     els.releaseInfo.textContent = "Click on the map to set release point.";
     els.runBtn.disabled = true;
+    if (els.quickRunBtn) els.quickRunBtn.disabled = true;
+    if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = true;
     return;
   }
   els.releaseInfo.textContent = `${releasePoint.lat.toFixed(4)} N, ${releasePoint.lon.toFixed(4)} E`;
   els.runBtn.disabled = false;
+  if (els.quickRunBtn) els.quickRunBtn.disabled = false;
+  if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = false;
 }
 
 function updateTimelinePill() {
+  const hasField = Field.loaded && Field.times.length;
   if (!activeRun) {
     els.timeWindowLabel.textContent = "Playback follows the forcing timeline.";
+    if (hasField) {
+      const currentIndex = Math.floor(tIdx);
+      els.timelineStart.textContent = `Start ${Field.times[0]} UTC`;
+      els.timelineEnd.textContent = `End ${Field.times[Field.times.length - 1]} UTC`;
+      els.timelineCurrent.textContent = `${Field.times[currentIndex] || ""} UTC`;
+      els.timelineEvents.innerHTML = "";
+    }
     return;
   }
   const viewSec = clamp(tIdxToSec(tIdx), activeRun.startSec, activeRun.endSec);
-  els.timeWindowLabel.textContent = `Viewing ${formatRunOffset((viewSec - activeRun.startSec) / 3600)} of ${activeRun.durationHours} h`;
+  const offsetHours = (viewSec - activeRun.startSec) / 3600;
+  els.timeWindowLabel.textContent = `Viewing ${formatRunOffset(offsetHours)} of ${activeRun.durationHours} h`;
+  els.timelineStart.textContent = `Release ${new Date(activeRun.startSec * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC`;
+  els.timelineEnd.textContent = `End ${new Date(activeRun.endSec * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC`;
+  els.timelineCurrent.textContent = `${formatRunOffset(offsetHours)} | ${new Date(viewSec * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC`;
+  renderTimelineEvents();
+}
+
+function timelinePct(tSec) {
+  if (!activeRun) return 0;
+  return clamp(((tSec - activeRun.startSec) / Math.max(1, activeRun.endSec - activeRun.startSec)) * 100, 0, 100);
+}
+
+function renderTimelineEvents() {
+  if (!activeRun || !els.timelineEvents) {
+    return;
+  }
+  const markers = [
+    { label: "Release", tSec: activeRun.startSec, type: "release" },
+  ];
+  const firstBeach = activeRun.snapshots.find((snapshot) => snapshot.stranded > 0);
+  if (firstBeach) markers.push({ label: "First stranding", tSec: firstBeach.tSec, type: "risk" });
+  const maxSpread = activeRun.snapshots.reduce((best, snapshot) => snapshot.sigmaKm > (best?.sigmaKm ?? -Infinity) ? snapshot : best, null);
+  if (maxSpread) markers.push({ label: "Max spread", tSec: maxSpread.tSec, type: "spread" });
+  if (activeRun.scenario === "oil") {
+    const responses = collectResponses();
+    if (responses.skimming.active) markers.push({ label: "Skim start", tSec: activeRun.startSec + responses.skimming.startH * 3600, type: "response" });
+    if (responses.burning.active) markers.push({ label: "Burn start", tSec: activeRun.startSec + responses.burning.startH * 3600, type: "response" });
+    if (responses.dispersant.active) markers.push({ label: "Dispersant start", tSec: activeRun.startSec + responses.dispersant.startH * 3600, type: "response" });
+  }
+  els.timelineEvents.innerHTML = markers.map((marker) =>
+    `<span class="timeline-marker ${marker.type}" style="left:${timelinePct(marker.tSec)}%" title="${marker.label}"></span>`
+  ).join("");
 }
 
 /* Populate scenario-specific select boxes from the model lookup tables. */
@@ -1499,7 +1644,29 @@ function buildPresetOptions(preferredId) {
   els.scenarioPreset.innerHTML = presets.map((preset) => `<option value="${preset.id}">${preset.label}</option>`).join("");
   const nextId = preferredId && presets.some((preset) => preset.id === preferredId) ? preferredId : presets[0].id;
   els.scenarioPreset.value = nextId;
+  renderPresetCards();
   applyPreset(nextId, false);
+}
+
+function presetDescription(preset) {
+  return `${preset.durHours} h | ${preset.nEns} particles | ${preset.useWind ? "wind on" : "currents only"}`;
+}
+
+function renderPresetCards() {
+  if (!els.presetCards) return;
+  const presets = SCENARIO_PRESETS[activeScenario];
+  els.presetCards.innerHTML = presets.map((preset) => `
+    <button type="button" class="preset-card ${preset.id === els.scenarioPreset.value ? "active" : ""}" data-preset="${preset.id}">
+      <span class="preset-label">${preset.label}</span>
+      <span class="preset-meta">${presetDescription(preset)}</span>
+    </button>
+  `).join("");
+  els.presetCards.querySelectorAll(".preset-card").forEach((card) => {
+    card.onclick = () => {
+      els.scenarioPreset.value = card.dataset.preset;
+      applyPreset(card.dataset.preset);
+    };
+  });
 }
 
 /* Push a preset's canned values into the live form controls. */
@@ -1517,6 +1684,8 @@ function applyPreset(presetId, announce = true) {
   els.nEns.value = preset.nEns;
   els.useWind.checked = Field.hasWind ? preset.useWind : false;
   if (announce) setStatus(`Preset loaded: ${preset.label}.`);
+  renderPresetCards();
+  updateScenarioBadges();
   updateStoryCard();
 }
 
@@ -1530,6 +1699,7 @@ function setScenario(scenario, preservePreset) {
   els.oilParams.style.display = scenario === "oil" ? "" : "none";
   els.responseCard.style.display = scenario === "oil" ? "" : "none";
   buildPresetOptions(preservePreset ? els.scenarioPreset.value : null);
+  updateScenarioBadges();
   updateStoryCard();
 }
 
@@ -1549,7 +1719,18 @@ function syncWindControls() {
 }
 
 function updateStoryCard() {
-  return;
+  const preset = selectedPreset();
+  if (!els.missionSummary || !preset) return;
+  const release = releasePoint
+    ? `${releasePoint.lat.toFixed(4)} N, ${releasePoint.lon.toFixed(4)} E`
+    : "No release point set";
+  const wind = els.useWind?.checked && Field.hasWind ? "wind drift enabled" : "currents only";
+  els.missionSummary.dataset.scenario = activeScenario;
+  const lede = els.missionSummary.querySelector(".lede");
+  if (lede) {
+    lede.textContent = `${preset.label}: ${preset.durHours} h, ${preset.nEns} particles, ${wind}. Release: ${release}.`;
+  }
+  updateScenarioBadges();
 }
 
 /* Restore UI state from the query string so scenarios can be shared. */
@@ -1635,6 +1816,7 @@ function collectDomRefs() {
   Object.assign(els, {
     clearBtn: document.getElementById("clearBtn"),
     closePanelBtn: document.getElementById("closePanelBtn"),
+    controlScenario: document.getElementById("controlScenario"),
     colorWheel: document.getElementById("color-wheel"),
     copyLinkBtn: document.getElementById("copyLinkBtn"),
     dataMeta: document.getElementById("data-meta"),
@@ -1643,25 +1825,46 @@ function collectDomRefs() {
     exportCsvBtn: document.getElementById("exportCsvBtn"),
     exportJsonBtn: document.getElementById("exportJsonBtn"),
     exportBudgetCsvBtn: document.getElementById("exportBudgetCsvBtn"),
+    exportMenu: document.getElementById("exportMenu"),
     focusBtn: document.getElementById("focusBtn"),
+    heroDismiss: document.getElementById("heroDismiss"),
+    heroOpenControls: document.getElementById("heroOpenControls"),
+    heroOverlay: document.getElementById("heroOverlay"),
     jumpBack24: document.getElementById("jumpBack24"),
     jumpBack6: document.getElementById("jumpBack6"),
     jumpForward24: document.getElementById("jumpForward24"),
     jumpForward6: document.getElementById("jumpForward6"),
     leewayCat: document.getElementById("leewayCat"),
     leewayParams: document.getElementById("leeway-params"),
+    missionSummary: document.getElementById("mission-summary"),
     nEns: document.getElementById("nEns"),
     nLabel: document.getElementById("n-label"),
     nSlider: document.getElementById("nSlider"),
+    layerCurrents: document.getElementById("layerCurrents"),
+    layerDensity: document.getElementById("layerDensity"),
+    layerOilRadius: document.getElementById("layerOilRadius"),
+    layerRelease: document.getElementById("layerRelease"),
+    layerTracers: document.getElementById("layerTracers"),
+    layerTrails: document.getElementById("layerTrails"),
+    layerUncertainty: document.getElementById("layerUncertainty"),
     oilParams: document.getElementById("oil-params"),
     oilType: document.getElementById("oilType"),
     oilVol: document.getElementById("oilVol"),
     panelToggle: document.getElementById("panelToggle"),
     playBtn: document.getElementById("playBtn"),
+    presetCards: document.getElementById("presetCards"),
+    progressDetail: document.getElementById("progress-detail"),
+    progressFill: document.getElementById("progress-fill"),
+    progressLabel: document.getElementById("progress-label"),
+    quickPlayBtn: document.getElementById("quickPlayBtn"),
+    quickRunBtn: document.getElementById("quickRunBtn"),
+    quickRunRailBtn: document.getElementById("quickRunRailBtn"),
+    quickScenario: document.getElementById("quickScenario"),
     relRadius: document.getElementById("relRadius"),
     releaseInfo: document.getElementById("release-info"),
     results: document.getElementById("results"),
     runBtn: document.getElementById("runBtn"),
+    runProgress: document.getElementById("run-progress"),
     runStatus: document.getElementById("run-status"),
     scenarioPreset: document.getElementById("scenarioPreset"),
     showDensity: document.getElementById("showDensity"),
@@ -1670,6 +1873,10 @@ function collectDomRefs() {
     speedLabel: document.getElementById("speed-label"),
     speedSlider: document.getElementById("speedSlider"),
     timeLabel: document.getElementById("time-label"),
+    timelineCurrent: document.getElementById("timeline-current"),
+    timelineEnd: document.getElementById("timeline-end"),
+    timelineEvents: document.getElementById("timeline-events"),
+    timelineStart: document.getElementById("timeline-start"),
     timeSlider: document.getElementById("timeSlider"),
     timeWindowLabel: document.getElementById("time-window-label"),
     tsPlot: document.getElementById("ts-plot"),
@@ -1693,6 +1900,7 @@ function collectDomRefs() {
     dispEff: document.getElementById("dispEff"),
     // Oil budget
     oilBudgetCard: document.getElementById("oil-budget-card"),
+    oilBudgetInsights: document.getElementById("oil-budget-insights"),
     oilBudgetPlot: document.getElementById("oil-budget-plot"),
     oilBudgetSummary: document.getElementById("oil-budget-summary"),
     emulsionNote: document.getElementById("emulsion-note"),
@@ -1724,6 +1932,9 @@ function wireUi() {
     playing = !playing;
     updatePlayButton();
   };
+  els.quickPlayBtn.onclick = els.playBtn.onclick;
+  els.quickRunBtn.onclick = runEnsemble;
+  els.quickRunRailBtn.onclick = runEnsemble;
   els.jumpBack24.onclick = () => seekHours(-24);
   els.jumpBack6.onclick = () => seekHours(-6);
   els.jumpForward6.onclick = () => seekHours(6);
@@ -1737,8 +1948,8 @@ function wireUi() {
   els.runBtn.onclick = runEnsemble;
   els.clearBtn.onclick = clearRun;
   els.copyLinkBtn.onclick = copyShareLink;
-  els.exportJsonBtn.onclick = exportRunJson;
-  els.exportBudgetCsvBtn.onclick = exportOilBudgetCsv;
+  els.exportJsonBtn.onclick = () => { exportRunJson(); els.exportMenu.open = false; };
+  els.exportBudgetCsvBtn.onclick = () => { exportOilBudgetCsv(); els.exportMenu.open = false; };
 
   // Response tab switching
   document.querySelectorAll(".resp-tab").forEach((tab) => {
@@ -1750,7 +1961,8 @@ function wireUi() {
       if (target) target.style.display = "";
     };
   });
-  els.exportCsvBtn.onclick = exportRunCsv;
+  els.exportCsvBtn.onclick = () => { exportRunCsv(); els.exportMenu.open = false; };
+  els.copyLinkBtn.onclick = () => { copyShareLink(); els.exportMenu.open = false; };
 
   // WebGNOME integration
   document.getElementById("openWebgnomeBtn").onclick = openWebgnome;
@@ -1762,18 +1974,47 @@ function wireUi() {
     if (e.target === document.getElementById("webgnome-modal")) hideWgModal();
   });
 
-  els.showTrails.onchange = () => { overlayState.trails = els.showTrails.checked; };
-  els.showDensity.onchange = () => { overlayState.density = els.showDensity.checked; };
-  els.showUncertainty.onchange = () => { overlayState.uncertainty = els.showUncertainty.checked; };
+  const bindLayer = (key, inputs) => {
+    inputs.filter(Boolean).forEach((input) => {
+      input.onchange = () => {
+        overlayState[key] = input.checked;
+        syncLayerInputs();
+        drawField();
+        drawBgParticles();
+        drawDrift();
+        updateResultsPanel(true);
+      };
+    });
+  };
+  bindLayer("currents", [els.layerCurrents]);
+  bindLayer("tracers", [els.layerTracers]);
+  bindLayer("trails", [els.layerTrails, els.showTrails]);
+  bindLayer("density", [els.layerDensity, els.showDensity]);
+  bindLayer("uncertainty", [els.layerUncertainty, els.showUncertainty]);
+  bindLayer("release", [els.layerRelease]);
+  bindLayer("oilRadius", [els.layerOilRadius]);
   els.useWind.onchange = updateStoryCard;
 
-  els.panelToggle.onclick = () => setPanelOpen(true);
+  els.panelToggle.onclick = () => setPanelOpen(!document.body.classList.contains("panel-open"));
   els.closePanelBtn.onclick = () => setPanelOpen(false);
   els.focusBtn.onclick = () => {
     focusMode = !focusMode;
     els.focusBtn.textContent = focusMode ? "Exit focus" : "Focus mode";
     updateBodyState();
   };
+
+  els.heroDismiss.onclick = () => {
+    sessionStorage.setItem("hormuzHeroDismissed", "1");
+    els.heroOverlay.hidden = true;
+  };
+  els.heroOpenControls.onclick = () => {
+    setPanelOpen(true);
+    sessionStorage.setItem("hormuzHeroDismissed", "1");
+    els.heroOverlay.hidden = true;
+  };
+  if (sessionStorage.getItem("hormuzHeroDismissed") === "1") {
+    els.heroOverlay.hidden = true;
+  }
 }
 
 /* One-time startup orchestration for map, data, controls, legend, and the
@@ -1798,6 +2039,7 @@ async function boot() {
   buildPresetOptions();
   setScenario("leeway", true);
   syncWindControls();
+  syncLayerInputs();
   paintWheel();
 
   els.timeSlider.max = Field.times.length - 1;
