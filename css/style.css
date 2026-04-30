@@ -116,7 +116,7 @@ img {
   inset: 0;
   display: grid;
   grid-template-columns: minmax(820px, 1fr) 430px;
-  grid-template-rows: 72px minmax(0, 1fr) auto;
+  grid-template-rows: 48px minmax(0, 1fr) auto;
   grid-template-areas:
     "banner banner"
     "map side"
@@ -131,14 +131,14 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  padding: 8px 18px;
+  gap: 14px;
+  padding: 5px 16px;
   background:
     radial-gradient(circle at 8% 50%, rgba(255, 209, 72, 0.36), transparent 24%),
     linear-gradient(100deg, rgba(0, 18, 32, 0.98), rgba(0, 45, 80, 0.96) 44%, rgba(0, 129, 176, 0.92));
   border-bottom: 1px solid rgba(255, 255, 255, 0.28);
   box-shadow: 0 10px 26px rgba(0, 18, 32, 0.18);
-  font-size: 12px;
+  font-size: 11px;
   color: #f7fff9;
 }
 
@@ -148,38 +148,28 @@ img {
 .brand-lockup {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex: 0 0 auto;
-  min-width: 238px;
+  min-width: 154px;
 }
 
 .brand-logo {
-  width: 74px;
-  height: 48px;
+  width: 58px;
+  height: 36px;
   object-fit: contain;
   filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.28));
 }
 
-.brand-name,
-.brand-subtitle {
+.brand-name {
   display: block;
 }
 
 .brand-name {
   color: #ffffff;
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 800;
   letter-spacing: 0.16em;
   line-height: 1;
-}
-
-.brand-subtitle {
-  margin-top: 4px;
-  color: rgba(255, 255, 255, 0.74);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .banner-copy {
@@ -187,20 +177,25 @@ img {
   align-items: center;
   justify-content: flex-end;
   flex: 1 1 auto;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 10px;
   min-width: 0;
   text-align: right;
 }
 
 .banner-copy b {
-  flex: 1 1 100%;
+  flex: 0 0 auto;
   font-size: 13px;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 .banner-copy span {
   color: rgba(255, 255, 255, 0.76);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Map shell is the containing block for Leaflet and the stacked canvas layers. */
