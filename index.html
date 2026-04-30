@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="css/style.css?v=6"/>
+<link rel="stylesheet" href="css/style.css?v=7"/>
 </head>
 <body class="panel-closed">
 <div id="app">
@@ -34,57 +34,10 @@
     <a href="README.md">README and caveats</a>.
   </div>
 
-  <!-- Map region. Leaflet owns #map itself; the remaining children are
-       floating UI elements positioned above the map/canvas stack. -->
+  <!-- Map region. Leaflet owns #map itself; all controls live outside the map
+       so smaller laptop screens keep a clean, uncluttered chart surface. -->
   <div id="map-shell">
     <div id="map"></div>
-
-    <!-- Compact action bar that keeps the map-first workflow usable even when
-         the main control panel is collapsed. -->
-    <div id="map-actions" class="glass mission-strip">
-      <button id="panelToggle" class="ghost">Mission Control</button>
-      <span id="quickScenario" class="map-pill">Man overboard</span>
-      <button id="quickRunBtn" class="primary" disabled>Run</button>
-      <button id="quickPlayBtn" class="ghost">Pause</button>
-      <button id="focusBtn" class="ghost">Focus mode</button>
-    </div>
-
-    <!-- Branded orientation card shown once per browser session. -->
-    <div id="heroOverlay" class="hero-overlay glass">
-      <div class="hero-kicker">Tridel drift lab</div>
-      <h1>Track shoreline risk from live currents.</h1>
-      <p>
-        Set a release point, choose a mission preset, and run an ensemble to see spread,
-        stranding risk, oil budget, and export-ready outputs.
-      </p>
-      <div class="hero-actions">
-        <button id="heroOpenControls" class="primary">Open mission control</button>
-        <button id="heroDismiss" class="ghost">Hide intro</button>
-      </div>
-    </div>
-
-    <!-- Desktop layer dock. These toggles affect visualization only, not model physics. -->
-    <div id="map-layer-controls" class="glass layer-dock">
-      <div class="layer-title">Layers</div>
-      <label><input id="layerCurrents" type="checkbox" checked/> Currents</label>
-      <label><input id="layerTracers" type="checkbox" checked/> Tracers</label>
-      <label><input id="layerTrails" type="checkbox" checked/> Trails</label>
-      <label><input id="layerDensity" type="checkbox" checked/> Density</label>
-      <label><input id="layerUncertainty" type="checkbox" checked/> Uncertainty</label>
-      <label><input id="layerRelease" type="checkbox" checked/> Release</label>
-      <label><input id="layerOilRadius" type="checkbox" checked/> Oil radius</label>
-    </div>
-
-    <!-- Legend explaining the canvas color language. The wheel graphic is
-         painted dynamically in JavaScript rather than shipped as an image. -->
-    <div id="map-legend" class="glass">
-      <div><b>Current direction</b></div>
-      <div class="hint">Hue = direction. Opacity = speed.</div>
-      <canvas id="color-wheel"></canvas>
-      <div class="hint" style="margin-top:4px">
-        Brown = land. Orange = active particles. Hot red = stranded. Cyan = uncertainty.
-      </div>
-    </div>
   </div>
 
   <!-- Bottom playback rail. These controls manipulate the display timeline
@@ -92,8 +45,10 @@
   <div id="controls">
     <div class="row controls-top">
       <div class="control-cluster">
+        <button id="panelToggle" class="ghost">Mission Control</button>
         <button id="playBtn">Pause</button>
         <button id="quickRunRailBtn" class="primary" disabled>Run current preset</button>
+        <button id="focusBtn" class="ghost">Focus mode</button>
         <span id="controlScenario" class="tag">Man overboard</span>
       </div>
       <span id="time-window-label" class="tag">Playback follows the forcing timeline.</span>
@@ -297,12 +252,16 @@
     <div class="section-card">
       <h3>Visual overlays</h3>
       <div class="toggle-grid">
-        <label class="check-pill"><input id="showTrails" type="checkbox" checked/> Trails</label>
-        <label class="check-pill"><input id="showDensity" type="checkbox" checked/> Density</label>
-        <label class="check-pill"><input id="showUncertainty" type="checkbox" checked/> Uncertainty</label>
+        <label class="check-pill"><input id="layerCurrents" type="checkbox" checked/> Currents</label>
+        <label class="check-pill"><input id="layerTracers" type="checkbox" checked/> Tracers</label>
+        <label class="check-pill"><input id="layerTrails" type="checkbox" checked/> Trails</label>
+        <label class="check-pill"><input id="layerDensity" type="checkbox" checked/> Density</label>
+        <label class="check-pill"><input id="layerUncertainty" type="checkbox" checked/> Uncertainty</label>
+        <label class="check-pill"><input id="layerRelease" type="checkbox" checked/> Release</label>
+        <label class="check-pill"><input id="layerOilRadius" type="checkbox" checked/> Oil radius</label>
       </div>
       <div class="hint">
-        Density and uncertainty are derived from the current playback time, not just the final state.
+        Density, uncertainty, and the oil radius are derived from the current playback time, not just the final state.
       </div>
     </div>
 
@@ -357,30 +316,6 @@
       <div id="ts-plot" aria-label="Run analytics chart"></div>
     </div>
 
-    <!-- Handoff path to NOAA tooling when a user wants to go beyond the
-         educational browser approximation. -->
-    <div class="section-card webgnome-card">
-      <div class="webgnome-header">
-        <div>
-          <div class="eyebrow">NOAA Official Tool</div>
-          <h3>WebGNOME Integration</h3>
-        </div>
-        <img src="https://response.restoration.noaa.gov/themes/custom/orr/images/logo-noaa-orr.svg" alt="NOAA ORR" class="noaa-logo" onerror="this.style.display='none'"/>
-      </div>
-      <p class="hint">Transfer your current scenario to <strong>WebGNOME</strong> — NOAA's full oil weathering model with ADIOS chemistry, 3D transport, and operational output formats.</p>
-      <div class="webgnome-feature-list">
-        <div class="wg-feat"><span class="wg-feat-icon">🔬</span><span>Full ADIOS oil weathering (evaporation, emulsion, dispersion)</span></div>
-        <div class="wg-feat"><span class="wg-feat-icon">🌊</span><span>Upload your CMEMS NetCDF directly as a current mover</span></div>
-        <div class="wg-feat"><span class="wg-feat-icon">📊</span><span>Oil budget charts, beached mass, and response planning output</span></div>
-      </div>
-      <div class="action-grid webgnome-actions">
-        <button id="openWebgnomeBtn" class="primary wg-primary">Open WebGNOME ↗</button>
-        <button id="downloadPygnomeBtn" class="ghost">Download PyGNOME script</button>
-        <button id="webgnomeHelpBtn" class="ghost small" style="grid-column:1/-1;">View setup instructions</button>
-      </div>
-      <div id="wg-status" class="hint" style="margin-top:6px;"></div>
-    </div>
-
     <div class="section-card">
       <h3>Data provenance</h3>
       <div class="hint">
@@ -392,76 +327,12 @@
 
 </div>
 
-<!-- Modal with the manual bridge from the current browser scenario to
-     WebGNOME/PyGNOME. -->
-<div id="webgnome-modal" class="wg-modal-overlay" style="display:none;">
-  <div class="wg-modal">
-    <div class="wg-modal-head">
-      <h2>Setting up WebGNOME with Hormuz data</h2>
-      <button id="closeWgModal" class="ghost small">✕</button>
-    </div>
-    <div class="wg-modal-body">
-      <div class="wg-step">
-        <span class="wg-step-num">1</span>
-        <div>
-          <strong>Open WebGNOME Manual Setup</strong>
-          <p>Click <em>Open WebGNOME ↗</em> above. In WebGNOME, choose <strong>Manual Setup</strong> from the home screen.</p>
-        </div>
-      </div>
-      <div class="wg-step">
-        <span class="wg-step-num">2</span>
-        <div>
-          <strong>Add your CMEMS currents file</strong>
-          <p>In WebGNOME: <em>Setup → Movers → Add a Mover → Grid Current</em>. Upload the file:<br/>
-          <code class="wg-code">cmems_mod_glo_phy_anfc_merged-uv_PT1H-i_...nc</code><br/>
-          (found in your project root folder). WebGNOME reads CF-compliant NetCDF natively.</p>
-        </div>
-      </div>
-      <div class="wg-step">
-        <span class="wg-step-num">3</span>
-        <div>
-          <strong>Add wind forcing</strong>
-          <p>Go to <em>Movers → Add a Mover → Wind</em>. Either enter a constant wind or use <strong>GOODS</strong> to fetch GFS wind for the Hormuz region (lat 23–30 N, lon 53–60 E).</p>
-        </div>
-      </div>
-      <div class="wg-step">
-        <span class="wg-step-num">4</span>
-        <div>
-          <strong>Place the spill</strong>
-          <p>Go to <em>Spills → Add a Spill → Instantaneous</em>. Set the lat/lon to match your release point from this model. Set the start time to match the data window.</p>
-        </div>
-      </div>
-      <div class="wg-step">
-        <span class="wg-step-num">5</span>
-        <div>
-          <strong>Select oil type from ADIOS</strong>
-          <p>For oil scenarios: <em>Spills → select your spill → Oil → Browse ADIOS database</em>. Search for the oil type matching your scenario (e.g. <em>Arabian Medium</em> for Hormuz crude).</p>
-        </div>
-      </div>
-      <div class="wg-step">
-        <span class="wg-step-num">6</span>
-        <div>
-          <strong>Run and compare</strong>
-          <p>Click <em>Run Model</em>. WebGNOME outputs an oil budget chart, trajectory animation, and beached mass — use these to validate and extend your Hormuz Drift results.</p>
-        </div>
-      </div>
-      <div class="wg-tip">
-        <strong>💡 Tip:</strong> For scripted / repeatable runs, download the <em>PyGNOME script</em> button above and run it locally with <code>python pygnome_hormuz.py</code> after <code>pip install gnome</code>.
-      </div>
-    </div>
-    <div class="wg-modal-foot">
-      <a href="https://gnome.orr.noaa.gov" target="_blank" rel="noopener" class="ghost" style="display:inline-block;padding:8px 16px;border:1px solid rgba(149,186,255,0.3);border-radius:6px;color:#95baff;text-decoration:none;font-size:13px;">Open WebGNOME ↗</a>
-      <button id="closeWgModal2" class="ghost">Close</button>
-    </div>
-  </div>
-</div>
-
 <!-- Runtime dependencies are loaded in order: vendors first, then data/model
      helpers, then the main orchestration script. -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/field.js?v=4"></script>
 <script src="js/drift.js?v=4"></script>
-<script src="js/app.js?v=10"></script>
+<script src="js/app.js?v=11"></script>
 </body>
 </html>

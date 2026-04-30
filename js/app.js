@@ -10,7 +10,7 @@
  * 2. Draw the current field and animated background tracers.
  * 3. Launch ensemble runs and capture snapshots/metrics.
  * 4. Reconstruct any playback frame from the stored tracks.
- * 5. Update the UI, charts, exports, and WebGNOME handoff tools.
+ * 5. Update the UI, charts, exports, and scenario controls.
  *
  * When you want to understand "what happens when I press Run?" or "what is
  * redrawn every animation frame?", this is the file to read.
@@ -65,7 +65,7 @@ const els = {};
 
 /* Leaflet owns the geographic view and projection math. Canvas overlays are
    layered above it for field rendering, tracers, and drift results. */
-const map = L.map("map", { zoomControl: true, preferCanvas: true, attributionControl: false }).setView([26.45, 56.1], 9);
+const map = L.map("map", { zoomControl: false, preferCanvas: true, attributionControl: false }).setView([26.45, 56.1], 9);
 L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
   subdomains: "abcd",
   maxZoom: 13,
@@ -198,7 +198,6 @@ function showStartupError(message) {
   els.releaseInfo.textContent = "Startup failed. Use start_local_server.bat or python -m http.server 8000.";
   els.results.innerHTML = '<div class="result-card wide"><span class="result-label">Startup</span><span class="result-value">Data unavailable</span><span class="result-subvalue">This page was opened without a local web server.</span></div>';
   els.runBtn.disabled = true;
-  if (els.quickRunBtn) els.quickRunBtn.disabled = true;
   if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = true;
   els.useWind.disabled = true;
   Plotly.purge(els.tsPlot);
@@ -821,7 +820,7 @@ function collectScenarioParams() {
 }
 
 /* Read the response-option panel into the compact structure consumed by the
-   oil-budget model and WebGNOME handoff helpers. */
+   oil-budget model and export helpers. */
 function collectResponses() {
   return {
     skimming: {
@@ -1177,40 +1176,6 @@ function updatePlotCursor(force) {
   });
 }
 
-/* Paint the color wheel legend used to decode current direction hues. */
-function paintWheel() {
-  const canvas = els.colorWheel;
-  canvas.width = canvas.height = 56;
-  const ctx = canvas.getContext("2d");
-  const radius = 28;
-  const image = ctx.createImageData(56, 56);
-  for (let y = 0; y < 56; y += 1) {
-    for (let x = 0; x < 56; x += 1) {
-      const dx = x - radius;
-      const dy = y - radius;
-      const r = Math.hypot(dx, dy);
-      const idx = (y * 56 + x) * 4;
-      if (r > radius) {
-        image.data[idx + 3] = 0;
-        continue;
-      }
-      const hue = directionHue(dx, dy);
-      const rgb = hslToRgb(hue / 360, 0.88, 0.56);
-      image.data[idx] = rgb[0];
-      image.data[idx + 1] = rgb[1];
-      image.data[idx + 2] = rgb[2];
-      image.data[idx + 3] = 230;
-    }
-  }
-  ctx.putImageData(image, 0, 0);
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "10px Inter";
-  ctx.fillText("E", 50, 31);
-  ctx.fillText("W", 4, 31);
-  ctx.fillText("N", 24, 10);
-  ctx.fillText("S", 24, 54);
-}
-
 function hslToRgb(h, s, l) {
   let r;
   let g;
@@ -1236,7 +1201,7 @@ function hslToRgb(h, s, l) {
   return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
 
-/* Small helper for all text-based downloads (JSON, CSV, PyGNOME script). */
+/* Small helper for all text-based downloads (JSON and CSV). */
 function downloadText(filename, text, mimeType) {
   const blob = new Blob([text], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -1367,9 +1332,6 @@ function exportOilBudgetCsv() {
 
 function updatePlayButton() {
   els.playBtn.textContent = playing ? "Pause" : "Play";
-  if (els.quickPlayBtn) {
-    els.quickPlayBtn.textContent = playing ? "Pause" : "Play";
-  }
 }
 
 function syncLayerInputs() {
@@ -1377,11 +1339,8 @@ function syncLayerInputs() {
     ["currents", els.layerCurrents],
     ["tracers", els.layerTracers],
     ["trails", els.layerTrails],
-    ["trails", els.showTrails],
     ["density", els.layerDensity],
-    ["density", els.showDensity],
     ["uncertainty", els.layerUncertainty],
-    ["uncertainty", els.showUncertainty],
     ["release", els.layerRelease],
     ["oilRadius", els.layerOilRadius],
   ];
@@ -1390,179 +1349,9 @@ function syncLayerInputs() {
   });
 }
 
-/* ── WebGNOME Integration ──────────────────────────────────────────────────── */
-
-/* WebGNOME bridge helpers intentionally do not try to auto-run NOAA tooling;
-   they package the current scenario and point the user toward the official
-   stack for higher-fidelity spill analysis. */
-function openWebgnome() {
-  window.open("https://gnome.orr.noaa.gov/#config", "_blank", "noopener");
-  const wgStatus = document.getElementById("wg-status");
-  if (wgStatus) {
-    wgStatus.textContent = "WebGNOME opened in a new tab. See \"View setup instructions\" for how to load your CMEMS file.";
-  }
-}
-
-function buildPygnomeScript() {
-  const lat = releasePoint ? releasePoint.lat.toFixed(5) : "26.45000";
-  const lon = releasePoint ? releasePoint.lon.toFixed(5) : "56.10000";
-  const durationHours = Number(els.durHours.value) || 24;
-  const nEns = Number(els.nEns.value) || 300;
-  const isOil = activeScenario === "oil";
-  const oilType = els.oilType ? els.oilType.value : "light_crude";
-  const oilVol = els.oilVol ? Number(els.oilVol.value) : 10;
-  const dataStartUtc = Field.loaded ? Field.times[0] : "2024-01-01T00:00:00";
-
-  const oilBlock = isOil ? `
-    # -- Oil spill setup --
-    spill = gs.surface_point_line_spill(
-        num_elements=${nEns},
-        start_position=(${lon}, ${lat}, 0.0),
-        release_time=start_time,
-        end_release_time=start_time,
-        amount=${oilVol},
-        units='m^3',
-        name='Hormuz oil spill'
-    )
-    # Load oil properties from ADIOS database (install adios_db first)
-    # from adios_db.computation.gnome_oil import make_gnome_oil
-    # from adios_db.models.oil.oil import Oil
-    # For now, use a built-in substance. Replace 'AD00020' with an ADIOS ID.
-    # spill.substance = GnomeOil(adios_id='AD00020')` : `
-    # -- Man overboard / SAR setup --
-    spill = gs.surface_point_line_spill(
-        num_elements=${nEns},
-        start_position=(${lon}, ${lat}, 0.0),
-        release_time=start_time,
-        name='Hormuz SAR target'
-    )`;
-
-  return `#!/usr/bin/env python3
-"""
-pygnome_hormuz.py — PyGNOME script generated by Hormuz Drift
-
-Scenario : ${activeScenario === "oil" ? "Oil spill" : "Man overboard / SAR"}
-Release  : ${lat} N, ${lon} E
-Duration : ${durationHours} h
-Particles: ${nEns}
-Generated: ${new Date().toISOString()}
-
-Install  : conda install -c noaa-orr-erd gnome
-           # or: pip install gnome (Linux/Mac only)
-Run      : python pygnome_hormuz.py
-"""
-
-from datetime import datetime, timedelta
-import gnome
-import gnome.scripting as gs
-from gnome.model import Model
-from gnome.maps import GnomeMap
-from gnome.movers import GridCurrentMover, PointWindMover
-from gnome.environment import Wind
-from gnome.outputters import Renderer, NetCDFOutput
-import pathlib
-
-# ── Paths ──────────────────────────────────────────────────────────────────
-CMEMS_NC = pathlib.Path("cmems_mod_glo_phy_anfc_merged-uv_PT1H-i_1776382234335.nc")
-OUTPUT_DIR = pathlib.Path("webgnome_output")
-OUTPUT_DIR.mkdir(exist_ok=True)
-
-# ── Time window ────────────────────────────────────────────────────────────
-start_time = datetime.fromisoformat("${dataStartUtc}")
-duration   = timedelta(hours=${durationHours})
-time_step  = timedelta(minutes=15)
-
-# ── Model ──────────────────────────────────────────────────────────────────
-model = Model(
-    start_time=start_time,
-    duration=duration,
-    time_step=time_step,
-    uncertain=True,           # stochastic ensemble
-    cache_enabled=True,
-)
-
-# ── Map (bounding box from CMEMS data) ─────────────────────────────────────
-# The GnomeMap will use shoreline data if GSHHS is installed.
-model.map = gs.get_map(
-    bounding_box=[53.0, 23.0, 60.0, 30.0]  # [lon_min, lat_min, lon_max, lat_max]
-)
-
-# ── Current mover from CMEMS NetCDF ────────────────────────────────────────
-if CMEMS_NC.exists():
-    current_mover = GridCurrentMover(
-        current_filename=str(CMEMS_NC),
-        grid_topology={  # CF-compliant file: let PyGNOME auto-detect
-            'u_var': 'utotal',
-            'v_var': 'vtotal',
-        }
-    )
-    model.movers += current_mover
-    print(f"[OK] Loaded CMEMS currents from {CMEMS_NC}")
-else:
-    print(f"[WARN] CMEMS file not found: {CMEMS_NC}")
-    print("       Copy the .nc file from your project root to this directory.")
-
-# ── Wind mover (constant NE wind 5 m/s – adjust as needed) ─────────────────
-# Replace with a real wind file for operational use.
-wind = Wind(timeseries=[(start_time, (45.0, 5.0))],  # bearing deg, speed m/s
-            units='m/s')
-wind_mover = PointWindMover(wind)
-model.movers += wind_mover
-${oilBlock}
-
-model.spills += spill
-
-# ── Outputters ─────────────────────────────────────────────────────────────
-renderer = Renderer(
-    output_dir=str(OUTPUT_DIR),
-    image_size=(1280, 720),
-    formats=['png'],
-)
-renderer.viewport = ((53.0, 23.0), (60.0, 30.0))
-model.outputters += renderer
-
-netcdf_out = NetCDFOutput(
-    filename=str(OUTPUT_DIR / "hormuz_trajectory.nc"),
-    which_data='standard',
-)
-model.outputters += netcdf_out
-
-# ── Run ────────────────────────────────────────────────────────────────────
-print(f"Running model: {start_time} + {durationHours} h, {nEns} particles...")
-model.full_run(rewind=True)
-print(f"Done. Outputs in: {OUTPUT_DIR.resolve()}")
-print("  - PNG frames: trajectory_*.png")
-print("  - NetCDF    : hormuz_trajectory.nc")
-print("\nTo open results in WebGNOME locally:")
-print("  cat output/hormuz_trajectory.nc | ncdump -h  # inspect structure")
-`;
-}
-
-function downloadPygnomeScript() {
-  const script = buildPygnomeScript();
-  downloadText("pygnome_hormuz.py", script, "text/x-python");
-  const wgStatus = document.getElementById("wg-status");
-  if (wgStatus) {
-    wgStatus.textContent = releasePoint
-      ? `Script generated for release at ${releasePoint.lat.toFixed(4)} N, ${releasePoint.lon.toFixed(4)} E.`
-      : "Script generated with default Hormuz centre coordinates (set a release point first for exact values).";
-  }
-}
-
-function showWgModal() {
-  const modal = document.getElementById("webgnome-modal");
-  if (modal) modal.style.display = "flex";
-}
-
-function hideWgModal() {
-  const modal = document.getElementById("webgnome-modal");
-  if (modal) modal.style.display = "none";
-}
-
 function updateScenarioBadges() {
   const preset = selectedPreset();
   const scenarioText = `${getScenarioLabel(activeScenario)}${preset ? ` | ${preset.label}` : ""}`;
-  if (els.quickScenario) els.quickScenario.textContent = scenarioText;
   if (els.controlScenario) els.controlScenario.textContent = scenarioText;
 }
 
@@ -1571,13 +1360,11 @@ function updateReleaseInfo() {
   if (!releasePoint) {
     els.releaseInfo.textContent = "Click on the map to set release point.";
     els.runBtn.disabled = true;
-    if (els.quickRunBtn) els.quickRunBtn.disabled = true;
     if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = true;
     return;
   }
   els.releaseInfo.textContent = `${releasePoint.lat.toFixed(4)} N, ${releasePoint.lon.toFixed(4)} E`;
   els.runBtn.disabled = false;
-  if (els.quickRunBtn) els.quickRunBtn.disabled = false;
   if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = false;
 }
 
@@ -1817,7 +1604,6 @@ function collectDomRefs() {
     clearBtn: document.getElementById("clearBtn"),
     closePanelBtn: document.getElementById("closePanelBtn"),
     controlScenario: document.getElementById("controlScenario"),
-    colorWheel: document.getElementById("color-wheel"),
     copyLinkBtn: document.getElementById("copyLinkBtn"),
     dataMeta: document.getElementById("data-meta"),
     diffK: document.getElementById("diffK"),
@@ -1827,9 +1613,6 @@ function collectDomRefs() {
     exportBudgetCsvBtn: document.getElementById("exportBudgetCsvBtn"),
     exportMenu: document.getElementById("exportMenu"),
     focusBtn: document.getElementById("focusBtn"),
-    heroDismiss: document.getElementById("heroDismiss"),
-    heroOpenControls: document.getElementById("heroOpenControls"),
-    heroOverlay: document.getElementById("heroOverlay"),
     jumpBack24: document.getElementById("jumpBack24"),
     jumpBack6: document.getElementById("jumpBack6"),
     jumpForward24: document.getElementById("jumpForward24"),
@@ -1856,10 +1639,7 @@ function collectDomRefs() {
     progressDetail: document.getElementById("progress-detail"),
     progressFill: document.getElementById("progress-fill"),
     progressLabel: document.getElementById("progress-label"),
-    quickPlayBtn: document.getElementById("quickPlayBtn"),
-    quickRunBtn: document.getElementById("quickRunBtn"),
     quickRunRailBtn: document.getElementById("quickRunRailBtn"),
-    quickScenario: document.getElementById("quickScenario"),
     relRadius: document.getElementById("relRadius"),
     releaseInfo: document.getElementById("release-info"),
     results: document.getElementById("results"),
@@ -1867,9 +1647,6 @@ function collectDomRefs() {
     runProgress: document.getElementById("run-progress"),
     runStatus: document.getElementById("run-status"),
     scenarioPreset: document.getElementById("scenarioPreset"),
-    showDensity: document.getElementById("showDensity"),
-    showTrails: document.getElementById("showTrails"),
-    showUncertainty: document.getElementById("showUncertainty"),
     speedLabel: document.getElementById("speed-label"),
     speedSlider: document.getElementById("speedSlider"),
     timeLabel: document.getElementById("time-label"),
@@ -1932,8 +1709,6 @@ function wireUi() {
     playing = !playing;
     updatePlayButton();
   };
-  els.quickPlayBtn.onclick = els.playBtn.onclick;
-  els.quickRunBtn.onclick = runEnsemble;
   els.quickRunRailBtn.onclick = runEnsemble;
   els.jumpBack24.onclick = () => seekHours(-24);
   els.jumpBack6.onclick = () => seekHours(-6);
@@ -1964,16 +1739,6 @@ function wireUi() {
   els.exportCsvBtn.onclick = () => { exportRunCsv(); els.exportMenu.open = false; };
   els.copyLinkBtn.onclick = () => { copyShareLink(); els.exportMenu.open = false; };
 
-  // WebGNOME integration
-  document.getElementById("openWebgnomeBtn").onclick = openWebgnome;
-  document.getElementById("downloadPygnomeBtn").onclick = downloadPygnomeScript;
-  document.getElementById("webgnomeHelpBtn").onclick = showWgModal;
-  document.getElementById("closeWgModal").onclick = hideWgModal;
-  document.getElementById("closeWgModal2").onclick = hideWgModal;
-  document.getElementById("webgnome-modal").addEventListener("click", (e) => {
-    if (e.target === document.getElementById("webgnome-modal")) hideWgModal();
-  });
-
   const bindLayer = (key, inputs) => {
     inputs.filter(Boolean).forEach((input) => {
       input.onchange = () => {
@@ -1988,9 +1753,9 @@ function wireUi() {
   };
   bindLayer("currents", [els.layerCurrents]);
   bindLayer("tracers", [els.layerTracers]);
-  bindLayer("trails", [els.layerTrails, els.showTrails]);
-  bindLayer("density", [els.layerDensity, els.showDensity]);
-  bindLayer("uncertainty", [els.layerUncertainty, els.showUncertainty]);
+  bindLayer("trails", [els.layerTrails]);
+  bindLayer("density", [els.layerDensity]);
+  bindLayer("uncertainty", [els.layerUncertainty]);
   bindLayer("release", [els.layerRelease]);
   bindLayer("oilRadius", [els.layerOilRadius]);
   els.useWind.onchange = updateStoryCard;
@@ -2003,18 +1768,6 @@ function wireUi() {
     updateBodyState();
   };
 
-  els.heroDismiss.onclick = () => {
-    sessionStorage.setItem("hormuzHeroDismissed", "1");
-    els.heroOverlay.hidden = true;
-  };
-  els.heroOpenControls.onclick = () => {
-    setPanelOpen(true);
-    sessionStorage.setItem("hormuzHeroDismissed", "1");
-    els.heroOverlay.hidden = true;
-  };
-  if (sessionStorage.getItem("hormuzHeroDismissed") === "1") {
-    els.heroOverlay.hidden = true;
-  }
 }
 
 /* One-time startup orchestration for map, data, controls, legend, and the
@@ -2040,7 +1793,6 @@ async function boot() {
   setScenario("leeway", true);
   syncWindControls();
   syncLayerInputs();
-  paintWheel();
 
   els.timeSlider.max = Field.times.length - 1;
   els.dataMeta.textContent = `${Field.meta.source} | ${Field.times[0]} to ${Field.times[Field.times.length - 1]} UTC | ${Field.times.length} hourly frames`;
