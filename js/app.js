@@ -57,7 +57,7 @@ const els = {};
 
 /* Leaflet owns the geographic view and projection math. Canvas overlays are
    layered above it for field rendering, tracers, and drift results. */
-const map = L.map("map", { zoomControl: true, preferCanvas: true }).setView([26.45, 56.1], 9);
+const map = L.map("map", { zoomControl: true, preferCanvas: true, attributionControl: false }).setView([26.45, 56.1], 9);
 L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
   subdomains: "abcd",
   maxZoom: 13,

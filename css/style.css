@@ -529,6 +529,10 @@ canvas.overlay { position: absolute; top: 0; left: 0; pointer-events: none; }
   border-bottom-color: rgba(0, 0, 0, 0.06) !important;
 }
 
+.leaflet-control-attribution {
+  display: none !important;
+}
+
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip { background: rgba(255, 255, 255, 0.96); color: var(--text); }
 
