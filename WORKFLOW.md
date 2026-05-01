@@ -155,14 +155,26 @@ A GitHub Actions cron job that runs **every day at 06:00 UTC**:
 
 1. Install Python deps (`copernicusmarine`, `xarray`, `netCDF4`, `pandas`, etc.)
 2. Run `scripts/fetch_data.py` for CMEMS, or `scripts/fetch_rtofs_data.py` for the no-login NOAA RTOFS fallback
-3. Commit the updated `data/currents.json` back to the repo
-4. GitHub Pages auto-redeploys
+3. Run `scripts/validate_currents.py` to catch bad JSON shape, timestamps, masks, or extreme speed values
+4. Commit the updated `data/currents.json` back to the repo
+5. GitHub Pages auto-redeploys
 
 CMEMS needs two secrets in GitHub **Settings → Secrets → Actions**: `CMEMS_USER`
 and `CMEMS_PASS` (your Copernicus account credentials). If that path fails, the
 workflow falls back to NOAA/NCEP Global RTOFS and Open-Meteo/GFS without secrets.
 The RTOFS fallback writes an hourly browser timeline, interpolated from the
 downloaded source forecast snapshots.
+
+**To play locally** after changing any fetch or packing script:
+
+```bash
+python scripts/fetch_rtofs_data.py
+python scripts/validate_currents.py
+```
+
+If validation fails, fix the data package before touching the UI. The browser
+assumes matching `[time][lat][lon]` arrays and will behave strangely if the
+current/wind masks or timestamps drift out of sync.
 
 ---
 

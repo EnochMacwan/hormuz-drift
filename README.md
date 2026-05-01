@@ -10,7 +10,7 @@ Runs entirely in the browser (JS + Leaflet + Canvas). Designed for **GitHub Page
 
 ## What is new in the upgraded UI
 
-- Mobile-first control sheet with a map-first desktop layout
+- Desktop-first mission-control layout with a map-first interaction model
 - Scenario presets for S&R and oil workflows
 - Time-jump playback controls and run-window playback
 - Trail, density, and uncertainty overlays tied to playback time
@@ -49,7 +49,8 @@ For operational use, run real [OpenDrift](https://opendrift.github.io).
 ├── scripts/
 │   ├── prepare_data.py           one-shot: NetCDF → JSON (local use)
 │   ├── fetch_data.py             CMEMS + GFS daily refresh (CI)
-│   └── fetch_rtofs_data.py       no-login NOAA RTOFS fallback refresh
+│   ├── fetch_rtofs_data.py       no-login NOAA RTOFS fallback refresh
+│   └── validate_currents.py      schema + sanity checks for currents.json
 └── .github/workflows/
     └── daily-data.yml            cron: 06:00 UTC
 ```
@@ -59,6 +60,7 @@ For operational use, run real [OpenDrift](https://opendrift.github.io).
 ```bash
 pip install xarray netCDF4 numpy                         # for prepare_data.py
 python scripts/prepare_data.py                           # build data/currents.json
+python scripts/validate_currents.py                      # verify shape, dates, and speeds
 python -m http.server 8000                               # serve
 # open http://localhost:8000
 ```
@@ -74,11 +76,16 @@ No-login live refresh:
 ```bash
 pip install xarray netCDF4 numpy pandas
 python scripts/fetch_rtofs_data.py
+python scripts/validate_currents.py
 ```
 
 This pulls NOAA/NCEP RTOFS surface currents for the latest available run,
 resamples the browser payload to 1-hour steps, and adds Open-Meteo/GFS wind for
 the same hourly time window.
+
+The daily refresh workflow runs `scripts/validate_currents.py` before committing,
+so broken shapes, bad timestamps, missing wind/current pairs, or extreme speed
+values fail in CI instead of quietly reaching the live page.
 
 ## Deploying to GitHub Pages
 

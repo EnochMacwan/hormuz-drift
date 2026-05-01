@@ -33,6 +33,9 @@ jobs:
           CMEMS_PASS: ${{ secrets.CMEMS_PASS }}
         run: python scripts/fetch_data.py || python scripts/fetch_rtofs_data.py
 
+      - name: Validate packed dataset
+        run: python scripts/validate_currents.py
+
       - name: Commit and push
         run: |
           git config user.email "actions@github.com"

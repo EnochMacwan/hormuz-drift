@@ -21,14 +21,14 @@
    definitions. */
 const SCENARIO_PRESETS = {
   leeway: [
-    { id: "sar_fast", label: "S&R fast response", category: "piw_light", relRadius: 80, diffK: 8, durHours: 24, nEns: 300, useWind: true },
-    { id: "sar_uncertain", label: "Wide uncertainty search", category: "raft_4_6", relRadius: 250, diffK: 18, durHours: 36, nEns: 500, useWind: true },
-    { id: "sar_long", label: "Long horizon drifting object", category: "debris", relRadius: 180, diffK: 14, durHours: 72, nEns: 600, useWind: true },
+    { id: "sar_fast", label: "S&R fast response", category: "piw_light", relRadius: 80, diffK: 8, durHours: 24, nEns: 300, useWind: true, guide: "Best for a recent person-in-water release where the first-day search box matters most." },
+    { id: "sar_uncertain", label: "Wide uncertainty search", category: "raft_4_6", relRadius: 250, diffK: 18, durHours: 36, nEns: 500, useWind: true, guide: "Use when the release location or target type is uncertain and the planning question is search-area growth." },
+    { id: "sar_long", label: "Long horizon drifting object", category: "debris", relRadius: 180, diffK: 14, durHours: 72, nEns: 600, useWind: true, guide: "Use for floating debris or delayed discovery where longer shoreline-risk timing is more important than fine early motion." },
   ],
   oil: [
-    { id: "oil_diesel", label: "Diesel leak", oilType: "diesel", oilVol: 10, relRadius: 120, diffK: 10, durHours: 24, nEns: 320, useWind: true },
-    { id: "oil_light", label: "Light crude release", oilType: "light_crude", oilVol: 150, relRadius: 220, diffK: 14, durHours: 48, nEns: 420, useWind: true },
-    { id: "oil_heavy", label: "Heavy fuel shoreline risk", oilType: "heavy_fuel", oilVol: 800, relRadius: 260, diffK: 18, durHours: 72, nEns: 520, useWind: true },
+    { id: "oil_diesel", label: "Diesel leak", oilType: "diesel", oilVol: 10, relRadius: 120, diffK: 10, durHours: 24, nEns: 320, useWind: true, guide: "Best for a small, volatile spill where evaporation and first-day movement dominate." },
+    { id: "oil_light", label: "Light crude release", oilType: "light_crude", oilVol: 150, relRadius: 220, diffK: 14, durHours: 48, nEns: 420, useWind: true, guide: "Use for a medium release where both transport and surface mass loss matter." },
+    { id: "oil_heavy", label: "Heavy fuel shoreline risk", oilType: "heavy_fuel", oilVol: 800, relRadius: 260, diffK: 18, durHours: 72, nEns: 520, useWind: true, guide: "Use for persistent heavy fuel where shoreline contact and response timing are the main questions." },
   ],
 };
 
@@ -178,6 +178,87 @@ function hideRunProgress() {
   if (els.runProgress) {
     els.runProgress.hidden = true;
     els.progressFill.style.width = "0%";
+  }
+}
+
+function parseUtc(value) {
+  if (!value) return NaN;
+  const text = String(value).trim().replace(" ", "T");
+  if (/[zZ]|[+-]\d\d:\d\d$/.test(text)) return Date.parse(text);
+  return Date.parse(`${text}Z`);
+}
+
+function formatAge(ms) {
+  if (!Number.isFinite(ms)) return "unknown age";
+  const abs = Math.abs(ms);
+  const hours = Math.round(abs / 36e5);
+  if (hours < 1) return "updated this hour";
+  if (hours < 48) return `${hours} h ${ms >= 0 ? "old" : "ahead"}`;
+  return `${Math.round(hours / 24)} days ${ms >= 0 ? "old" : "ahead"}`;
+}
+
+function dataSourceKind() {
+  const source = Field.meta?.source || "";
+  if (/rtofs/i.test(source)) return "NOAA RTOFS fallback";
+  if (/cmems|copernicus/i.test(source)) return "CMEMS authenticated";
+  return "Unknown source";
+}
+
+function currentSpeedStats() {
+  if (!Field.u || !Field.v) return null;
+  const speeds = [];
+  Field.u.forEach((slice, ti) => {
+    slice.forEach((row, j) => {
+      row.forEach((u, i) => {
+        const v = Field.v[ti]?.[j]?.[i];
+        if (u !== null && v !== null && Number.isFinite(u) && Number.isFinite(v)) {
+          speeds.push(Math.hypot(u, v));
+        }
+      });
+    });
+  });
+  if (!speeds.length) return null;
+  speeds.sort((a, b) => a - b);
+  return {
+    median: speeds[Math.floor(speeds.length * 0.5)],
+    p90: speeds[Math.floor(speeds.length * 0.9)],
+    max: speeds[speeds.length - 1],
+  };
+}
+
+function timelinePhaseFor(sec) {
+  const nowSec = Date.now() / 1000;
+  if (sec < nowSec - 6 * 3600) return "Hindcast";
+  if (sec <= nowSec + 3600) return "Near real time";
+  return "Forecast";
+}
+
+function updateDataQualityPanel() {
+  if (!Field.loaded || !Field.meta) return;
+  const meta = Field.meta;
+  const generatedMs = parseUtc(meta.generated_utc);
+  const nowMs = Date.now();
+  const sourceKind = dataSourceKind();
+  const interpolated = meta.source_time_step_sec && meta.source_time_step_sec !== meta.time_step_sec;
+  const stats = currentSpeedStats();
+  const dataAge = Number.isFinite(generatedMs) ? formatAge(nowMs - generatedMs) : "generation time unknown";
+
+  if (els.dataSourceChip) els.dataSourceChip.textContent = sourceKind;
+  if (els.dataFreshness) els.dataFreshness.textContent = dataAge;
+  if (els.dataHealth) els.dataHealth.textContent = sourceKind.includes("fallback") ? "Fallback live data" : "Primary live data";
+  if (els.dataWindow) els.dataWindow.textContent = `${meta.time_start} to ${meta.time_end} UTC`;
+  if (els.dataResolution) {
+    const sourceStep = interpolated ? ` from ${Math.round(meta.source_time_step_sec / 3600)} h source` : "";
+    els.dataResolution.textContent = `${Math.round(meta.time_step_sec / 3600)} h${sourceStep}`;
+  }
+  if (els.dataGenerated) els.dataGenerated.textContent = `${meta.generated_utc || "-"} (${dataAge})`;
+  if (els.dataGrid) els.dataGrid.textContent = `${meta.n_lat} x ${meta.n_lon} cells | ${meta.n_times} frames`;
+  if (els.speedScaleMid && stats) els.speedScaleMid.textContent = `Median ${stats.median.toFixed(2)} m/s`;
+  if (els.speedScaleMax && stats) els.speedScaleMax.textContent = `Max ${stats.max.toFixed(2)} m/s`;
+  if (els.dataQualityNote) {
+    const windText = Field.hasWind ? `Wind: ${meta.wind_source}.` : "Wind is not embedded in this dataset.";
+    const interpText = interpolated ? " Hourly browser frames are linearly interpolated from source forecast snapshots." : "";
+    els.dataQualityNote.textContent = `${sourceKind}. ${windText}${interpText}`;
   }
 }
 
@@ -1253,18 +1334,21 @@ function buildShareUrl() {
   return url.toString();
 }
 
-async function copyShareLink() {
-  const url = buildShareUrl();
+async function copyTextToClipboard(text) {
   try {
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(text);
   } catch (err) {
     const fallback = document.createElement("textarea");
-    fallback.value = url;
+    fallback.value = text;
     document.body.appendChild(fallback);
     fallback.select();
     document.execCommand("copy");
     fallback.remove();
   }
+}
+
+async function copyShareLink() {
+  await copyTextToClipboard(buildShareUrl());
   setStatus("Share link copied.");
 }
 
@@ -1281,6 +1365,11 @@ function exportRunJson() {
       releaseRadiusM: Number(els.relRadius.value),
       diffusionK: Number(els.diffK.value),
       useWind: Boolean(els.useWind.checked && Field.hasWind),
+    },
+    data: {
+      meta: Field.meta,
+      sourceKind: dataSourceKind(),
+      activeTimeUtc: Field.times[Math.floor(tIdx)] || null,
     },
     run: activeRun ? {
       startUtc: new Date(activeRun.startSec * 1000).toISOString(),
@@ -1466,6 +1555,36 @@ function downloadPygnomeScript() {
   }
 }
 
+function buildValidationSummary() {
+  const preset = selectedPreset();
+  const meta = Field.meta || {};
+  const lines = [
+    "Hormuz Drift validation handoff",
+    `Scenario: ${getScenarioLabel(activeScenario)}${preset ? ` / ${preset.label}` : ""}`,
+    `Release: ${releasePoint ? `${releasePoint.lat.toFixed(5)} N, ${releasePoint.lon.toFixed(5)} E` : "not set"}`,
+    `Run duration: ${els.durHours.value} h`,
+    `Ensemble: ${els.nEns.value} particles`,
+    `Current source: ${meta.source || "unknown"}`,
+    `Wind source: ${meta.wind_source || "not embedded"}`,
+    `Data window: ${meta.time_start || "?"} UTC to ${meta.time_end || "?"} UTC`,
+    `Browser time step: ${meta.time_step_sec ? `${meta.time_step_sec / 3600} h` : "unknown"}`,
+    `Source step: ${meta.source_time_step_sec ? `${meta.source_time_step_sec / 3600} h` : "native/unknown"}`,
+    "Compare in WebGNOME/OpenDrift: release coordinates, start time, current/wind forcing window, trajectory spread, oil budget, and first shoreline contact.",
+  ];
+  if (activeRun?.summary) {
+    lines.push(`Last browser run: ${activeRun.summary.drifting} drifting, ${activeRun.summary.stranded} stranded.`);
+  }
+  return lines.join("\n");
+}
+
+async function copyValidationSummary() {
+  await copyTextToClipboard(buildValidationSummary());
+  const wgStatus = document.getElementById("wg-status");
+  if (wgStatus) {
+    wgStatus.textContent = "Validation summary copied. Paste it beside the WebGNOME/OpenDrift run notes.";
+  }
+}
+
 function showWgModal() {
   const modal = document.getElementById("webgnome-modal");
   if (modal) modal.style.display = "flex";
@@ -1507,11 +1626,13 @@ function updateReleaseInfo() {
     els.releaseInfo.textContent = "Click on the map to set release point.";
     els.runBtn.disabled = true;
     if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = true;
+    updatePresetGuide();
     return;
   }
   els.releaseInfo.textContent = `${releasePoint.lat.toFixed(4)} N, ${releasePoint.lon.toFixed(4)} E`;
   els.runBtn.disabled = false;
   if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = false;
+  updatePresetGuide();
 }
 
 function updateTimelinePill() {
@@ -1520,9 +1641,11 @@ function updateTimelinePill() {
     els.timeWindowLabel.textContent = "Playback follows the forcing timeline.";
     if (hasField) {
       const currentIndex = Math.floor(tIdx);
+      const currentSec = tIdxToSec(currentIndex);
       els.timelineStart.textContent = `Start ${Field.times[0]} UTC`;
       els.timelineEnd.textContent = `End ${Field.times[Field.times.length - 1]} UTC`;
       els.timelineCurrent.textContent = `${Field.times[currentIndex] || ""} UTC`;
+      if (els.timelinePhase) els.timelinePhase.textContent = timelinePhaseFor(currentSec);
       els.timelineEvents.innerHTML = "";
     }
     return;
@@ -1533,6 +1656,7 @@ function updateTimelinePill() {
   els.timelineStart.textContent = `Release ${new Date(activeRun.startSec * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC`;
   els.timelineEnd.textContent = `End ${new Date(activeRun.endSec * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC`;
   els.timelineCurrent.textContent = `${formatRunOffset(offsetHours)} | ${new Date(viewSec * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC`;
+  if (els.timelinePhase) els.timelinePhase.textContent = timelinePhaseFor(viewSec);
   renderTimelineEvents();
 }
 
@@ -1585,6 +1709,19 @@ function presetDescription(preset) {
   return `${preset.durHours} h | ${preset.nEns} particles | ${preset.useWind ? "wind on" : "currents only"}`;
 }
 
+function updatePresetGuide() {
+  const preset = selectedPreset();
+  if (!els.presetGuide || !preset) return;
+  const releaseText = releasePoint
+    ? `Release at ${releasePoint.lat.toFixed(4)} N, ${releasePoint.lon.toFixed(4)} E.`
+    : "Click the map to anchor the release before running.";
+  els.presetGuide.innerHTML = `
+    <strong>${preset.label}</strong>
+    <span>${preset.guide || "Use this preset as a fast starting point, then tune duration, diffusion, and ensemble size."}</span>
+    <span>${presetDescription(preset)}. ${releaseText}</span>
+  `;
+}
+
 function renderPresetCards() {
   if (!els.presetCards) return;
   const presets = SCENARIO_PRESETS[activeScenario];
@@ -1592,6 +1729,7 @@ function renderPresetCards() {
     <button type="button" class="preset-card ${preset.id === els.scenarioPreset.value ? "active" : ""}" data-preset="${preset.id}">
       <span class="preset-label">${preset.label}</span>
       <span class="preset-meta">${presetDescription(preset)}</span>
+      <span class="preset-meta">${preset.guide}</span>
     </button>
   `).join("");
   els.presetCards.querySelectorAll(".preset-card").forEach((card) => {
@@ -1618,6 +1756,7 @@ function applyPreset(presetId, announce = true) {
   els.useWind.checked = Field.hasWind ? preset.useWind : false;
   if (announce) setStatus(`Preset loaded: ${preset.label}.`);
   renderPresetCards();
+  updatePresetGuide();
   updateScenarioBadges();
   updateStoryCard();
 }
@@ -1750,7 +1889,16 @@ function collectDomRefs() {
     clearBtn: document.getElementById("clearBtn"),
     controlScenario: document.getElementById("controlScenario"),
     copyLinkBtn: document.getElementById("copyLinkBtn"),
+    copyValidationBtn: document.getElementById("copyValidationBtn"),
+    dataFreshness: document.getElementById("data-freshness"),
+    dataGenerated: document.getElementById("data-generated"),
+    dataGrid: document.getElementById("data-grid"),
+    dataHealth: document.getElementById("data-health"),
     dataMeta: document.getElementById("data-meta"),
+    dataQualityNote: document.getElementById("data-quality-note"),
+    dataResolution: document.getElementById("data-resolution"),
+    dataSourceChip: document.getElementById("data-source-chip"),
+    dataWindow: document.getElementById("data-window"),
     diffK: document.getElementById("diffK"),
     durHours: document.getElementById("durHours"),
     exportCsvBtn: document.getElementById("exportCsvBtn"),
@@ -1779,6 +1927,7 @@ function collectDomRefs() {
     oilType: document.getElementById("oilType"),
     oilVol: document.getElementById("oilVol"),
     playBtn: document.getElementById("playBtn"),
+    presetGuide: document.getElementById("preset-guide"),
     presetCards: document.getElementById("presetCards"),
     progressDetail: document.getElementById("progress-detail"),
     progressFill: document.getElementById("progress-fill"),
@@ -1791,12 +1940,15 @@ function collectDomRefs() {
     runProgress: document.getElementById("run-progress"),
     runStatus: document.getElementById("run-status"),
     scenarioPreset: document.getElementById("scenarioPreset"),
+    speedScaleMax: document.getElementById("speed-scale-max"),
+    speedScaleMid: document.getElementById("speed-scale-mid"),
     speedLabel: document.getElementById("speed-label"),
     speedSlider: document.getElementById("speedSlider"),
     timeLabel: document.getElementById("time-label"),
     timelineCurrent: document.getElementById("timeline-current"),
     timelineEnd: document.getElementById("timeline-end"),
     timelineEvents: document.getElementById("timeline-events"),
+    timelinePhase: document.getElementById("timeline-phase"),
     timelineStart: document.getElementById("timeline-start"),
     timeSlider: document.getElementById("timeSlider"),
     timeWindowLabel: document.getElementById("time-window-label"),
@@ -1878,6 +2030,7 @@ function wireUi() {
   const webgnomeModal = document.getElementById("webgnome-modal");
   if (openWebgnomeBtn) openWebgnomeBtn.onclick = openWebgnome;
   if (downloadPygnomeBtn) downloadPygnomeBtn.onclick = downloadPygnomeScript;
+  if (els.copyValidationBtn) els.copyValidationBtn.onclick = copyValidationSummary;
   if (webgnomeHelpBtn) webgnomeHelpBtn.onclick = showWgModal;
   if (closeWgModal) closeWgModal.onclick = hideWgModal;
   if (closeWgModal2) closeWgModal2.onclick = hideWgModal;
@@ -1951,6 +2104,7 @@ async function boot() {
   buildPresetOptions();
   setScenario("leeway", true);
   syncWindControls();
+  updateDataQualityPanel();
   syncLayerInputs();
 
   els.timeSlider.max = Field.times.length - 1;

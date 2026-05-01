@@ -22,7 +22,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="icon" type="image/png" href="assets/tridel.png"/>
-<link rel="stylesheet" href="css/style.css?v=19"/>
+<link rel="stylesheet" href="css/style.css?v=20"/>
 </head>
 <body>
 <div id="app">
@@ -67,6 +67,7 @@
     <div class="row scrub-row timeline-head">
       <span id="time-label">loading...</span>
       <span id="timeline-current" class="tag">Waiting for data</span>
+      <span id="timeline-phase" class="tag">Timeline context pending</span>
     </div>
 
     <div class="timeline-shell">
@@ -118,7 +119,35 @@
           <span class="stat-label">Wind forcing</span>
           <strong id="wind-note">-</strong>
         </div>
+        <div class="stat-card">
+          <span class="stat-label">Data source</span>
+          <strong id="data-source-chip">Loading dataset...</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Freshness</span>
+          <strong id="data-freshness">Waiting for metadata</strong>
+        </div>
       </div>
+    </div>
+
+    <div class="section-card data-quality-card" id="data-quality-card">
+      <div class="section-heading-row">
+        <h3>Data quality</h3>
+        <span id="data-health" class="tag">Checking</span>
+      </div>
+      <div class="quality-grid">
+        <div><span>Forecast window</span><strong id="data-window">-</strong></div>
+        <div><span>Resolution</span><strong id="data-resolution">-</strong></div>
+        <div><span>Generated</span><strong id="data-generated">-</strong></div>
+        <div><span>Grid</span><strong id="data-grid">-</strong></div>
+      </div>
+      <div class="speed-scale" aria-label="Current speed scale">
+        <div class="speed-scale-bar"><span></span><span></span><span></span></div>
+        <div class="speed-scale-labels">
+          <span>Low</span><strong id="speed-scale-mid">Median -</strong><span id="speed-scale-max">Max -</span>
+        </div>
+      </div>
+      <div id="data-quality-note" class="hint">Dataset metadata will appear after the forcing file loads.</div>
     </div>
 
     <!-- Scenario family selector. This switches the active modeling path
@@ -135,6 +164,10 @@
         <select id="scenarioPreset"></select>
       </div>
       <div id="presetCards" class="preset-card-grid"></div>
+      <div id="preset-guide" class="preset-guide">
+        <strong>Preset guide</strong>
+        <span>Choose a scenario preset to see what it is best for.</span>
+      </div>
 
       <div id="leeway-params">
         <div class="row">
@@ -235,6 +268,16 @@
       </div>
     </div>
 
+    <div class="section-card caveat-card">
+      <h3>Model honesty</h3>
+      <div class="caveat-list">
+        <div><strong>Surface only</strong><span>No subsurface shear, vertical mixing, or wave-spectrum resolved Stokes drift.</span></div>
+        <div><strong>Hourly browser grid</strong><span>RTOFS fallback is packed as hourly output; source snapshots may be interpolated from coarser forecast files.</span></div>
+        <div><strong>Shoreline risk</strong><span>Stranding uses the model land mask, not high-resolution shoreline polygons or port infrastructure.</span></div>
+        <div><strong>Operational handoff</strong><span>Use WebGNOME/OpenDrift for certified response planning, oil chemistry, and official products.</span></div>
+      </div>
+    </div>
+
     <!-- Browser-side approximations of operational response actions. -->
     <div class="section-card" id="response-card" style="display:none">
       <h3>Response options</h3>
@@ -315,6 +358,10 @@
           <span class="wheel-key">Orange = particles, red = stranded, cyan = uncertainty.</span>
         </div>
       </div>
+      <div class="map-polish-note">
+        <strong>Speed styling</strong>
+        <span>Current opacity is normalized against the loaded dataset so low, medium, and high-flow areas stay readable across refreshes.</span>
+      </div>
     </div>
 
     <!-- Run/start/clear/export affordances for the active scenario. -->
@@ -387,7 +434,13 @@
       <div class="action-grid webgnome-actions">
         <button id="openWebgnomeBtn" class="primary wg-primary">Open WebGNOME</button>
         <button id="downloadPygnomeBtn" class="ghost">Download PyGNOME script</button>
+        <button id="copyValidationBtn" class="ghost">Copy validation summary</button>
         <button id="webgnomeHelpBtn" class="ghost small" style="grid-column:1/-1;">View setup instructions</button>
+      </div>
+      <div class="validation-checklist">
+        <span>Compare release time and coordinates</span>
+        <span>Match current and wind source window</span>
+        <span>Compare trajectory spread, oil budget, and first shoreline contact</span>
       </div>
       <div id="wg-status" class="hint" style="margin-top:6px;"></div>
     </div>
@@ -398,6 +451,15 @@
         Currents come from the active dataset metadata: CMEMS when authenticated, or NOAA/NCEP RTOFS
         when the no-login real-time fallback is used. Wind vectors are embedded when the dataset refresh
         includes Open-Meteo/GFS or NCEP GFS forcing. Tiles by OpenStreetMap and CARTO.
+      </div>
+    </div>
+
+    <div class="section-card science-roadmap-card">
+      <h3>Next fidelity upgrades</h3>
+      <div class="roadmap-list">
+        <div><strong>Tide/current comparison</strong><span>Add a harmonic tide layer or port-gauge feed to compare tidal phase against RTOFS/CMEMS currents.</span></div>
+        <div><strong>Shoreline polygons</strong><span>Replace grid-cell stranding with GSHHS or local coastline polygons for more precise contact points.</span></div>
+        <div><strong>Higher physics tier</strong><span>Run OpenDrift/WebGNOME server-side for vertical mixing, richer oil weathering, and uncertainty products.</span></div>
       </div>
     </div>
   </aside>
@@ -466,6 +528,6 @@
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/field.js?v=4"></script>
 <script src="js/drift.js?v=4"></script>
-<script src="js/app.js?v=20"></script>
+<script src="js/app.js?v=21"></script>
 </body>
 </html>
