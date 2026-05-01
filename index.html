@@ -106,8 +106,8 @@
 
     <div class="section-card intro-card" id="mission-summary">
       <p class="lede">
-        A Tridel research page for exploring live oil-spill and drifter trajectories using CMEMS surface
-        currents, optional wind drift, and a particle ensemble over the Strait of Hormuz.
+        A Tridel research page for exploring live oil-spill and drifter trajectories using operational
+        surface currents, optional wind drift, and a particle ensemble over the Strait of Hormuz.
       </p>
       <div class="quick-stats">
         <div class="stat-card">
@@ -381,7 +381,7 @@
       <p class="hint">Use this browser model for fast exploration, then transfer the same release setup into <strong>WebGNOME</strong> for NOAA's fuller oil weathering and response-planning workflow.</p>
       <div class="webgnome-feature-list">
         <div class="wg-feat"><span class="wg-feat-icon">ADIOS</span><span>Oil weathering, emulsion, dispersion, and budget outputs.</span></div>
-        <div class="wg-feat"><span class="wg-feat-icon">CMEMS</span><span>Load the project NetCDF currents as a grid-current mover.</span></div>
+        <div class="wg-feat"><span class="wg-feat-icon">DATA</span><span>Load the project NetCDF currents as a grid-current mover.</span></div>
         <div class="wg-feat"><span class="wg-feat-icon">OPS</span><span>Compare trajectories, beached mass, and operational exports.</span></div>
       </div>
       <div class="action-grid webgnome-actions">
@@ -395,9 +395,9 @@
     <div class="section-card">
       <h3>Data provenance</h3>
       <div class="hint">
-        Currents come from <a href="https://marine.copernicus.eu">Copernicus Marine Service</a> CMEMS surface
-        velocity fields. Wind vectors are embedded when the dataset refresh includes Open-Meteo/GFS or NCEP GFS
-        forcing. Tiles by OpenStreetMap and CARTO.
+        Currents come from the active dataset metadata: CMEMS when authenticated, or NOAA/NCEP RTOFS
+        when the no-login real-time fallback is used. Wind vectors are embedded when the dataset refresh
+        includes Open-Meteo/GFS or NCEP GFS forcing. Tiles by OpenStreetMap and CARTO.
       </div>
     </div>
   </aside>
@@ -423,9 +423,9 @@
       <div class="wg-step">
         <span class="wg-step-num">2</span>
         <div>
-          <strong>Add CMEMS currents</strong>
-          <p>Add a grid-current mover and upload the CMEMS NetCDF currents file from this project.</p>
-          <code class="wg-code">cmems_mod_glo_phy_anfc_merged-uv_PT1H-i_*.nc</code>
+          <strong>Add project currents</strong>
+          <p>Add a grid-current mover and upload the CMEMS or NOAA RTOFS NetCDF currents file used for this project.</p>
+          <code class="wg-code">cmems_*.nc or rtofs_glo_2ds_*.nc</code>
         </div>
       </div>
       <div class="wg-step">
@@ -466,6 +466,6 @@
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="js/field.js?v=4"></script>
 <script src="js/drift.js?v=4"></script>
-<script src="js/app.js?v=19"></script>
+<script src="js/app.js?v=20"></script>
 </body>
 </html>

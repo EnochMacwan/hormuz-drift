@@ -153,13 +153,14 @@ File: **`.github/workflows/daily-data.yml`**
 
 A GitHub Actions cron job that runs **every day at 06:00 UTC**:
 
-1. Install Python deps (`copernicusmarine`, `xarray`, etc.)
-2. Run `scripts/fetch_data.py` which pulls fresh 10-day forecasts from CMEMS + Open-Meteo
+1. Install Python deps (`copernicusmarine`, `xarray`, `netCDF4`, `pandas`, etc.)
+2. Run `scripts/fetch_data.py` for CMEMS, or `scripts/fetch_rtofs_data.py` for the no-login NOAA RTOFS fallback
 3. Commit the updated `data/currents.json` back to the repo
 4. GitHub Pages auto-redeploys
 
-Needs two secrets in GitHub **Settings → Secrets → Actions**: `CMEMS_USER` and
-`CMEMS_PASS` (your Copernicus account credentials).
+CMEMS needs two secrets in GitHub **Settings → Secrets → Actions**: `CMEMS_USER`
+and `CMEMS_PASS` (your Copernicus account credentials). If that path fails, the
+workflow falls back to NOAA/NCEP Global RTOFS and Open-Meteo/GFS without secrets.
 
 ---
 

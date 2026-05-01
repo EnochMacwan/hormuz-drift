@@ -69,7 +69,7 @@ const map = L.map("map", { zoomControl: false, preferCanvas: true, attributionCo
 L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
   subdomains: "abcd",
   maxZoom: 13,
-  attribution: "OpenStreetMap | CARTO | Currents: CMEMS",
+  attribution: "OpenStreetMap | CARTO | Currents: live dataset",
 }).addTo(map);
 
 /* Three stacked canvases:
@@ -1347,7 +1347,7 @@ function openWebgnome() {
   window.open("https://gnome.orr.noaa.gov/#config", "_blank", "noopener");
   const wgStatus = document.getElementById("wg-status");
   if (wgStatus) {
-    wgStatus.textContent = "WebGNOME opened in a new tab. Use the setup instructions to load CMEMS currents and match the release point.";
+    wgStatus.textContent = "WebGNOME opened in a new tab. Use the setup instructions to load the project currents and match the release point.";
   }
 }
 

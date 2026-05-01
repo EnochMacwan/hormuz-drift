@@ -48,7 +48,8 @@ For operational use, run real [OpenDrift](https://opendrift.github.io).
 │   └── currents.json             generated – do not edit by hand
 ├── scripts/
 │   ├── prepare_data.py           one-shot: NetCDF → JSON (local use)
-│   └── fetch_data.py             CMEMS + GFS daily refresh (CI)
+│   ├── fetch_data.py             CMEMS + GFS daily refresh (CI)
+│   └── fetch_rtofs_data.py       no-login NOAA RTOFS fallback refresh
 └── .github/workflows/
     └── daily-data.yml            cron: 06:00 UTC
 ```
@@ -68,6 +69,16 @@ Do not open `index.html` directly with `file://`. The browser will block
 The packaged sample `data/currents.json` in this repo is currents-only. The UI
 will enable wind drift automatically when refreshed data includes `uw` / `vw`.
 
+No-login live refresh:
+
+```bash
+pip install xarray netCDF4 numpy pandas
+python scripts/fetch_rtofs_data.py
+```
+
+This pulls NOAA/NCEP RTOFS surface currents for the latest available run and
+adds Open-Meteo/GFS wind for the same time window.
+
 ## Deploying to GitHub Pages
 
 1. Create a public repo, push this folder.
@@ -75,8 +86,9 @@ will enable wind drift automatically when refreshed data includes `uw` / `vw`.
 3. **Settings → Secrets and variables → Actions**, add
    `CMEMS_USER` and `CMEMS_PASS` (free at <https://marine.copernicus.eu>).
 4. The daily workflow (`.github/workflows/daily-data.yml`) will refresh
-   `data/currents.json` automatically; when GFS is reachable it also embeds
-   surface wind into the JSON. Pages redeploys on every push.
+   `data/currents.json` automatically. It tries CMEMS first, then falls back to
+   NOAA/NCEP RTOFS if CMEMS credentials are missing or rejected. Pages redeploys
+   on every push.
 
 The site lives at `https://<user>.github.io/<repo>/`.
 
@@ -88,13 +100,13 @@ Each particle integrates
 dx/dt = V_current(x,t) + V_leeway(W) + V_stokes(W) + η(t)
 ```
 
-- `V_current`: bilinear interp of CMEMS `utotal, vtotal` in space + time.
+- `V_current`: bilinear interp of the active current dataset in space + time.
 - `V_leeway = dw·W·ŵ + cw·W·ŵ⊥` with object-dependent slopes (NOAA).
 - `V_stokes ≈ 0.016·W` (Kenyon surface-current approximation).
 - `η ∼ N(0, √(2Kδt))` per axis, with `K = 10 m²/s` default.
 
 Time integration is RK2 (midpoint) with `δt = 300 s`. Stranding = particle
-enters a land-mask cell (CMEMS NaN).
+enters a land-mask cell (`null` in the packed forcing grid).
 
 For oil, a slick-scale `OilSlick` tracks Fay radius and mass-fraction
 evaporation against the centroid release time; per-particle mass also decays.
@@ -102,10 +114,11 @@ evaporation against the centroid release time; per-particle mass also decays.
 ## Data sources
 
 - **Currents** — CMEMS `cmems_mod_glo_phy_anfc_merged-uv_PT1H-i`
-  (Copernicus Marine Service; free account required).
-- **Wind** — NCEP GFS 0.25° `u10, v10` via NOMADS OpenDAP (free, no auth).
+  when credentials are available, or NOAA/NCEP Global RTOFS via NOMADS HTTPS
+  as a no-login fallback.
+- **Wind** — Open-Meteo/GFS or NCEP GFS `u10, v10`, depending on the refresh path.
 - **Base tiles** — OpenStreetMap + CARTO Voyager.
 
 ## License
 
-Code: MIT. Data: subject to upstream licences (CMEMS redistribution requires attribution).
+Code: MIT. Data: subject to upstream licences; keep CMEMS and NOAA/NCEP RTOFS attribution when redistributing derived payloads.

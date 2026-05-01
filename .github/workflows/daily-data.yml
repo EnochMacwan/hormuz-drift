@@ -25,13 +25,13 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install copernicusmarine xarray numpy netCDF4 pydap
+          pip install copernicusmarine xarray numpy netCDF4 pydap pandas
 
-      - name: Fetch CMEMS + GFS
+      - name: Fetch live currents + wind
         env:
           CMEMS_USER: ${{ secrets.CMEMS_USER }}
           CMEMS_PASS: ${{ secrets.CMEMS_PASS }}
-        run: python scripts/fetch_data.py
+        run: python scripts/fetch_data.py || python scripts/fetch_rtofs_data.py
 
       - name: Commit and push
         run: |
