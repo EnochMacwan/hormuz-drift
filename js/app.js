@@ -1210,66 +1210,6 @@ function hslToRgb(h, s, l) {
   return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
 
-/* Paint the Mission Control legend for the same hue mapping used by currents.
-   Keeping it in the side rail avoids putting another floating object on map. */
-function paintColorWheel() {
-  const canvas = els.colorWheel;
-  if (!canvas) return;
-  const dpr = window.devicePixelRatio || 1;
-  const cssSize = 112;
-  canvas.width = cssSize * dpr;
-  canvas.height = cssSize * dpr;
-  canvas.style.width = `${cssSize}px`;
-  canvas.style.height = `${cssSize}px`;
-
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const center = cssSize / 2;
-  const diskRadius = 24;
-  const image = ctx.createImageData(cssSize, cssSize);
-  const pix = image.data;
-
-  for (let y = 0; y < cssSize; y += 1) {
-    for (let x = 0; x < cssSize; x += 1) {
-      const dx = x + 0.5 - center;
-      const dy = y + 0.5 - center;
-      const dist = Math.hypot(dx, dy);
-      const p = (y * cssSize + x) * 4;
-      if (dist > diskRadius) {
-        pix[p + 3] = 0;
-        continue;
-      }
-      const hue = directionHue(dx, dy);
-      const lightness = 0.6 - (dist / diskRadius) * 0.08;
-      const [r, g, b] = hslToRgb(hue / 360, 0.88, lightness);
-      pix[p] = r;
-      pix[p + 1] = g;
-      pix[p + 2] = b;
-      pix[p + 3] = Math.round(235 - (dist / diskRadius) * 45);
-    }
-  }
-
-  ctx.putImageData(image, 0, 0);
-  ctx.beginPath();
-  ctx.arc(center, center, center - 2, 0, Math.PI * 2);
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.82)";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(center, center, diskRadius + 1, 0, Math.PI * 2);
-  ctx.strokeStyle = "rgba(0, 18, 32, 0.16)";
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.fillStyle = "rgba(0, 18, 32, 0.72)";
-  ctx.font = "800 13px Inter, sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("N", center, 14);
-  ctx.fillText("E", cssSize - 14, center);
-  ctx.fillText("S", center, cssSize - 14);
-  ctx.fillText("W", 14, center);
-}
-
 /* Small helper for all text-based downloads (JSON, CSV, and generated helper
    scripts such as the optional PyGNOME handoff). */
 function downloadText(filename, text, mimeType) {
@@ -1829,7 +1769,6 @@ function collectDomRefs() {
     nLabel: document.getElementById("n-label"),
     nSlider: document.getElementById("nSlider"),
     layerCurrents: document.getElementById("layerCurrents"),
-    colorWheel: document.getElementById("colorWheel"),
     layerDensity: document.getElementById("layerDensity"),
     layerOilRadius: document.getElementById("layerOilRadius"),
     layerRelease: document.getElementById("layerRelease"),
@@ -2010,7 +1949,6 @@ async function boot() {
   buildLeewayOptions();
   buildOilOptions();
   buildPresetOptions();
-  paintColorWheel();
   setScenario("leeway", true);
   syncWindControls();
   syncLayerInputs();

@@ -284,7 +284,7 @@ img {
 
 .color-wheel-card {
   display: grid;
-  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-columns: 116px minmax(0, 1fr);
   align-items: center;
   gap: 16px;
   margin-top: 12px;
@@ -296,11 +296,93 @@ img {
   border: 1px solid rgba(0, 170, 231, 0.16);
 }
 
-#colorWheel {
+.direction-compass {
+  position: relative;
   width: 112px;
   height: 112px;
   border-radius: 50%;
+  isolation: isolate;
   filter: drop-shadow(0 8px 18px rgba(0, 18, 32, 0.14));
+}
+
+.direction-compass::before,
+.direction-compass::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.direction-compass::before {
+  inset: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.86);
+}
+
+.direction-compass::after {
+  inset: 28px;
+  border: 1px solid rgba(0, 18, 32, 0.12);
+}
+
+.direction-disc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.38), transparent 34%),
+    conic-gradient(
+      from 0deg,
+      hsl(90, 88%, 56%),
+      hsl(180, 88%, 56%),
+      hsl(270, 88%, 56%),
+      hsl(0, 88%, 56%),
+      hsl(90, 88%, 56%)
+    );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.42),
+    0 8px 16px rgba(0, 18, 32, 0.16);
+  transform: translate(-50%, -50%);
+}
+
+.direction-label {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: rgba(0, 18, 32, 0.72);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.direction-label-n {
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.direction-label-e {
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+}
+
+.direction-label-s {
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.direction-label-w {
+  top: 50%;
+  left: 4px;
+  transform: translateY(-50%);
 }
 
 .color-wheel-copy {
