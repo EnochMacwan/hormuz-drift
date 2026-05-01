@@ -24,7 +24,8 @@ from prepare_data import fetch_wind_openmeteo, pack
 
 LON_MIN, LON_MAX = 54.5, 57.8
 LAT_MIN, LAT_MAX = 25.5, 27.5
-DEFAULT_HOURS = tuple(range(0, 73, 6))
+DEFAULT_SOURCE_HOURS = tuple(range(0, 73, 6))
+DEFAULT_OUTPUT_STEP_HOURS = 1
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_JSON = ROOT / "data" / "currents.json"
@@ -88,11 +89,42 @@ def fmt_time(value):
     return np.datetime_as_string(value, unit="s").replace("T", " ")
 
 
+def hourly_axis(times, step_hours):
+    """Build an evenly spaced output axis from the first to last source time."""
+    start = np.datetime64(times[0], "s")
+    end = np.datetime64(times[-1], "s")
+    step = np.timedelta64(step_hours, "h")
+    return np.arange(start, end + step, step)
+
+
+def resample_time(arr, source_times, output_times):
+    """Linearly resample [time, lat, lon] arrays onto the browser time axis."""
+    source_sec = np.array(source_times, dtype="datetime64[s]").astype("int64")
+    output_sec = np.array(output_times, dtype="datetime64[s]").astype("int64")
+    out = np.empty((len(output_times),) + arr.shape[1:], dtype=np.float32)
+
+    for idx, t_sec in enumerate(output_sec):
+        right = np.searchsorted(source_sec, t_sec, side="right")
+        if right <= 1:
+            out[idx] = arr[0]
+            continue
+        if right >= len(source_sec):
+            out[idx] = arr[-1]
+            continue
+        left = right - 1
+        span = source_sec[right] - source_sec[left]
+        frac = 0.0 if span == 0 else (t_sec - source_sec[left]) / span
+        out[idx] = arr[left] * (1 - frac) + arr[right] * frac
+    return out
+
+
 def main():
     parser = argparse.ArgumentParser(description="Fetch NOAA RTOFS data for Hormuz Drift.")
     parser.add_argument("--day", help="RTOFS day as YYYYMMDD. Defaults to latest NOMADS directory.")
-    parser.add_argument("--hours", default=",".join(str(h) for h in DEFAULT_HOURS),
-                        help="Comma-separated forecast hours, default: 0,3,...,24")
+    parser.add_argument("--hours", default=",".join(str(h) for h in DEFAULT_SOURCE_HOURS),
+                        help="Comma-separated source forecast hours, default: 0,6,...,72")
+    parser.add_argument("--output-step-hours", type=int, default=DEFAULT_OUTPUT_STEP_HOURS,
+                        help="Packed JSON time step in hours, default: 1")
     parser.add_argument("--keep-cache", action="store_true", help="Keep downloaded NetCDF files.")
     args = parser.parse_args()
 
@@ -121,28 +153,36 @@ def main():
     u_arr = np.stack(u_slices, axis=0)
     v_arr = np.stack(v_slices, axis=0)
 
-    print("Fetching Open-Meteo/GFS wind for the same time window ...")
-    uw_arr, vw_arr, wind_source = fetch_wind_openmeteo(np.asarray(times), lats, lons)
+    output_times = hourly_axis(times, args.output_step_hours)
+    u_out = resample_time(u_arr, times, output_times)
+    v_out = resample_time(v_arr, times, output_times)
+    source_step_sec = int((times[1] - times[0]) / np.timedelta64(1, "s")) if len(times) > 1 else 0
+    output_step_sec = int(args.output_step_hours * 3600)
+
+    print(f"Resampled currents to {len(output_times)} frames at {args.output_step_hours} h resolution.")
+    print("Fetching Open-Meteo/GFS wind for the same hourly time window ...")
+    uw_arr, vw_arr, wind_source = fetch_wind_openmeteo(output_times, lats, lons)
 
     payload = {
         "meta": {
-            "source": f"NOAA/NCEP Global RTOFS 2-D surface currents (rtofs.{day})",
+            "source": f"NOAA/NCEP Global RTOFS 2-D surface currents (rtofs.{day}, hourly browser interpolation)",
             "wind_source": wind_source,
-            "time_start": fmt_time(times[0]),
-            "time_end": fmt_time(times[-1]),
-            "time_step_sec": int((times[1] - times[0]) / np.timedelta64(1, "s")) if len(times) > 1 else 3600,
-            "n_times": len(times),
+            "time_start": fmt_time(output_times[0]),
+            "time_end": fmt_time(output_times[-1]),
+            "time_step_sec": output_step_sec,
+            "source_time_step_sec": source_step_sec,
+            "n_times": len(output_times),
             "n_lat": len(lats),
             "n_lon": len(lons),
             "dlat": float(np.mean(np.diff(lats))),
             "dlon": float(np.mean(np.diff(lons))),
             "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         },
-        "times": [fmt_time(t) for t in times],
+        "times": [fmt_time(t) for t in output_times],
         "lats": [round(float(x), 4) for x in lats.tolist()],
         "lons": [round(float(x), 4) for x in lons.tolist()],
-        "u": pack(u_arr),
-        "v": pack(v_arr),
+        "u": pack(u_out),
+        "v": pack(v_out),
         "uw": pack(uw_arr) if uw_arr is not None else None,
         "vw": pack(vw_arr) if vw_arr is not None else None,
     }

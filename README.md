@@ -76,8 +76,9 @@ pip install xarray netCDF4 numpy pandas
 python scripts/fetch_rtofs_data.py
 ```
 
-This pulls NOAA/NCEP RTOFS surface currents for the latest available run and
-adds Open-Meteo/GFS wind for the same time window.
+This pulls NOAA/NCEP RTOFS surface currents for the latest available run,
+resamples the browser payload to 1-hour steps, and adds Open-Meteo/GFS wind for
+the same hourly time window.
 
 ## Deploying to GitHub Pages
 

@@ -161,6 +161,8 @@ A GitHub Actions cron job that runs **every day at 06:00 UTC**:
 CMEMS needs two secrets in GitHub **Settings → Secrets → Actions**: `CMEMS_USER`
 and `CMEMS_PASS` (your Copernicus account credentials). If that path fails, the
 workflow falls back to NOAA/NCEP Global RTOFS and Open-Meteo/GFS without secrets.
+The RTOFS fallback writes an hourly browser timeline, interpolated from the
+downloaded source forecast snapshots.
 
 ---
 
