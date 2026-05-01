@@ -831,6 +831,87 @@ button.small { padding: 9px 12px; }
   transition: width 160ms ease;
 }
 
+/* WebGNOME handoff card lives in the side panel rather than on top of the
+   map, preserving map legibility while keeping the official-tool path handy. */
+.webgnome-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(0, 170, 231, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(0, 170, 231, 0.16), transparent 38%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(237, 248, 252, 0.94));
+}
+
+.webgnome-card::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -44px;
+  width: 150px;
+  height: 150px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(229, 173, 25, 0.22), transparent 68%);
+  pointer-events: none;
+}
+
+.webgnome-header {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.noaa-logo {
+  width: 54px;
+  height: auto;
+  flex: 0 0 auto;
+  opacity: 0.78;
+}
+
+.webgnome-feature-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 14px;
+}
+
+.wg-feat {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.wg-feat-icon {
+  flex: 0 0 auto;
+  min-width: 48px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: rgba(0, 170, 231, 0.1);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.webgnome-actions {
+  gap: 8px;
+}
+
+button.wg-primary {
+  border-color: rgba(0, 170, 231, 0.42);
+  background: linear-gradient(135deg, rgba(0, 170, 231, 0.95), rgba(0, 129, 176, 0.9));
+  color: #ffffff;
+}
+
+button.wg-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(0, 170, 231, 0.98), rgba(0, 129, 176, 0.98));
+}
+
 /* Results area is a responsive card grid that gets repopulated by app.js as
    the run/playback state changes. */
 #results {
@@ -921,6 +1002,131 @@ canvas.overlay { position: absolute; top: 0; left: 0; pointer-events: none; }
 
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip { background: rgba(255, 255, 255, 0.96); color: var(--text); }
+
+/* WebGNOME setup modal. It is intentionally lightweight: the heavy lifting
+   remains in NOAA WebGNOME or the generated PyGNOME script. */
+.wg-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 18, 32, 0.48);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.wg-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(660px, 100%);
+  max-height: 88vh;
+  overflow: hidden;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(0, 170, 231, 0.12), transparent 34%),
+    rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 28px 70px rgba(0, 18, 32, 0.24);
+}
+
+.wg-modal-head,
+.wg-modal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px;
+  border-color: var(--line);
+}
+
+.wg-modal-head {
+  border-bottom: 1px solid var(--line);
+}
+
+.wg-modal-foot {
+  justify-content: flex-end;
+  border-top: 1px solid var(--line);
+}
+
+.wg-modal-head h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.25rem;
+  letter-spacing: -0.03em;
+}
+
+.wg-modal-body {
+  display: grid;
+  gap: 16px;
+  padding: 20px 22px;
+  overflow-y: auto;
+}
+
+.wg-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.wg-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.wg-step strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.wg-step p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.wg-code {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(0, 170, 231, 0.09);
+  color: var(--accent-2);
+  font-size: 11px;
+}
+
+.wg-tip {
+  padding: 13px 15px;
+  border-radius: 16px;
+  background: rgba(0, 170, 231, 0.08);
+  border: 1px solid rgba(0, 170, 231, 0.16);
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.wg-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 16px;
+  text-decoration: none;
+}
 
 body.focus-mode #side,
 body.focus-mode #controls,
