@@ -22,7 +22,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="icon" type="image/png" href="assets/tridel.png"/>
-<link rel="stylesheet" href="css/style.css?v=15"/>
+<link rel="stylesheet" href="css/style.css?v=16"/>
 </head>
 <body>
 <div id="app">
@@ -40,6 +40,9 @@
       <span>Research / educational use only. Physics are based on OpenDRIFT.</span>
       <a href="README.md">README and caveats</a>
     </div>
+    <a class="partner-logo" href="https://austides.com" target="_blank" rel="noopener" aria-label="Austides Adelaide">
+      <img src="assets/austides.svg" alt="Austides Adelaide"/>
+    </a>
   </div>
 
   <!-- Map region. Leaflet owns #map itself; all controls live outside the map
@@ -119,7 +122,7 @@
     </div>
 
     <!-- Scenario family selector. This switches the active modeling path
-         between SAR/leeway behavior and oil/weathering behavior. -->
+         between S&R/leeway behavior and oil/weathering behavior. -->
     <div class="section-card">
       <h3>Scenario</h3>
       <div class="scenario-tabs">
@@ -139,7 +142,7 @@
           <select id="leewayCat"></select>
         </div>
         <div class="hint">
-          NOAA leeway categories combine downwind and crosswind response for different SAR targets.
+          NOAA leeway categories combine downwind and crosswind response for different S&R targets.
         </div>
       </div>
 

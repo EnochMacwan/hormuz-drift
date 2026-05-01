@@ -8,7 +8,7 @@ This is a quick technical handoff note for the Strait of Hormuz drift animation.
 2. Converted that gridded scientific data into a compact browser-friendly JSON file.
 3. Used OpenDrift as the modeling reference, but reimplemented a simplified drift model in JavaScript instead of running Python in the browser.
 4. Added the main particle physics in JavaScript:
-   current advection, random-walk diffusion, leeway drift for SAR objects, simple Stokes-drift approximation, and a simplified oil spreading / evaporation mode.
+   current advection, random-walk diffusion, leeway drift for S&R objects, simple Stokes-drift approximation, and a simplified oil spreading / evaporation mode.
 5. Built a sampler that interpolates the gridded data in both space and time so particles move smoothly.
 6. Created an ensemble system so many particles can be released at once with slightly different initial conditions.
 7. Rendered the basemap with Leaflet and drew the currents / particles on stacked canvas overlays for performance.
@@ -62,7 +62,7 @@ This is what makes the particles move smoothly instead of snapping cell to cell.
 - `js/drift.js`
   Core particle model.
   Defines:
-  - SAR leeway categories
+  - S&R leeway categories
   - oil presets
   - `Drifter` particle class
   - `OilSlick` helper model

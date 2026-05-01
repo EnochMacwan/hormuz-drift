@@ -3,7 +3,7 @@
 Static, client-side web model of surface-current drift in the Strait of Hormuz.
 Targets two scenarios:
 
-- **Man overboard / SAR** — NOAA Leeway categories with downwind + crosswind slopes.
+- **Man overboard / S&R** — NOAA Leeway categories with downwind + crosswind slopes.
 - **Oil spill** — Fay gravity-viscous spreading + first-order evaporation.
 
 Runs entirely in the browser (JS + Leaflet + Canvas). Designed for **GitHub Pages**.
@@ -11,7 +11,7 @@ Runs entirely in the browser (JS + Leaflet + Canvas). Designed for **GitHub Page
 ## What is new in the upgraded UI
 
 - Mobile-first control sheet with a map-first desktop layout
-- Scenario presets for SAR and oil workflows
+- Scenario presets for S&R and oil workflows
 - Time-jump playback controls and run-window playback
 - Trail, density, and uncertainty overlays tied to playback time
 - Results analytics chart plus JSON and CSV export
@@ -20,7 +20,7 @@ Runs entirely in the browser (JS + Leaflet + Canvas). Designed for **GitHub Page
 
 ## ⚠ Scope & caveats
 
-> **Research / educational use only. Not certified for operational SAR or spill response.**
+> **Research / educational use only. Not certified for operational S&R or spill response.**
 
 | Physics | Implemented | Missing vs. real OpenDrift |
 |---|---|---|

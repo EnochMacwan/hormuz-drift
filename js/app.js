@@ -21,7 +21,7 @@
    definitions. */
 const SCENARIO_PRESETS = {
   leeway: [
-    { id: "sar_fast", label: "SAR fast response", category: "piw_light", relRadius: 80, diffK: 8, durHours: 24, nEns: 300, useWind: true },
+    { id: "sar_fast", label: "S&R fast response", category: "piw_light", relRadius: 80, diffK: 8, durHours: 24, nEns: 300, useWind: true },
     { id: "sar_uncertain", label: "Wide uncertainty search", category: "raft_4_6", relRadius: 250, diffK: 18, durHours: 36, nEns: 500, useWind: true },
     { id: "sar_long", label: "Long horizon drifting object", category: "debris", relRadius: 180, diffK: 14, durHours: 72, nEns: 600, useWind: true },
   ],
@@ -1545,7 +1545,7 @@ function applyPreset(presetId, announce = true) {
   updateStoryCard();
 }
 
-/* Switch between SAR and oil modes and show/hide the matching controls. */
+/* Switch between S&R and oil modes and show/hide the matching controls. */
 function setScenario(scenario, preservePreset) {
   activeScenario = scenario;
   document.querySelectorAll(".scenario-tabs button").forEach((button) => {

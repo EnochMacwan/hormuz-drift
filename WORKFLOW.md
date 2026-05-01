@@ -144,7 +144,7 @@ dx/dt = V_current(x,t)        ← from CMEMS
   reflects real uncertainty
 - **Timeline scrubber** lets you jump around in the 10-day forcing window
 
-**To play**: just click around. Try different scenarios. Change the SAR preset to Oil spill,
+**To play**: just click around. Try different scenarios. Change the S&R preset to Oil spill,
 see how weathering (evaporation) shrinks the slick over time.
 
 ### 6. Automate the daily refresh

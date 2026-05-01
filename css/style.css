@@ -198,6 +198,26 @@ img {
   white-space: nowrap;
 }
 
+.partner-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 128px;
+  height: 38px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  box-shadow: 0 8px 18px rgba(0, 18, 32, 0.22);
+}
+
+.partner-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 /* Map shell is the containing block for Leaflet and the stacked canvas layers. */
 #map-shell {
   grid-area: map;
