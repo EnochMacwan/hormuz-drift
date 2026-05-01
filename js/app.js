@@ -1225,7 +1225,7 @@ function paintColorWheel() {
   const ctx = canvas.getContext("2d");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const center = cssSize / 2;
-  const diskRadius = 31;
+  const diskRadius = 24;
   const image = ctx.createImageData(cssSize, cssSize);
   const pix = image.data;
 
