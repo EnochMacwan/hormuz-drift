@@ -1216,7 +1216,7 @@ function paintColorWheel() {
   const canvas = els.colorWheel;
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
-  const cssSize = 96;
+  const cssSize = 112;
   canvas.width = cssSize * dpr;
   canvas.height = cssSize * dpr;
   canvas.style.width = `${cssSize}px`;
@@ -1264,10 +1264,10 @@ function paintColorWheel() {
   ctx.font = "800 13px Inter, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("N", center, 12);
-  ctx.fillText("E", cssSize - 12, center);
-  ctx.fillText("S", center, cssSize - 12);
-  ctx.fillText("W", 12, center);
+  ctx.fillText("N", center, 14);
+  ctx.fillText("E", cssSize - 14, center);
+  ctx.fillText("S", center, cssSize - 14);
+  ctx.fillText("W", 14, center);
 }
 
 /* Small helper for all text-based downloads (JSON, CSV, and generated helper
