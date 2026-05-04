@@ -1,16 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 140" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 140" role="img" aria-labelledby="title desc">
   <title id="title">Austides Adelaide</title>
   <desc id="desc">High-resolution Austides Adelaide wordmark with Southern Cross stars.</desc>
-  <rect width="360" height="140" rx="12" fill="#ffffff"/>
+  <rect width="430" height="140" rx="12" fill="#ffffff"/>
   <g fill="#123f4d">
-    <text x="126" y="58" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="800" letter-spacing="-1.1">Austides</text>
-    <text x="146" y="90" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="800" letter-spacing="-0.5">Adelaide</text>
+    <text x="102" y="58" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="800" letter-spacing="-1.1">Austides</text>
+    <text x="130" y="91" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="800" letter-spacing="-0.5">Adelaide</text>
   </g>
   <g fill="#02070b">
-    <path d="M250 38l4.2 9.5 10.3 1-7.8 6.8 2.3 10.1-8.9-5.3-8.9 5.3 2.3-10.1-7.8-6.8 10.3-1z"/>
-    <path d="M298 20l3.2 7.2 7.8.8-5.9 5.2 1.7 7.7-6.8-4-6.8 4 1.8-7.7-6-5.2 7.8-.8z"/>
-    <path d="M324 54l4.3 9.7 10.5 1-8 7 2.4 10.4-9.2-5.4-9.1 5.4 2.4-10.4-8-7 10.5-1z"/>
-    <path d="M282 86l5 11.3 12.3 1.2-9.3 8.1 2.8 12-10.6-6.3-10.6 6.3 2.8-12-9.3-8.1 12.3-1.2z"/>
-    <path d="M114 100l4.2 9.5 10.3 1-7.8 6.8 2.3 10.1-8.9-5.3-8.9 5.3 2.3-10.1-7.8-6.8 10.3-1z"/>
+    <path d="M312 38l4.2 9.5 10.3 1-7.8 6.8 2.3 10.1-8.9-5.3-8.9 5.3 2.3-10.1-7.8-6.8 10.3-1z"/>
+    <path d="M360 20l3.2 7.2 7.8.8-5.9 5.2 1.7 7.7-6.8-4-6.8 4 1.8-7.7-6-5.2 7.8-.8z"/>
+    <path d="M386 54l4.3 9.7 10.5 1-8 7 2.4 10.4-9.2-5.4-9.1 5.4 2.4-10.4-8-7 10.5-1z"/>
+    <path d="M344 86l5 11.3 12.3 1.2-9.3 8.1 2.8 12-10.6-6.3-10.6 6.3 2.8-12-9.3-8.1 12.3-1.2z"/>
+    <path d="M82 100l4.2 9.5 10.3 1-7.8 6.8 2.3 10.1-8.9-5.3-8.9 5.3 2.3-10.1-7.8-6.8 10.3-1z"/>
   </g>
 </svg>

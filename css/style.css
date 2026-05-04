@@ -203,10 +203,10 @@ img {
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 128px;
-  height: 38px;
-  padding: 4px 8px;
-  border-radius: 12px;
+  width: 176px;
+  height: 48px;
+  padding: 5px 10px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.42);
   box-shadow: 0 8px 18px rgba(0, 18, 32, 0.22);
@@ -228,6 +228,42 @@ img {
 }
 
 #map { position: absolute; inset: 0; }
+
+.map-area-cta {
+  position: absolute;
+  left: clamp(18px, 4vw, 56px);
+  bottom: clamp(18px, 5vh, 48px);
+  z-index: 620;
+  display: grid;
+  gap: 3px;
+  max-width: 270px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  color: #ffffff;
+  text-decoration: none;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(255, 209, 72, 0.34), transparent 34%),
+    linear-gradient(135deg, rgba(0, 18, 32, 0.92), rgba(0, 129, 176, 0.86));
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  box-shadow: 0 18px 42px rgba(0, 18, 32, 0.26);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.map-area-cta strong {
+  font-size: 14px;
+  line-height: 1.18;
+}
+
+.map-area-cta span {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+}
+
+.map-area-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 48px rgba(0, 18, 32, 0.32);
+}
 
 /* Shared frosted-glass treatment used by controls, drawer, and cards. */
 .glass,

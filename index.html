@@ -22,7 +22,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="icon" type="image/png" href="assets/tridel.png"/>
-<link rel="stylesheet" href="css/style.css?v=20"/>
+<link rel="stylesheet" href="css/style.css?v=21"/>
 </head>
 <body>
 <div id="app">
@@ -49,6 +49,10 @@
        so smaller laptop screens keep a clean, uncluttered chart surface. -->
   <div id="map-shell">
     <div id="map"></div>
+    <a class="map-area-cta" href="https://enochmacwan.github.io/Tridel/#/" target="_blank" rel="noopener">
+      <strong>Let Tridel recreate this map for your area!</strong>
+      <span>Click here for options.</span>
+    </a>
   </div>
 
   <!-- Bottom playback rail. These controls manipulate the display timeline
@@ -457,6 +461,9 @@
     <div class="section-card science-roadmap-card">
       <h3>Next fidelity upgrades</h3>
       <div class="roadmap-list">
+        <div><strong>OpenOil oil engine</strong><span>Evaluate a server-side OpenDrift/OpenOil path for the oil-spill option instead of treating oil fate only in the browser.</span></div>
+        <div><strong>Abu Dhabi expansion</strong><span>Hold until the Sanjeev review and a supplied larger grid, then extend the domain and default map framing.</span></div>
+        <div><strong>Oil tanker layer</strong><span>Future AIS/tanker overlays can mirror the Greenpeace-style context layer without crowding the response controls.</span></div>
         <div><strong>Tide/current comparison</strong><span>Add a harmonic tide layer or port-gauge feed to compare tidal phase against RTOFS/CMEMS currents.</span></div>
         <div><strong>Shoreline polygons</strong><span>Replace grid-cell stranding with GSHHS or local coastline polygons for more precise contact points.</span></div>
         <div><strong>Higher physics tier</strong><span>Run OpenDrift/WebGNOME server-side for vertical mixing, richer oil weathering, and uncertainty products.</span></div>

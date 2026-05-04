@@ -22,17 +22,19 @@ Runs entirely in the browser (JS + Leaflet + Canvas). Designed for **GitHub Page
 
 > **Research / educational use only. Not certified for operational S&R or spill response.**
 
-| Physics | Implemented | Missing vs. real OpenDrift |
+| Physics | Implemented | Missing vs. real OpenDrift/OpenOil |
 |---|---|---|
 | Ocean-current advection (RK2 + bilinear) | ✅ | — |
 | Horizontal diffusion (random walk) | ✅ | — |
 | Leeway wind drift (NOAA 19-category subset) | ✅ | full 50-category table |
 | Stokes drift (1.6 % wind, Kenyon) | ✅ | wave-spectrum resolved |
-| Oil Fay spreading + evaporation | ✅ | full ADIOS weathering, emulsion, dispersion |
+| Oil Fay spreading + evaporation | ✅ | server-side OpenOil transport, 3-D oil state, NOAA OilLibrary/PyGNOME-grade weathering |
 | Coastline stranding | partial (grid land-mask) | GSHHS polygons |
 | Subsurface 3-D | ❌ | surface only |
 
 For operational use, run real [OpenDrift](https://opendrift.github.io).
+For a higher-fidelity oil-spill option, the preferred future direction is a
+server-side OpenDrift/OpenOil run that exports browser-ready trajectories.
 
 ## Project layout
 
