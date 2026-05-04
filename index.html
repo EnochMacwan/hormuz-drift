@@ -9,8 +9,8 @@
   scenario/analytics controls that js/app.js wires up at boot time.
 
   The page is organized into four large regions:
-  - banner: disclaimer and README entry point
-  - map shell: basemap plus floating map affordances
+  - banner: Tridel/Austides masthead and research disclaimer
+  - map shell: basemap, editorial story panel, and floating map affordances
   - controls strip: playback/scrubbing controls under the map
   - side panel: scenario inputs, exports, analytics, and provenance
 -->
@@ -22,7 +22,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <link rel="icon" type="image/png" href="assets/tridel.png"/>
-<link rel="stylesheet" href="css/style.css?v=21"/>
+<link rel="stylesheet" href="css/style.css?v=22"/>
 </head>
 <body>
 <div id="app">
@@ -49,6 +49,28 @@
        so smaller laptop screens keep a clean, uncluttered chart surface. -->
   <div id="map-shell">
     <div id="map"></div>
+    <section class="map-story-panel" aria-label="Tridel map briefing">
+      <div class="story-kicker"><span class="live-dot" aria-hidden="true"></span>TRIDEL PRIME RESPONSE MAP</div>
+      <h1>Oil spill and drifter trajectories in one live Hormuz view.</h1>
+      <p>
+        Click a water location, choose S&R or oil spill, and run an ensemble to see current-driven spread,
+        shoreline risk, and response timing.
+      </p>
+      <div class="story-action-row">
+        <span class="story-primary-link">Use mission controls on the right</span>
+        <span class="story-pill">OpenOil path under review</span>
+      </div>
+      <div class="story-metric-grid" aria-label="Map capabilities">
+        <div><strong>1 h</strong><span>forcing frames</span></div>
+        <div><strong>500+</strong><span>ensemble-ready particles</span></div>
+        <div><strong>Live</strong><span>RTOFS/CMEMS data path</span></div>
+      </div>
+    </section>
+    <div class="map-risk-strip" aria-label="Visible map layers">
+      <span><i class="risk-dot oil-dot"></i>Oil spill runs</span>
+      <span><i class="risk-dot drift-dot"></i>S&R drifters</span>
+      <span><i class="risk-dot current-dot"></i>Current field</span>
+    </div>
     <a class="map-area-cta" href="https://enochmacwan.github.io/Tridel/#/" target="_blank" rel="noopener">
       <strong>Let Tridel recreate this map for your area!</strong>
       <span>Click here for options.</span>
