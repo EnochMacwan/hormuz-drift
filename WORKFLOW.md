@@ -24,8 +24,9 @@ same equations and the same data sources as the real thing.
 
 CMEMS = Copernicus Marine Environment Monitoring Service. Free account, NetCDF downloads.
 
-The specific product: `cmems_mod_glo_phy_anfc_merged-uv_PT1H-i` — hourly,
-global, surface currents (`utotal`, `vtotal`) on a ~1/12° grid (about 9 km per cell).
+The specific Copernicus Marine product is `GLOBAL_ANALYSISFORECAST_PHY_001_024`,
+using dataset `cmems_mod_glo_phy_anfc_merged-uv_PT1H-i` — hourly, global,
+surface currents (`utotal`, `vtotal`) on a ~1/12° grid (about 9 km per cell).
 
 You end up with a file like `cmems_mod_glo_phy_anfc_merged-uv_PT1H-i_1776382234335.nc` —
 a multi-dimensional array with axes `(time, depth, latitude, longitude)` and variables
@@ -160,8 +161,10 @@ A GitHub Actions cron job that runs **every day at 06:00 UTC**:
 5. GitHub Pages auto-redeploys
 
 CMEMS needs two secrets in GitHub **Settings → Secrets → Actions**: `CMEMS_USER`
-and `CMEMS_PASS` (your Copernicus account credentials). If that path fails, the
-workflow falls back to NOAA/NCEP Global RTOFS and Open-Meteo/GFS without secrets.
+and `CMEMS_PASS` (your Copernicus account credentials). Local runs can also use
+`COPERNICUSMARINE_SERVICE_USERNAME` / `COPERNICUSMARINE_SERVICE_PASSWORD` or a
+saved `copernicusmarine login`. If that path fails, the workflow falls back to
+NOAA/NCEP Global RTOFS and Open-Meteo/GFS without secrets.
 The RTOFS fallback writes an hourly browser timeline, interpolated from the
 downloaded source forecast snapshots.
 

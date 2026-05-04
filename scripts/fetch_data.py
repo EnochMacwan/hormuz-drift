@@ -6,13 +6,15 @@ Run by .github/workflows/daily-data.yml (cron 06:00 UTC) or manually:
     python scripts/fetch_data.py
 
 Downloads:
-  • CMEMS global hourly merged surface currents (utotal, vtotal)
+  • Copernicus Marine global hourly merged surface currents (utotal, vtotal)
   • NCEP GFS 0.25° surface wind (u10, v10)  [if available]
 
 Produces: data/currents.json (replaces previous file)
 
 Environment variables:
-  CMEMS_USER, CMEMS_PASS   — required for the copernicusmarine client
+  CMEMS_USER, CMEMS_PASS
+  or COPERNICUSMARINE_SERVICE_USERNAME, COPERNICUSMARINE_SERVICE_PASSWORD
+  — required unless `copernicusmarine login` has already saved credentials
 
 BBox + time window are the editable knobs at the top of this file.
 """
@@ -32,6 +34,9 @@ import xarray as xr
 
 # ── knobs ──────────────────────────────────────────────────────────────
 # Regional domain: Abu Dhabi and the UAE Gulf coast through the Strait of Hormuz.
+CMEMS_PRODUCT_ID = 'GLOBAL_ANALYSISFORECAST_PHY_001_024'
+CMEMS_DATASET_ID = 'cmems_mod_glo_phy_anfc_merged-uv_PT1H-i'
+CMEMS_VARIABLES = ['utotal', 'vtotal']
 LON_MIN, LON_MAX = 53.7, 57.8
 LAT_MIN, LAT_MAX = 24.1, 27.5
 HINDCAST_DAYS    = 3     # pull the last N days as "history"
@@ -43,34 +48,59 @@ CACHE_DIR = ROOT / 'data' / 'cache'
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def has_saved_copernicus_credentials():
+    """Return True when the toolbox can find saved credentials without prompting."""
+    base_dir = Path(os.environ.get('COPERNICUSMARINE_CREDENTIALS_DIRECTORY', Path.home()))
+    candidates = [
+        base_dir / '.copernicusmarine' / '.copernicusmarine-credentials',
+        Path.home() / 'motuclient' / 'motuclient-python.ini',
+        Path.home() / ('_netrc' if os.name == 'nt' else '.netrc'),
+    ]
+    return any(path.exists() for path in candidates)
+
+
 def fetch_cmems():
-    """Subset the CMEMS merged-uv hourly product to the UAE-Hormuz bbox."""
+    """Subset the Copernicus Marine merged-uv hourly product to the UAE-Hormuz bbox."""
     try:
         import copernicusmarine as cm
     except ImportError:
         sys.exit("pip install copernicusmarine")
 
-    user = os.environ.get('CMEMS_USER')
-    pw   = os.environ.get('CMEMS_PASS')
-    if not user or not pw:
-        sys.exit("Set CMEMS_USER and CMEMS_PASS environment variables.")
+    user = os.environ.get('CMEMS_USER') or os.environ.get('COPERNICUSMARINE_SERVICE_USERNAME')
+    pw   = os.environ.get('CMEMS_PASS') or os.environ.get('COPERNICUSMARINE_SERVICE_PASSWORD')
+    auth_kwargs = {}
+    if user and pw:
+        auth_kwargs = {'username': user, 'password': pw}
+    elif not has_saved_copernicus_credentials():
+        sys.exit(
+            "Copernicus Marine credentials are not configured. Set CMEMS_USER/CMEMS_PASS, "
+            "set COPERNICUSMARINE_SERVICE_USERNAME/COPERNICUSMARINE_SERVICE_PASSWORD, "
+            "or run `copernicusmarine login`."
+        )
 
     now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
     t0  = now - timedelta(days=HINDCAST_DAYS)
     t1  = now + timedelta(days=FORECAST_DAYS)
 
     out = CACHE_DIR / 'cmems.nc'
+    print(f"Copernicus Marine product: {CMEMS_PRODUCT_ID}")
+    print(f"Dataset: {CMEMS_DATASET_ID} ({', '.join(CMEMS_VARIABLES)})")
+    print(f"Subset bbox: lon {LON_MIN}..{LON_MAX}, lat {LAT_MIN}..{LAT_MAX}")
+    print(f"Time window: {t0.isoformat()} → {t1.isoformat()}")
     print(f"CMEMS subset → {out}")
     cm.subset(
-        dataset_id='cmems_mod_glo_phy_anfc_merged-uv_PT1H-i',
-        variables=['utotal', 'vtotal'],
+        dataset_id=CMEMS_DATASET_ID,
+        variables=CMEMS_VARIABLES,
         minimum_longitude=LON_MIN, maximum_longitude=LON_MAX,
         minimum_latitude =LAT_MIN, maximum_latitude =LAT_MAX,
         minimum_depth=0, maximum_depth=1,
         start_datetime=t0.isoformat(), end_datetime=t1.isoformat(),
-        output_filename=str(out),
-        username=user, password=pw,
+        output_directory=str(CACHE_DIR),
+        output_filename=out.name,
+        file_format='netcdf',
         overwrite=True,
+        disable_progress_bar=True,
+        **auth_kwargs,
     )
     return xr.open_dataset(out)
 
@@ -128,7 +158,7 @@ def main():
     # Step 3: write the minimal schema the browser actually needs.
     payload = {
         'meta': {
-            'source':        'CMEMS GLOBAL_ANALYSISFORECAST_PHY_001_024 (merged-uv hourly)',
+            'source':        f'CMEMS {CMEMS_PRODUCT_ID} ({CMEMS_DATASET_ID}, merged-uv hourly)',
             'wind_source':   wind_source,
             'time_start':    times[0], 'time_end': times[-1],
             'time_step_sec': 3600, 'n_times': len(times),

@@ -95,6 +95,9 @@ values fail in CI instead of quietly reaching the live page.
 2. **Settings → Pages** → *Deploy from a branch*, branch `main`, root `/`.
 3. **Settings → Secrets and variables → Actions**, add
    `CMEMS_USER` and `CMEMS_PASS` (free at <https://marine.copernicus.eu>).
+   Local runs can also use the official toolbox names
+   `COPERNICUSMARINE_SERVICE_USERNAME` and `COPERNICUSMARINE_SERVICE_PASSWORD`,
+   or a saved `copernicusmarine login`.
 4. The daily workflow (`.github/workflows/daily-data.yml`) will refresh
    `data/currents.json` automatically. It tries CMEMS first, then falls back to
    NOAA/NCEP RTOFS if CMEMS credentials are missing or rejected. Pages redeploys
@@ -123,7 +126,8 @@ evaporation against the centroid release time; per-particle mass also decays.
 
 ## Data sources
 
-- **Currents** — CMEMS `cmems_mod_glo_phy_anfc_merged-uv_PT1H-i`
+- **Currents** — Copernicus Marine product `GLOBAL_ANALYSISFORECAST_PHY_001_024`,
+  dataset `cmems_mod_glo_phy_anfc_merged-uv_PT1H-i`
   when credentials are available, or NOAA/NCEP Global RTOFS via NOMADS HTTPS
   as a no-login fallback.
 - **Wind** — Open-Meteo/GFS or NCEP GFS `u10, v10`, depending on the refresh path.
