@@ -56,8 +56,8 @@ const overlayState = {
   currents: true,
   tracers: true,
   trails: true,
-  density: true,
-  uncertainty: true,
+  density: false,
+  uncertainty: false,
   release: true,
   oilRadius: true,
 };
