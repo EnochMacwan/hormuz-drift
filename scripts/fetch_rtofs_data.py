@@ -3,16 +3,17 @@ No-login real-time refresh for the Hormuz Drift web model.
 
 This is the fallback/live-data path when CMEMS credentials are unavailable.
 It pulls NOAA/NCEP Global RTOFS 2-D forecast NetCDF files from NOMADS, extracts
-the Strait of Hormuz box, enriches the result with Open-Meteo/GFS 10 m wind,
+the UAE-to-Hormuz box, enriches the result with Open-Meteo/GFS 10 m wind,
 and writes data/currents.json.
 
 The source RTOFS files are large global grids, so this script downloads them to
-data/cache only long enough to extract the small Hormuz subset.
+data/cache only long enough to extract the regional subset.
 """
 
 import argparse
 import json
 import re
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,8 +23,9 @@ import xarray as xr
 
 from prepare_data import fetch_wind_openmeteo, pack
 
-LON_MIN, LON_MAX = 54.5, 57.8
-LAT_MIN, LAT_MAX = 25.5, 27.5
+# Regional domain: Abu Dhabi and the UAE Gulf coast through the Strait of Hormuz.
+LON_MIN, LON_MAX = 53.7, 57.8
+LAT_MIN, LAT_MAX = 24.1, 27.5
 DEFAULT_SOURCE_HOURS = tuple(range(0, 73, 6))
 DEFAULT_OUTPUT_STEP_HOURS = 1
 
@@ -33,21 +35,50 @@ CACHE_DIR = ROOT / "data" / "cache"
 RTOFS_INDEX = "https://nomads.ncep.noaa.gov/pub/data/nccf/com/rtofs/prod"
 
 
-def latest_rtofs_day():
-    """Return latest YYYYMMDD directory advertised by NOAA NOMADS."""
+def rtofs_file_url(day, hour):
+    """Build the NOAA NOMADS URL for one RTOFS forecast-hour NetCDF file."""
+    name = f"rtofs_glo_2ds_f{hour:03d}_prog.nc"
+    return f"{RTOFS_INDEX}/rtofs.{day}/{name}"
+
+
+def rtofs_file_exists(day, hour):
+    """Return True when NOMADS has published the requested forecast-hour file."""
+    request = urllib.request.Request(
+        rtofs_file_url(day, hour),
+        headers={"User-Agent": "hormuz-drift-data-refresh/1.0"},
+        method="HEAD",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return 200 <= response.status < 300
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError):
+        return False
+
+
+def latest_rtofs_day(required_hours=DEFAULT_SOURCE_HOURS):
+    """Return the newest YYYYMMDD run with all requested NetCDF files available."""
     with urllib.request.urlopen(RTOFS_INDEX + "/", timeout=60) as response:
         html = response.read().decode("utf-8", errors="replace")
     days = sorted(set(re.findall(r"rtofs\.(\d{8})/", html)))
     if not days:
         raise RuntimeError("No rtofs.YYYYMMDD directories found on NOMADS.")
-    return days[-1]
+
+    for day in reversed(days):
+        missing = [hour for hour in required_hours if not rtofs_file_exists(day, hour)]
+        if not missing:
+            return day
+        preview = ", ".join(f"f{hour:03d}" for hour in missing[:4])
+        suffix = "..." if len(missing) > 4 else ""
+        print(f"Skipping rtofs.{day}: missing {preview}{suffix}")
+
+    raise RuntimeError("No RTOFS run has all requested forecast-hour files yet.")
 
 
 def download_file(day, hour):
     """Download one RTOFS forecast-hour file into the local cache."""
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     name = f"rtofs_glo_2ds_f{hour:03d}_prog.nc"
-    url = f"{RTOFS_INDEX}/rtofs.{day}/{name}"
+    url = rtofs_file_url(day, hour)
     out = CACHE_DIR / name
     if out.exists() and out.stat().st_size > 100_000_000:
         print(f"Using cached {name} ...")
@@ -64,7 +95,7 @@ def download_file(day, hour):
 
 
 def subset_rtofs(path):
-    """Extract surface u/v current data for the configured Hormuz bbox."""
+    """Extract surface u/v current data for the configured UAE-Hormuz bbox."""
     with xr.open_dataset(path, mask_and_scale=True) as ds:
         lat2 = ds["Latitude"].values.astype(np.float32)
         lon2 = ds["Longitude"].values.astype(np.float32)
@@ -73,7 +104,7 @@ def subset_rtofs(path):
         y_idx = np.where((lat2[:, 0] >= LAT_MIN) & (lat2[:, 0] <= LAT_MAX))[0]
         x_idx = np.where((lon_norm[0, :] >= LON_MIN) & (lon_norm[0, :] <= LON_MAX))[0]
         if len(y_idx) < 2 or len(x_idx) < 2:
-            raise RuntimeError(f"Hormuz bbox not found in {path.name}.")
+            raise RuntimeError(f"Configured UAE-Hormuz bbox not found in {path.name}.")
 
         lats = lat2[y_idx, 0].astype(float)
         lons = lon_norm[0, x_idx].astype(float)
@@ -119,7 +150,7 @@ def resample_time(arr, source_times, output_times):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Fetch NOAA RTOFS data for Hormuz Drift.")
+    parser = argparse.ArgumentParser(description="Fetch NOAA RTOFS data for the UAE-Hormuz drift domain.")
     parser.add_argument("--day", help="RTOFS day as YYYYMMDD. Defaults to latest NOMADS directory.")
     parser.add_argument("--hours", default=",".join(str(h) for h in DEFAULT_SOURCE_HOURS),
                         help="Comma-separated source forecast hours, default: 0,6,...,72")
@@ -128,8 +159,8 @@ def main():
     parser.add_argument("--keep-cache", action="store_true", help="Keep downloaded NetCDF files.")
     args = parser.parse_args()
 
-    day = args.day or latest_rtofs_day()
     hours = [int(part.strip()) for part in args.hours.split(",") if part.strip()]
+    day = args.day or latest_rtofs_day(hours)
     print(f"Using NOAA RTOFS run rtofs.{day}, forecast hours: {hours}")
 
     times = []

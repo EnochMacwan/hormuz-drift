@@ -65,12 +65,20 @@ const els = {};
 
 /* Leaflet owns the geographic view and projection math. Canvas overlays are
    layered above it for field rendering, tracers, and drift results. */
-const map = L.map("map", { zoomControl: false, preferCanvas: true, attributionControl: false }).setView([26.45, 56.1], 9);
+const map = L.map("map", { zoomControl: false, preferCanvas: true, attributionControl: false }).setView([25.8, 55.75], 8);
 L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
   subdomains: "abcd",
   maxZoom: 13,
   attribution: "OpenStreetMap | CARTO | Currents: live dataset",
 }).addTo(map);
+
+function fitMapToDataDomain() {
+  if (!Field.loaded || !Field.grid.lats?.length || !Field.grid.lons?.length) return;
+  map.fitBounds(
+    [[Field.grid.latMin, Field.grid.lonMin], [Field.grid.latMax, Field.grid.lonMax]],
+    { padding: [26, 26], animate: false }
+  );
+}
 
 /* Three stacked canvases:
    - field: colorized current vectors
@@ -2097,6 +2105,7 @@ async function boot() {
   }
 
   fieldLayer = new DualCanvasLayer().addTo(map);
+  fitMapToDataDomain();
   makeBgParticles(nParticles);
   drawField();
   buildLeewayOptions();

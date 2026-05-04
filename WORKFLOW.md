@@ -60,7 +60,7 @@ the output. A one-line fix after hours of "why is everything washing ashore?"
 File: **`scripts/prepare_data.py`**
 
 - Uses `xarray` to open the NetCDF
-- Loops through a 5×7 grid of (lat, lon) query points covering the Strait, hitting Open-Meteo for each
+- Loops through a 5×7 grid of (lat, lon) query points covering the Abu Dhabi-to-Hormuz domain, hitting Open-Meteo for each
 - Converts wind speed+direction to u,v components:
   ```python
   u10 = -ws * sin(wd_rad)   # meteorological convention:
@@ -68,7 +68,7 @@ File: **`scripts/prepare_data.py`**
   ```
 - Interpolates the sparse wind grid onto the dense CMEMS grid (`xarray.interp`)
 - Rounds to 3 decimals, replaces NaN (land cells) with `null`
-- Dumps everything into `data/currents.json` (~10 MB)
+- Dumps everything into `data/currents.json` (~11 MB for the current expanded RTOFS pack)
 
 Output structure:
 
@@ -76,8 +76,8 @@ Output structure:
 {
   "meta": {...},
   "times": ["2026-04-15 23:00:00", ...],     // 241 hourly frames
-  "lats": [25.500, 25.583, ..., 27.500],     // 19 points
-  "lons": [54.500, 54.583, ..., 57.833],     // 33 points
+  "lats": [24.133, 24.204, ..., 27.446],     // 47-point Abu Dhabi-to-Hormuz grid
+  "lons": [53.760, 53.840, ..., 57.760],     // 51-point Abu Dhabi-to-Hormuz grid
   "u":  [[[...], [...]], ...],               // [time][lat][lon]
   "v":  [...],                               // currents
   "uw": [...], "vw": [...]                   // wind
@@ -197,7 +197,7 @@ current/wind masks or timestamps drift out of sync.
                  │
                  ▼
       ┌──────────────────────┐
-      │  data/currents.json  │    ← 10 MB, 241 frames × 19×33 grid
+      │  data/currents.json  │    ← 73 hourly frames × 47×51 expanded grid
       └──────────┬───────────┘
                  │  (fetched by browser)
                  ▼
@@ -222,7 +222,7 @@ current/wind masks or timestamps drift out of sync.
 | Leeway slopes for an object | `js/drift.js` `LEEWAY_CATEGORIES` array | Bigger dw = more wind-blown; cw ≠ 0 = drifts off-axis of wind |
 | Timestep | `js/app.js` search for `300` (seconds) | Larger = less accurate but faster; smaller = barely different (RK2 is stable) |
 | Ensemble size | UI "Particles" input | Statistical noise scales with `1/√N` — 200 is usually enough |
-| Bounding box | `scripts/prepare_data.py` top — `LON_MIN`, `LAT_MIN`, etc. | Restrict region → smaller JSON, faster load |
+| Bounding box | `scripts/prepare_data.py` top — `LON_MIN`, `LAT_MIN`, etc. | Expand toward Abu Dhabi or restrict region → larger/smaller JSON |
 | Wind fraction for Stokes | `js/drift.js` search `0.016` | Literature says 1.3–1.8% of wind speed |
 | Base map | `js/app.js` search `cartocdn` or `tiles` | Try `openstreetmap.org` or ESRI satellite imagery |
 

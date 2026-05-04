@@ -26,15 +26,15 @@ ROOT     = Path(__file__).resolve().parent.parent
 NC_FILE  = ROOT / 'cmems_mod_glo_phy_anfc_merged-uv_PT1H-i_1776382234335.nc'
 OUT_JSON = ROOT / 'data' / 'currents.json'
 
-# ── Bounding box (Hormuz) ─────────────────────────────────────────────
-LON_MIN, LON_MAX = 54.5, 57.8
-LAT_MIN, LAT_MAX = 25.5, 27.5
+# ── Bounding box (Abu Dhabi through Hormuz) ───────────────────────────
+LON_MIN, LON_MAX = 53.7, 57.8
+LAT_MIN, LAT_MAX = 24.1, 27.5
 
 
 def fetch_wind_openmeteo(cm_times, cm_lats, cm_lons):
     """
     Fetch surface wind (u10, v10) from the Open-Meteo Archive + Forecast API.
-    Queries a grid of representative points covering the Hormuz bbox, then
+    Queries a grid of representative points covering the UAE-Hormuz bbox, then
     interpolates to the CMEMS grid.
 
     Open-Meteo is free, no auth required, and provides hourly data.

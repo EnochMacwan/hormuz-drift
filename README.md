@@ -81,9 +81,9 @@ python scripts/fetch_rtofs_data.py
 python scripts/validate_currents.py
 ```
 
-This pulls NOAA/NCEP RTOFS surface currents for the latest available run,
-resamples the browser payload to 1-hour steps, and adds Open-Meteo/GFS wind for
-the same hourly time window.
+This pulls NOAA/NCEP RTOFS surface currents for the newest complete run across
+the Abu Dhabi-to-Hormuz domain, resamples the browser payload to 1-hour steps,
+and adds Open-Meteo/GFS wind for the same hourly time window.
 
 The daily refresh workflow runs `scripts/validate_currents.py` before committing,
 so broken shapes, bad timestamps, missing wind/current pairs, or extreme speed

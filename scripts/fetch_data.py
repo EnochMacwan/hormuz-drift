@@ -31,8 +31,9 @@ import numpy as np
 import xarray as xr
 
 # ── knobs ──────────────────────────────────────────────────────────────
-LON_MIN, LON_MAX = 54.5, 57.8
-LAT_MIN, LAT_MAX = 25.5, 27.5
+# Regional domain: Abu Dhabi and the UAE Gulf coast through the Strait of Hormuz.
+LON_MIN, LON_MAX = 53.7, 57.8
+LAT_MIN, LAT_MAX = 24.1, 27.5
 HINDCAST_DAYS    = 3     # pull the last N days as "history"
 FORECAST_DAYS    = 5     # pull the next N days as forecast
 
@@ -43,7 +44,7 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def fetch_cmems():
-    """Subset the CMEMS merged-uv hourly product to the Hormuz bbox."""
+    """Subset the CMEMS merged-uv hourly product to the UAE-Hormuz bbox."""
     try:
         import copernicusmarine as cm
     except ImportError:
