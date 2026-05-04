@@ -8,11 +8,10 @@
   uses HTML as a stable scaffold for Leaflet, stacked canvases, and the
   scenario/analytics controls that js/app.js wires up at boot time.
 
-  The page is organized into four large regions:
+  The page is organized into three large regions:
   - banner: Tridel/Austides masthead and research disclaimer
-  - map shell: basemap and simulation overlays
-  - controls strip: playback/scrubbing controls under the map
-  - side panel: scenario inputs, exports, analytics, and provenance
+  - map shell: basemap and simulation overlays only
+  - side panel: playback controls, scenario inputs, exports, analytics, and provenance
 -->
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -45,56 +44,10 @@
     </a>
   </div>
 
-  <!-- Map region. Leaflet owns #map itself; all controls live outside the map
-       so smaller laptop screens keep a clean, uncluttered chart surface. -->
+  <!-- Map region. Leaflet owns #map itself; keep this surface clear so the
+       left side remains simulation-only. -->
   <div id="map-shell">
     <div id="map"></div>
-    <section class="map-left-panel" aria-label="Tridel map briefing">
-      <div class="map-panel-kicker"><span aria-hidden="true"></span>TRIDEL PRIME RESPONSE MAP</div>
-      <h1>Oil spill and drifter trajectories in one live Hormuz view.</h1>
-      <p>Click water, pick S&R or oil spill, and run an ensemble for spread, shoreline risk, and timing.</p>
-    </section>
-  </div>
-
-  <!-- Bottom playback rail. These controls manipulate the display timeline
-       and the always-running background tracer field. -->
-  <div id="controls">
-    <div class="row controls-top">
-      <div class="control-cluster">
-        <button id="playBtn">Pause</button>
-        <button id="quickRunRailBtn" class="primary" disabled>Run current preset</button>
-        <button id="focusBtn" class="ghost">Focus mode</button>
-        <span id="controlScenario" class="tag">Man overboard</span>
-      </div>
-      <span id="time-window-label" class="tag">Playback follows the forcing timeline.</span>
-    </div>
-
-    <div class="row scrub-row timeline-head">
-      <span id="time-label">loading...</span>
-      <span id="timeline-current" class="tag">Waiting for data</span>
-      <span id="timeline-phase" class="tag">Timeline context pending</span>
-    </div>
-
-    <div class="timeline-shell">
-      <input id="timeSlider" type="range" min="0" max="0" value="0" step="1"/>
-      <div id="timeline-events" class="timeline-events" aria-hidden="true"></div>
-      <div class="timeline-ticks" aria-hidden="true">
-        <span></span><span></span><span></span><span></span><span></span>
-      </div>
-    </div>
-
-    <div class="timeline-meta">
-      <span id="timeline-start">Start -</span>
-      <div class="control-cluster">
-        <button id="jumpBack24" class="ghost small">-24h</button>
-        <button id="jumpBack6" class="ghost small">-6h</button>
-        <button id="jumpForward6" class="ghost small">+6h</button>
-        <button id="jumpForward24" class="ghost small">+24h</button>
-      </div>
-      <span id="timeline-end">End -</span>
-    </div>
-
-    <div class="dim" id="data-meta">-</div>
   </div>
 
   <!-- Main side panel. Sections are conditionally shown/updated depending on
@@ -108,6 +61,47 @@
           <h2>Live Simulation of Oil Spill & Drifter Trajectories at Strait of Hormuz</h2>
         </div>
       </div>
+    </div>
+
+    <!-- Playback and quick-run controls live in the right rail so the left side
+         stays map-only. -->
+    <div id="controls">
+      <div class="row controls-top">
+        <div class="control-cluster">
+          <button id="playBtn">Pause</button>
+          <button id="quickRunRailBtn" class="primary" disabled>Run current preset</button>
+          <button id="focusBtn" class="ghost">Focus mode</button>
+          <span id="controlScenario" class="tag">Man overboard</span>
+        </div>
+        <span id="time-window-label" class="tag">Playback follows the forcing timeline.</span>
+      </div>
+
+      <div class="row scrub-row timeline-head">
+        <span id="time-label">loading...</span>
+        <span id="timeline-current" class="tag">Waiting for data</span>
+        <span id="timeline-phase" class="tag">Timeline context pending</span>
+      </div>
+
+      <div class="timeline-shell">
+        <input id="timeSlider" type="range" min="0" max="0" value="0" step="1"/>
+        <div id="timeline-events" class="timeline-events" aria-hidden="true"></div>
+        <div class="timeline-ticks" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <div class="timeline-meta">
+        <span id="timeline-start">Start -</span>
+        <div class="control-cluster">
+          <button id="jumpBack24" class="ghost small">-24h</button>
+          <button id="jumpBack6" class="ghost small">-6h</button>
+          <button id="jumpForward6" class="ghost small">+6h</button>
+          <button id="jumpForward24" class="ghost small">+24h</button>
+        </div>
+        <span id="timeline-end">End -</span>
+      </div>
+
+      <div class="dim" id="data-meta">-</div>
     </div>
 
     <div class="section-card intro-card" id="mission-summary">
