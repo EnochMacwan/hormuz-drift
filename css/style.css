@@ -488,10 +488,13 @@ img {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   margin-top: 14px;
   padding: 14px;
   border-radius: 24px;
+  overflow: hidden;
   color: #ffffff;
   background:
     radial-gradient(circle at 80% 0%, rgba(255, 59, 48, 0.18), transparent 32%),
@@ -557,6 +560,12 @@ img {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+#controls .tag {
+  max-width: 100%;
+  justify-content: flex-start;
+  white-space: normal;
+}
+
 #controls button:hover:not(:disabled) {
   border-color: rgba(255, 255, 255, 0.38);
   background: rgba(255, 255, 255, 0.18);
@@ -566,6 +575,18 @@ img {
 #controls #data-meta,
 #controls .timeline-meta {
   color: rgba(255, 255, 255, 0.68);
+}
+
+#controls #data-meta {
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
+#controls #time-label {
+  min-width: 0;
+  color: #ffffff;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 h3 {
@@ -835,12 +856,48 @@ button.small { padding: 9px 12px; }
 
 .controls-top { justify-content: space-between; }
 
+#controls .controls-top {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+#controls .control-cluster {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+}
+
+#controls .control-cluster > * {
+  width: 100%;
+  min-width: 0;
+}
+
+#controls .control-cluster .tag {
+  justify-content: center;
+  text-align: center;
+}
+
+#controls #time-window-label {
+  width: 100%;
+}
+
 .scrub-row {
   gap: 14px;
 }
 
 .timeline-head {
   justify-content: space-between;
+}
+
+#controls .timeline-head {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: 8px;
+}
+
+#controls .timeline-head .tag {
+  width: 100%;
 }
 
 .timeline-shell {
@@ -904,6 +961,29 @@ button.small { padding: 9px 12px; }
   gap: 14px;
   color: var(--muted);
   font-size: 11px;
+}
+
+#controls .timeline-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: center;
+}
+
+#controls .timeline-meta .control-cluster {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+#controls #timeline-start,
+#controls #timeline-end {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#controls #timeline-end {
+  text-align: right;
 }
 
 .controls-bottom {
