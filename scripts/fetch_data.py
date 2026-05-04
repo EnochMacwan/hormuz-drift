@@ -7,7 +7,7 @@ Run by .github/workflows/daily-data.yml (cron 06:00 UTC) or manually:
 
 Downloads:
   • Copernicus Marine global hourly merged surface currents (utotal, vtotal)
-  • NCEP GFS 0.25° surface wind (u10, v10)  [if available]
+  • Open-Meteo/GFS surface wind (u10, v10)  [if available]
 
 Produces: data/currents.json (replaces previous file)
 
@@ -105,25 +105,14 @@ def fetch_cmems():
     return xr.open_dataset(out)
 
 
-def fetch_gfs(times):
-    """
-    Pull GFS surface wind (u10, v10) at the requested hours via NOMADS OpenDAP.
-    Falls back to None on any failure (offline mode, outage). The web model
-    handles missing wind gracefully — currents-only drift still works.
-    """
+def fetch_wind(times, lats, lons):
+    """Fetch Open-Meteo/GFS wind on the same time window and grid as currents."""
     try:
-        url = ('https://nomads.ncep.noaa.gov/dods/gfs_0p25_1hr/'
-               f'gfs{times[0].strftime("%Y%m%d")}/gfs_0p25_1hr_00z')
-        ds = xr.open_dataset(url)
-        ds = ds[['ugrd10m', 'vgrd10m']].sel(
-            lon=slice(LON_MIN % 360, LON_MAX % 360),
-            lat=slice(LAT_MIN, LAT_MAX),
-        )
-        ds = ds.interp(time=times, method='linear')
-        return ds
+        from prepare_data import fetch_wind_openmeteo
+        return fetch_wind_openmeteo(times, lats, lons)
     except Exception as e:
-        print(f"GFS fetch skipped: {e}", file=sys.stderr)
-        return None
+        print(f"Wind fetch skipped: {e}", file=sys.stderr)
+        return None, None, None
 
 
 def pack(a):
@@ -145,15 +134,10 @@ def main():
     # front-end can disable wind-specific controls cleanly.
     uw = vw = None
     wind_source = None
-    ds_wind = fetch_gfs(ds_cm['time'].values)
-    if ds_wind is not None:
-        wind_source = 'NCEP GFS 0.25° surface (u10, v10)'
-        # Re-grid wind onto the exact CMEMS grid so the browser can sample both
-        # forcings through one shared interpolation path.
-        w = ds_wind.interp(lat=xr.DataArray(lats, dims='latitude'),
-                           lon=xr.DataArray(lons % 360, dims='longitude'))
-        uw = pack(w['ugrd10m'].values.astype(np.float32))
-        vw = pack(w['vgrd10m'].values.astype(np.float32))
+    uw_arr, vw_arr, wind_source = fetch_wind(ds_cm['time'].values, lats, lons)
+    if uw_arr is not None and vw_arr is not None:
+        uw = pack(uw_arr)
+        vw = pack(vw_arr)
 
     # Step 3: write the minimal schema the browser actually needs.
     payload = {
