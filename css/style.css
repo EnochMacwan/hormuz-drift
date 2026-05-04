@@ -233,6 +233,58 @@ img {
   inset: 0;
 }
 
+.map-left-panel {
+  position: absolute;
+  top: clamp(18px, 3vh, 34px);
+  left: clamp(18px, 3vw, 42px);
+  z-index: 620;
+  width: min(340px, calc(100% - 72px));
+  padding: 18px 20px;
+  border-radius: 24px;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 209, 72, 0.22), transparent 36%),
+    linear-gradient(145deg, rgba(0, 18, 32, 0.94), rgba(0, 45, 80, 0.84));
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 0 22px 52px rgba(0, 18, 32, 0.3);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.map-panel-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.map-panel-kicker span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff3b30;
+  box-shadow: 0 0 0 6px rgba(255, 59, 48, 0.16), 0 0 18px rgba(255, 59, 48, 0.72);
+}
+
+.map-left-panel h1 {
+  margin: 10px 0 8px;
+  max-width: 12ch;
+  font-size: clamp(1.95rem, 3.25vw, 3.15rem);
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+}
+
+.map-left-panel p {
+  max-width: 28rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 /* Shared frosted-glass treatment used by controls, drawer, and cards. */
 .glass,
 #controls,
