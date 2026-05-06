@@ -74,10 +74,12 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
 
 function fitMapToDataDomain() {
   if (!Field.loaded || !Field.grid.lats?.length || !Field.grid.lons?.length) return;
-  map.fitBounds(
-    [[Field.grid.latMin, Field.grid.lonMin], [Field.grid.latMax, Field.grid.lonMax]],
-    { padding: [26, 26], animate: false }
+  const bounds = L.latLngBounds(
+    [Field.grid.latMin, Field.grid.lonMin],
+    [Field.grid.latMax, Field.grid.lonMax]
   );
+  const zoom = map.getBoundsZoom(bounds, false, [0, 0]);
+  map.setView(bounds.getCenter(), zoom + 1, { animate: false });
 }
 
 /* Three stacked canvases:
