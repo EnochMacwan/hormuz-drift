@@ -228,6 +228,22 @@ img {
   object-fit: contain;
 }
 
+.marine-embed {
+  margin-top: 10px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 18, 32, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 18, 32, 0.08);
+  background: #0c1422;
+}
+
+.marine-embed iframe {
+  display: block;
+  width: 100%;
+  height: 320px;
+  border: 0;
+}
+
 .opendrift-attribution {
   display: inline-flex;
   align-items: center;

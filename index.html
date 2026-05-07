@@ -137,6 +137,21 @@
       <span>Click here for options.</span>
     </a>
 
+    <!-- Live AIS vessel tracking via MarineTraffic. The iframe is loaded on
+         demand to keep first paint cheap and to respect MarineTraffic ToS. -->
+    <div class="section-card marinetraffic-card" id="marinetraffic-card">
+      <div class="section-heading-row">
+        <h3>Vessel traffic</h3>
+        <span class="tag">MarineTraffic AIS</span>
+      </div>
+      <p class="hint">Toggle live MarineTraffic vessel-density tiles directly on the map. Adds OpenSeaMap nautical chart features for ports, lighthouses, and channels.</p>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <button id="marineToggleBtn" class="ghost small">Show vessel layer</button>
+        <button id="seamarkToggleBtn" class="ghost small">Show seamarks</button>
+        <a id="marineOpenLink" href="https://www.marinetraffic.com/" target="_blank" rel="noopener" class="ghost small">Open MarineTraffic</a>
+      </div>
+    </div>
+
     <div class="section-card data-quality-card" id="data-quality-card">
       <div class="section-heading-row">
         <h3>Data quality</h3>

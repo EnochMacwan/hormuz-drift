@@ -26,9 +26,9 @@ ROOT     = Path(__file__).resolve().parent.parent
 NC_FILE  = ROOT / 'cmems_mod_glo_phy_anfc_merged-uv_PT1H-i_1776382234335.nc'
 OUT_JSON = ROOT / 'data' / 'currents.json'
 
-# ── Bounding box (Abu Dhabi through Hormuz) ───────────────────────────
-LON_MIN, LON_MAX = 53.7, 57.8
-LAT_MIN, LAT_MAX = 24.1, 27.5
+# ── Bounding box (entire Arabian Gulf: Kuwait through Hormuz) ─────────
+LON_MIN, LON_MAX = 47.5, 57.8
+LAT_MIN, LAT_MAX = 23.5, 30.5
 
 
 def fetch_wind_openmeteo(cm_times, cm_lats, cm_lons):
