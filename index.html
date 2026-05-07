@@ -39,8 +39,8 @@
       <span>Research / educational use only. Physics are based on OpenDRIFT.</span>
       <a href="README.md">README and caveats</a>
     </div>
-    <a class="partner-logo" href="https://austides.com" target="_blank" rel="noopener" aria-label="Austides Adelaide">
-      <img src="assets/austides.svg" alt="Austides Adelaide"/>
+    <a class="partner-logo" href="https://austides.com" target="_blank" rel="noopener" aria-label="Austides Consulting">
+      <img src="assets/austides.png" alt="Austides Consulting"/>
     </a>
   </div>
 
@@ -55,7 +55,6 @@
   <aside id="side">
     <div class="side-header">
       <div class="side-brand">
-        <img src="assets/tridel.png" alt="" class="side-logo" aria-hidden="true"/>
         <div>
           <div class="eyebrow">Tridel Mission Control</div>
           <h2>Live Simulation of Oil Spill & Drifter Trajectories at Strait of Hormuz</h2>
@@ -109,6 +108,10 @@
         A Tridel research page for exploring live oil-spill and drifter trajectories using operational
         surface currents, optional wind drift, and a particle ensemble over the Strait of Hormuz.
       </p>
+      <a class="opendrift-attribution" href="https://github.com/OpenDrift/opendrift" target="_blank" rel="noopener" aria-label="Powered by OpenDrift">
+        <span>Powered by</span>
+        <img src="assets/opendrift_logo.png" alt="OpenDrift"/>
+      </a>
       <div class="quick-stats">
         <div class="stat-card">
           <span class="stat-label">Release</span>
@@ -133,6 +136,21 @@
       <strong>Let Tridel recreate this map for your area.</strong>
       <span>Click here for options.</span>
     </a>
+
+    <!-- Live AIS vessel tracking via MarineTraffic. The iframe is loaded on
+         demand to keep first paint cheap and to respect MarineTraffic ToS. -->
+    <div class="section-card marinetraffic-card" id="marinetraffic-card">
+      <div class="section-heading-row">
+        <h3>Vessel traffic</h3>
+        <span class="tag">MarineTraffic AIS</span>
+      </div>
+      <p class="hint">Toggle live MarineTraffic vessel-density tiles directly on the map. Adds OpenSeaMap nautical chart features for ports, lighthouses, and channels.</p>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <button id="marineToggleBtn" class="ghost small">Show vessel layer</button>
+        <button id="seamarkToggleBtn" class="ghost small">Show seamarks</button>
+        <a id="marineOpenLink" href="https://www.marinetraffic.com/" target="_blank" rel="noopener" class="ghost small">Open MarineTraffic</a>
+      </div>
+    </div>
 
     <div class="section-card data-quality-card" id="data-quality-card">
       <div class="section-heading-row">

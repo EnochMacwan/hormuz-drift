@@ -33,12 +33,13 @@ import numpy as np
 import xarray as xr
 
 # ── knobs ──────────────────────────────────────────────────────────────
-# Regional domain: Abu Dhabi and the UAE Gulf coast through the Strait of Hormuz.
+# Regional domain: full Arabian (Persian) Gulf including Kuwait, the UAE
+# Gulf coast through Abu Dhabi, and the Strait of Hormuz outflow.
 CMEMS_PRODUCT_ID = 'GLOBAL_ANALYSISFORECAST_PHY_001_024'
 CMEMS_DATASET_ID = 'cmems_mod_glo_phy_anfc_merged-uv_PT1H-i'
 CMEMS_VARIABLES = ['utotal', 'vtotal']
-LON_MIN, LON_MAX = 53.7, 57.8
-LAT_MIN, LAT_MAX = 24.1, 27.5
+LON_MIN, LON_MAX = 47.5, 57.8
+LAT_MIN, LAT_MAX = 23.5, 30.5
 HINDCAST_DAYS    = 3     # pull the last N days as "history"
 FORECAST_DAYS    = 5     # pull the next N days as forecast
 

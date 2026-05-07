@@ -72,12 +72,29 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
   attribution: "OpenStreetMap | CARTO | Currents: live dataset",
 }).addTo(map);
 
+/* MarineTraffic vessel-density overlay. The tile service is publicly readable
+   and renders historical AIS density on top of the simulation. Toggleable via
+   the side-panel button; not added to the map until the user opts in. */
+const vesselLayer = L.tileLayer(
+  "https://tiles.marinetraffic.com/ais_helpers/shipsdensity/{z}/{x}/{y}.png",
+  { maxZoom: 13, opacity: 0.75, attribution: "Vessel density (c) MarineTraffic" }
+);
+
+/* OpenSeaMap seamark overlay - free nautical chart with lighthouses, channels,
+   port boundaries. Useful sub-layer for marine-domain context. */
+const seamarkLayer = L.tileLayer(
+  "https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",
+  { maxZoom: 18, opacity: 0.9, attribution: "Seamarks (c) OpenSeaMap contributors" }
+);
+
 function fitMapToDataDomain() {
   if (!Field.loaded || !Field.grid.lats?.length || !Field.grid.lons?.length) return;
-  map.fitBounds(
-    [[Field.grid.latMin, Field.grid.lonMin], [Field.grid.latMax, Field.grid.lonMax]],
-    { padding: [26, 26], animate: false }
+  const bounds = L.latLngBounds(
+    [Field.grid.latMin, Field.grid.lonMin],
+    [Field.grid.latMax, Field.grid.lonMax]
   );
+  const zoom = map.getBoundsZoom(bounds, false, [0, 0]);
+  map.setView(bounds.getCenter(), zoom + 1, { animate: false });
 }
 
 /* Three stacked canvases:
@@ -651,6 +668,11 @@ function summarizePoints(points, tSec) {
   const lambda2 = Math.max(0, (trace - detTerm) / 2);
   const angleRad = 0.5 * Math.atan2(2 * covXY, covXX - covYY);
 
+  // Ensemble footprint: 2-sigma uncertainty ellipse area (95% containment).
+  const sigmaMajorM = Math.sqrt(lambda1);
+  const sigmaMinorM = Math.sqrt(lambda2);
+  const footprintKm2 = (Math.PI * (2 * sigmaMajorM) * (2 * sigmaMinorM)) / 1e6;
+
   return {
     total: points.length,
     drifting: points.length - stranded,
@@ -658,11 +680,62 @@ function summarizePoints(points, tSec) {
     centroidLon,
     centroidLat,
     sigmaKm,
+    footprintKm2,
     maxAgeHours: maxAge / 3600,
     massLeftPct: (massTotal / points.length) * 100,
     ellipse: { majorM: 2 * Math.sqrt(lambda1), minorM: 2 * Math.sqrt(lambda2), angleRad },
     tSec,
   };
+}
+
+/* Compute the convex-hull area in km² for a list of {lon, lat} points using
+   Andrew's monotone chain algorithm. Used to estimate the total area swept by
+   particle trails over the run. */
+function convexHullAreaKm2(points) {
+  if (points.length < 3) return 0;
+  // Project to local-tangent metres around the centroid so polygon area is
+  // reasonably accurate for regional-scale clouds.
+  let cLon = 0;
+  let cLat = 0;
+  for (const p of points) { cLon += p.lon; cLat += p.lat; }
+  cLon /= points.length;
+  cLat /= points.length;
+  const mLat = mPerDegLat(cLat);
+  const mLon = mPerDegLon(cLat);
+  const xy = points.map((p) => [(p.lon - cLon) * mLon, (p.lat - cLat) * mLat]);
+  xy.sort((a, b) => (a[0] - b[0]) || (a[1] - b[1]));
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lower = [];
+  for (const p of xy) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+    lower.push(p);
+  }
+  const upper = [];
+  for (let i = xy.length - 1; i >= 0; i -= 1) {
+    const p = xy[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+    upper.push(p);
+  }
+  const hull = lower.slice(0, -1).concat(upper.slice(0, -1));
+  let area2 = 0;
+  for (let i = 0; i < hull.length; i += 1) {
+    const a = hull[i];
+    const b = hull[(i + 1) % hull.length];
+    area2 += a[0] * b[1] - b[0] * a[1];
+  }
+  return Math.abs(area2) / 2 / 1e6;
+}
+
+/* Trail-swept area: convex hull of every recorded track sample across the
+   ensemble up to the current playback time. */
+function trailSweptAreaKm2(ensemble, tSec) {
+  const pts = [];
+  for (const drifter of ensemble) {
+    for (const sample of drifter.track) {
+      if (sample[2] <= tSec) pts.push({ lon: sample[0], lat: sample[1] });
+    }
+  }
+  return convexHullAreaKm2(pts);
 }
 
 /* Build one snapshot of the ensemble at a requested time by sampling the saved
@@ -696,11 +769,13 @@ function getRunFrame(tSec) {
         centroidLon: releasePoint ? releasePoint.lon : null,
         centroidLat: releasePoint ? releasePoint.lat : null,
         sigmaKm: 0,
+        footprintKm2: 0,
         maxAgeHours: 0,
         massLeftPct: 100,
         ellipse: null,
         tSec,
       },
+      trailKm2: 0,
     };
   }
 
@@ -712,7 +787,8 @@ function getRunFrame(tSec) {
 
   const points = activeRun.ensemble.map((drifter) => sampleTrackPosition(drifter, viewSec));
   const metrics = summarizePoints(points, viewSec);
-  const value = { preRun: false, tSec: viewSec, points, metrics };
+  const trailKm2 = trailSweptAreaKm2(activeRun.ensemble, viewSec);
+  const value = { preRun: false, tSec: viewSec, points, metrics, trailKm2 };
   frameCache = { key, value };
   return value;
 }
@@ -1218,6 +1294,16 @@ function updateResultsPanel(force) {
       <span class="result-label">Centroid</span>
       <span class="result-value">${centroidText}</span>
       <span class="result-subvalue">Current ensemble center</span>
+    </div>
+    <div class="result-card">
+      <span class="result-label">Ensemble footprint</span>
+      <span class="result-value">${fmt(metrics.footprintKm2, 2)} km²</span>
+      <span class="result-subvalue">2σ uncertainty ellipse area (95% containment)</span>
+    </div>
+    <div class="result-card">
+      <span class="result-label">Trail coverage</span>
+      <span class="result-value">${fmt(frame.trailKm2 ?? 0, 2)} km²</span>
+      <span class="result-subvalue">Convex-hull area swept by all particle trails</span>
     </div>
     ${oilCards}
     <div class="result-card wide">
@@ -1985,7 +2071,52 @@ function collectDomRefs() {
     oilBudgetPlot: document.getElementById("oil-budget-plot"),
     oilBudgetSummary: document.getElementById("oil-budget-summary"),
     emulsionNote: document.getElementById("emulsion-note"),
+    marineToggleBtn: document.getElementById("marineToggleBtn"),
+    marineOpenLink: document.getElementById("marineOpenLink"),
+    seamarkToggleBtn: document.getElementById("seamarkToggleBtn"),
   });
+}
+
+/* MarineTraffic deep-link / embed helpers. We compose URLs from the current
+   map center + zoom so traffic and the simulation stay in sync. */
+function marineTrafficViewUrl() {
+  const center = map.getCenter();
+  const zoom = Math.max(5, Math.min(13, Math.round(map.getZoom())));
+  return `https://www.marinetraffic.com/en/ais/home/centerx:${center.lng.toFixed(3)}/centery:${center.lat.toFixed(3)}/zoom:${zoom}`;
+}
+
+function marineTrafficEmbedUrl() {
+  const center = map.getCenter();
+  const zoom = Math.max(5, Math.min(13, Math.round(map.getZoom())));
+  return `https://www.marinetraffic.com/en/ais/embed/zoom:${zoom}/centery:${center.lat.toFixed(3)}/centerx:${center.lng.toFixed(3)}/maptype:0/shownames:false/mmsi:0/shipid:0/fleet:0/fleet_id:0/vlist:false/showmenu:false/remember:false`;
+}
+
+function refreshMarineLinks() {
+  if (els.marineOpenLink) els.marineOpenLink.href = marineTrafficViewUrl();
+}
+
+/* Toggle the MarineTraffic vessel-density tile overlay on the main map. */
+function toggleMarineEmbed() {
+  if (!els.marineToggleBtn) return;
+  if (map.hasLayer(vesselLayer)) {
+    map.removeLayer(vesselLayer);
+    els.marineToggleBtn.textContent = "Show vessel layer";
+  } else {
+    vesselLayer.addTo(map);
+    els.marineToggleBtn.textContent = "Hide vessel layer";
+  }
+}
+
+/* Toggle the OpenSeaMap seamark overlay (lighthouses, channels, port marks). */
+function toggleSeamarks() {
+  if (!els.seamarkToggleBtn) return;
+  if (map.hasLayer(seamarkLayer)) {
+    map.removeLayer(seamarkLayer);
+    els.seamarkToggleBtn.textContent = "Show seamarks";
+  } else {
+    seamarkLayer.addTo(map);
+    els.seamarkToggleBtn.textContent = "Hide seamarks";
+  }
 }
 
 /* Attach all event handlers after DOM refs have been collected. */
@@ -2008,6 +2139,18 @@ function wireUi() {
     els.nLabel.textContent = String(nParticles);
     makeBgParticles(nParticles);
   };
+
+  if (els.marineToggleBtn) {
+    els.marineToggleBtn.onclick = toggleMarineEmbed;
+  }
+  if (els.seamarkToggleBtn) {
+    els.seamarkToggleBtn.onclick = toggleSeamarks;
+  }
+  if (els.marineOpenLink) {
+    els.marineOpenLink.addEventListener("click", refreshMarineLinks);
+    refreshMarineLinks();
+  }
+  map.on("moveend zoomend", refreshMarineLinks);
 
   els.playBtn.onclick = () => {
     playing = !playing;

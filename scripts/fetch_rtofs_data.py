@@ -23,9 +23,10 @@ import xarray as xr
 
 from prepare_data import fetch_wind_openmeteo, pack
 
-# Regional domain: Abu Dhabi and the UAE Gulf coast through the Strait of Hormuz.
-LON_MIN, LON_MAX = 53.7, 57.8
-LAT_MIN, LAT_MAX = 24.1, 27.5
+# Regional domain: full Arabian (Persian) Gulf including Kuwait, the UAE
+# Gulf coast through Abu Dhabi, and the Strait of Hormuz outflow.
+LON_MIN, LON_MAX = 47.5, 57.8
+LAT_MIN, LAT_MAX = 23.5, 30.5
 DEFAULT_SOURCE_HOURS = tuple(range(0, 73, 6))
 DEFAULT_OUTPUT_STEP_HOURS = 1
 
