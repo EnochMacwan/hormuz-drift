@@ -508,11 +508,6 @@ function drawField() {
     ctx.drawImage(fieldSrcBuffers[1].canvas, dX, dY, dW, dH);
   }
   ctx.restore();
-
-  ctx.save();
-  ctx.fillStyle = "rgba(0, 0, 0, 0.13)";
-  ctx.fillRect(0, 0, size.x, size.y);
-  ctx.restore();
 }
 
 /* Draw streak-style background tracers by fading the previous frame slightly
