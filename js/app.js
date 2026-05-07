@@ -2261,6 +2261,38 @@ async function boot() {
 
   els.timeSlider.max = Field.times.length - 1;
   els.dataMeta.textContent = `${Field.meta.source} | ${Field.times[0]} to ${Field.times[Field.times.length - 1]} UTC | ${Field.times.length} hourly frames`;
+
+  /* Auto-set a default release point at the centre of the data grid so the
+     run buttons are immediately usable without requiring a map click first. */
+  if (!releasePoint) {
+    const g = Field.grid;
+    const midLat = (g.latMin + g.latMax) / 2;
+    const midLon = (g.lonMin + g.lonMax) / 2;
+    outer: for (let r = 0; r <= 10; r++) {
+      for (let di = -r; di <= r; di++) {
+        for (let dj = -r; dj <= r; dj++) {
+          if (Math.abs(di) !== r && Math.abs(dj) !== r) continue;
+          const tryLon = midLon + di * g.dlon;
+          const tryLat = midLat + dj * g.dlat;
+          if (!Field.isLand(tryLon, tryLat)) {
+            releasePoint = { lat: tryLat, lon: tryLon };
+            break outer;
+          }
+        }
+      }
+    }
+  }
+
+  /* Ensure vessel/seamark layers are off and buttons show correct initial state. */
+  if (map.hasLayer(vesselLayer)) {
+    map.removeLayer(vesselLayer);
+    if (els.marineToggleBtn) els.marineToggleBtn.textContent = "Show vessel layer";
+  }
+  if (map.hasLayer(seamarkLayer)) {
+    map.removeLayer(seamarkLayer);
+    if (els.seamarkToggleBtn) els.seamarkToggleBtn.textContent = "Show seamarks";
+  }
+
   updateReleaseInfo();
   updateStoryCard();
   applyStateFromUrl();
