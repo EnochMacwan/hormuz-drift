@@ -3873,3 +3873,154 @@ body:not(.compact-reference-ui) .visual-overlay-card .check-pill:nth-child(n+5) 
     font-size: 18px !important;
   }
 }
+
+/* --- Readability polish for the full function panel --- */
+body:not(.compact-reference-ui) #side {
+  color: rgba(241, 249, 255, 0.92) !important;
+  scrollbar-color: rgba(31, 184, 222, 0.9) rgba(7, 25, 44, 0.35);
+  scrollbar-width: thin;
+}
+
+body:not(.compact-reference-ui) #side::-webkit-scrollbar {
+  width: 10px;
+}
+
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(7, 25, 44, 0.38);
+}
+
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(7, 25, 44, 0.38);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #23f8ff, #0aa2d2);
+}
+
+body:not(.compact-reference-ui) #side .section-card h3,
+body:not(.compact-reference-ui) #side .eyebrow {
+  color: #23f8ff !important;
+  letter-spacing: .22em !important;
+}
+
+body:not(.compact-reference-ui) #side .lede,
+body:not(.compact-reference-ui) #side .hint,
+body:not(.compact-reference-ui) #side .dim,
+body:not(.compact-reference-ui) #side .wheel-key,
+body:not(.compact-reference-ui) #side .result-subvalue,
+body:not(.compact-reference-ui) #side .stat-label {
+  color: rgba(217, 232, 242, 0.72) !important;
+}
+
+body:not(.compact-reference-ui) #side .term-card,
+body:not(.compact-reference-ui) #side .caveat-list div,
+body:not(.compact-reference-ui) #side .roadmap-list div,
+body:not(.compact-reference-ui) #side .quality-grid div,
+body:not(.compact-reference-ui) #side .stat-card,
+body:not(.compact-reference-ui) #side .result-card,
+body:not(.compact-reference-ui) #side .preset-card,
+body:not(.compact-reference-ui) #side .preset-guide,
+body:not(.compact-reference-ui) #side .wg-feat,
+body:not(.compact-reference-ui) #side .budget-stat,
+body:not(.compact-reference-ui) #side .insight-pill,
+body:not(.compact-reference-ui) #side .op-cell {
+  color: rgba(242, 249, 255, 0.92) !important;
+  background:
+    linear-gradient(135deg, rgba(24, 54, 78, 0.86), rgba(10, 31, 54, 0.78)) !important;
+  border: 1px solid rgba(97, 181, 218, 0.22) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 24px rgba(0, 0, 0, 0.18) !important;
+}
+
+body:not(.compact-reference-ui) #side .term-card strong,
+body:not(.compact-reference-ui) #side .caveat-list strong,
+body:not(.compact-reference-ui) #side .roadmap-list strong,
+body:not(.compact-reference-ui) #side .result-value,
+body:not(.compact-reference-ui) #side .stat-card strong,
+body:not(.compact-reference-ui) #side .quality-grid strong,
+body:not(.compact-reference-ui) #side .preset-card strong,
+body:not(.compact-reference-ui) #side .wg-feat-icon,
+body:not(.compact-reference-ui) #side .op-cell span:last-child {
+  color: #ffffff !important;
+}
+
+body:not(.compact-reference-ui) #side .term-card span,
+body:not(.compact-reference-ui) #side .caveat-list span,
+body:not(.compact-reference-ui) #side .roadmap-list span,
+body:not(.compact-reference-ui) #side .preset-card span,
+body:not(.compact-reference-ui) #side .preset-guide span,
+body:not(.compact-reference-ui) #side .quality-grid span,
+body:not(.compact-reference-ui) #side .wg-feat span:last-child {
+  color: rgba(226, 240, 248, 0.76) !important;
+}
+
+body:not(.compact-reference-ui) #side .scenario-tabs button,
+body:not(.compact-reference-ui) #side .resp-tab,
+body:not(.compact-reference-ui) #side button.ghost,
+body:not(.compact-reference-ui) #side details summary {
+  color: rgba(241, 249, 255, 0.88) !important;
+  background: rgba(7, 25, 44, 0.70) !important;
+  border-color: rgba(93, 181, 222, 0.32) !important;
+}
+
+body:not(.compact-reference-ui) #side .scenario-tabs button.active,
+body:not(.compact-reference-ui) #side .resp-tab.active {
+  color: #03111f !important;
+  background: linear-gradient(135deg, #23f8ff, #14aee7) !important;
+  border-color: rgba(35, 248, 255, 0.75) !important;
+}
+
+body:not(.compact-reference-ui) #side .preset-guide strong {
+  color: #ffffff !important;
+}
+
+body:not(.compact-reference-ui) #side input,
+body:not(.compact-reference-ui) #side select,
+body:not(.compact-reference-ui) #side textarea {
+  color: #f7fbff !important;
+  background: rgba(4, 18, 33, 0.62) !important;
+  border-color: rgba(93, 181, 222, 0.32) !important;
+}
+
+body:not(.compact-reference-ui) #side select option {
+  color: #081626;
+}
+
+body:not(.compact-reference-ui) #side .tridel-area-card {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255, 205, 69, 0.20), transparent 40%),
+    linear-gradient(135deg, rgba(4, 37, 60, 0.94), rgba(8, 107, 139, 0.82)) !important;
+  border-color: rgba(35, 248, 255, 0.28) !important;
+}
+
+body:not(.compact-reference-ui) #banner {
+  width: min(590px, calc(100vw - 820px)) !important;
+  min-width: 500px !important;
+  padding: 32px 30px 30px !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-logo {
+  width: 72px !important;
+  height: 72px !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-name {
+  font-size: 31px !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy b {
+  font-size: 22px !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy a {
+  font-size: 21px !important;
+  padding: 16px 24px !important;
+}
+
+body:not(.compact-reference-ui) #banner .partner-logo {
+  height: 92px !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend {
+  top: 372px !important;
+}
