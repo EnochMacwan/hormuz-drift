@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<!--
+  <!--
   Main application shell for the browser-based Hormuz Drift experience.
 
   This document intentionally keeps almost all behavior out of the markup and
@@ -13,546 +14,643 @@
   - map shell: basemap and simulation overlays only
   - side panel: playback controls, scenario inputs, exports, analytics, and provenance
 -->
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Tridel | Live Simulation of Oil Spill & Drifter Trajectories at Strait of Hormuz</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="icon" type="image/png" href="assets/tridel.png"/>
-<link rel="stylesheet" href="css/style.css?v=25"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tridel | Live Simulation of Oil Spill & Drifter Trajectories at Strait of Hormuz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="icon" type="image/png" href="assets/tridel.png" />
+  <link rel="stylesheet" href="css/style.css?v=26" />
 </head>
+
 <body>
-<div id="app">
+  <div id="app">
 
-  <!-- Persistent Tridel masthead and research disclaimer. -->
-  <div id="banner">
-    <div class="brand-lockup" aria-label="Tridel">
-      <img src="assets/tridel.png" alt="Tridel" class="brand-logo"/>
-      <div>
-        <span class="brand-name">TRIDEL</span>
-      </div>
-    </div>
-    <div class="banner-copy">
-      <b>Strait of Hormuz simulation</b>
-      <span>Research / educational use only. Physics are based on OpenDRIFT.</span>
-      <a href="README.md">README and caveats</a>
-    </div>
-    <a class="partner-logo" href="https://austides.com" target="_blank" rel="noopener" aria-label="Austides Consulting">
-      <img src="assets/austides.png" alt="Austides Consulting"/>
-    </a>
-  </div>
-
-  <!-- Map region. Leaflet owns #map itself; keep this surface clear so the
-       left side remains simulation-only. -->
-  <div id="map-shell">
-    <div id="map"></div>
-  </div>
-
-  <!-- Main side panel. Sections are conditionally shown/updated depending on
-       scenario type, data availability, and whether a run has been computed. -->
-  <aside id="side">
-    <div class="side-header">
-      <div class="side-brand">
+    <!-- Persistent Tridel masthead and research disclaimer. -->
+    <div id="banner">
+      <div class="brand-lockup" aria-label="Tridel">
+        <img src="assets/tridel.png" alt="Tridel" class="brand-logo" />
         <div>
-          <div class="eyebrow">Tridel Mission Control</div>
-          <h2>Live Simulation of Oil Spill & Drifter Trajectories at Strait of Hormuz</h2>
+          <span class="brand-name">TRIDEL</span>
         </div>
       </div>
-    </div>
-
-    <!-- Playback and quick-run controls live in the right rail so the left side
-         stays map-only. -->
-    <div id="controls">
-      <div class="row controls-top">
-        <div class="control-cluster">
-          <button id="playBtn">Pause</button>
-          <button id="quickRunRailBtn" class="primary" disabled>Run current preset</button>
-          <button id="focusBtn" class="ghost">Focus mode</button>
-          <span id="controlScenario" class="tag">Man overboard</span>
-        </div>
-        <span id="time-window-label" class="tag">Playback follows the forcing timeline.</span>
+      <div class="banner-copy">
+        <b>Strait of Hormuz simulation</b>
+        <span>Research / educational use only. Physics are based on OpenDRIFT.</span>
+        <a href="README.md">README and caveats</a>
       </div>
-
-      <div class="row scrub-row timeline-head">
-        <span id="time-label">loading...</span>
-        <span id="timeline-current" class="tag">Waiting for data</span>
-        <span id="timeline-phase" class="tag">Timeline context pending</span>
-      </div>
-
-      <div class="timeline-shell">
-        <input id="timeSlider" type="range" min="0" max="0" value="0" step="1"/>
-        <div id="timeline-events" class="timeline-events" aria-hidden="true"></div>
-        <div class="timeline-ticks" aria-hidden="true">
-          <span></span><span></span><span></span><span></span><span></span>
-        </div>
-      </div>
-
-      <div class="timeline-meta">
-        <span id="timeline-start">Start -</span>
-        <div class="control-cluster">
-          <button id="jumpBack24" class="ghost small">-24h</button>
-          <button id="jumpBack6" class="ghost small">-6h</button>
-          <button id="jumpForward6" class="ghost small">+6h</button>
-          <button id="jumpForward24" class="ghost small">+24h</button>
-        </div>
-        <span id="timeline-end">End -</span>
-      </div>
-
-      <div class="dim" id="data-meta">-</div>
-    </div>
-
-    <div class="section-card intro-card" id="mission-summary">
-      <p class="lede">
-        A Tridel research page for exploring live oil-spill and drifter trajectories using operational
-        surface currents, optional wind drift, and a particle ensemble over the Strait of Hormuz.
-      </p>
-      <a class="opendrift-attribution" href="https://github.com/OpenDrift/opendrift" target="_blank" rel="noopener" aria-label="Powered by OpenDrift">
-        <span>Powered by</span>
-        <img src="assets/opendrift_logo.png" alt="OpenDrift"/>
+      <a class="partner-logo" href="https://austides.com" target="_blank" rel="noopener"
+        aria-label="Austides Consulting">
+        <img src="assets/austides.png" alt="Austides Consulting" />
       </a>
-      <div class="quick-stats">
-        <div class="stat-card">
-          <span class="stat-label">Release</span>
-          <strong id="release-info">Click on the map to set release point.</strong>
+    </div>
+
+    <!-- Map region. Leaflet owns #map itself; keep this surface clear so the
+       left side remains simulation-only. -->
+    <div id="map-shell">
+      <div id="map"></div>
+      <div id="areaHud" class="map-hud" style="display:none;">
+        <div class="hud-item">
+          <span class="hud-label">Instant footprint</span>
+          <strong id="hudFootprint">0 km²</strong>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">Wind forcing</span>
-          <strong id="wind-note">-</strong>
+        <div class="hud-item">
+          <span class="hud-label">Swept trail area</span>
+          <strong id="hudTrail">0 km²</strong>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">Data source</span>
-          <strong id="data-source-chip">Loading dataset...</strong>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">Freshness</span>
-          <strong id="data-freshness">Waiting for metadata</strong>
-        </div>
+      </div>
+      <div class="reference-current-legend" aria-label="Current layer legend">
+        <div><strong>CYAN:</strong><span>Surface Currents</span></div>
+        <div><strong>ORANGE:</strong><span>Depth Currents</span></div>
+        <div class="flow-key"><span></span><span>Flow Direction</span></div>
       </div>
     </div>
 
-    <a class="section-card tridel-area-card" href="https://enochmacwan.github.io/Tridel/#/" target="_blank" rel="noopener">
-      <strong>Let Tridel recreate this map for your area.</strong>
-      <span>Click here for options.</span>
-    </a>
+    <!-- Main side panel. Sections are conditionally shown/updated depending on
+       scenario type, data availability, and whether a run has been computed. -->
+    <aside id="side">
+      <div class="side-header">
+        <div class="side-brand">
+          <div>
+            <h2>SIMULATION CONTROLS</h2>
+            <div class="dim">Inter, Medium</div>
+          </div>
+        </div>
+      </div>
 
-    <!-- Live AIS vessel tracking via MarineTraffic. The iframe is loaded on
+      <!-- Playback and quick-run controls live in the right rail so the left side
+         stays map-only. -->
+      <div id="controls">
+        <div class="row controls-top">
+          <div class="control-cluster">
+            <button id="playBtn">Pause</button>
+            <button id="quickRunRailBtn" class="primary" disabled>Run current preset</button>
+            <button id="focusBtn" class="ghost">Focus mode</button>
+            <span id="controlScenario" class="tag">Man overboard</span>
+          </div>
+          <span id="time-window-label" class="tag">Playback follows the forcing timeline.</span>
+        </div>
+
+        <div class="row scrub-row timeline-head">
+          <span id="time-label">loading...</span>
+          <span id="timeline-current" class="tag">Waiting for data</span>
+          <span id="timeline-phase" class="tag">Timeline context pending</span>
+        </div>
+
+        <div class="timeline-shell">
+          <input id="timeSlider" type="range" min="0" max="0" value="0" step="1" />
+          <div id="timeline-events" class="timeline-events" aria-hidden="true"></div>
+          <div class="timeline-ticks" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="reference-control-row">
+          <div class="reference-control-label">
+            <span>Current Speed</span>
+            <strong>2.8 knots</strong>
+          </div>
+          <input class="reference-faux-range" type="range" min="0" max="5" step="0.1" value="2.8" aria-label="Current speed display" disabled />
+        </div>
+
+        <div class="timeline-meta">
+          <span id="timeline-start">Start -</span>
+          <div class="control-cluster">
+            <button id="jumpBack24" class="ghost small">-24h</button>
+            <button id="jumpBack6" class="ghost small">-6h</button>
+            <button id="jumpForward6" class="ghost small">+6h</button>
+            <button id="jumpForward24" class="ghost small">+24h</button>
+          </div>
+          <span id="timeline-end">End -</span>
+        </div>
+
+        <div class="dim" id="data-meta">-</div>
+      </div>
+
+      <div class="section-card intro-card" id="mission-summary">
+        <p class="lede">
+          A Tridel research page for exploring live oil-spill and drifter trajectories using operational
+          surface currents, optional wind drift, and a particle ensemble over the Strait of Hormuz.
+        </p>
+        <a class="opendrift-attribution" href="https://github.com/OpenDrift/opendrift" target="_blank" rel="noopener"
+          aria-label="Powered by OpenDrift">
+          <span>Powered by</span>
+          <img src="assets/opendrift_logo.png" alt="OpenDrift" />
+        </a>
+        <div class="quick-stats">
+          <div class="stat-card">
+            <span class="stat-label">Release</span>
+            <strong id="release-info">Click on the map to set release point.</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Wind forcing</span>
+            <strong id="wind-note">-</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Data source</span>
+            <strong id="data-source-chip">Loading dataset...</strong>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Freshness</span>
+            <strong id="data-freshness">Waiting for metadata</strong>
+          </div>
+        </div>
+      </div>
+
+      <a class="section-card tridel-area-card" href="https://enochmacwan.github.io/Tridel/#/" target="_blank"
+        rel="noopener">
+        <strong>Let Tridel recreate this map for your area.</strong>
+        <span>Click here for options.</span>
+      </a>
+
+      <!-- Live AIS vessel tracking via MarineTraffic. The iframe is loaded on
          demand to keep first paint cheap and to respect MarineTraffic ToS. -->
-    <div class="section-card marinetraffic-card" id="marinetraffic-card">
-      <div class="section-heading-row">
-        <h3>Vessel traffic</h3>
-        <span class="tag">MarineTraffic AIS</span>
-      </div>
-      <p class="hint">Toggle live MarineTraffic vessel-density tiles directly on the map. Adds OpenSeaMap nautical chart features for ports, lighthouses, and channels.</p>
-      <div class="row" style="gap:8px;flex-wrap:wrap">
-        <button id="marineToggleBtn" class="ghost small">Show vessel layer</button>
-        <button id="seamarkToggleBtn" class="ghost small">Show seamarks</button>
-        <a id="marineOpenLink" href="https://www.marinetraffic.com/" target="_blank" rel="noopener" class="ghost small">Open MarineTraffic</a>
-      </div>
-    </div>
-
-    <div class="section-card data-quality-card" id="data-quality-card">
-      <div class="section-heading-row">
-        <h3>Data quality</h3>
-        <span id="data-health" class="tag">Checking</span>
-      </div>
-      <div class="quality-grid">
-        <div><span>Forecast window</span><strong id="data-window">-</strong></div>
-        <div><span>Resolution</span><strong id="data-resolution">-</strong></div>
-        <div><span>Generated</span><strong id="data-generated">-</strong></div>
-        <div><span>Grid</span><strong id="data-grid">-</strong></div>
-      </div>
-      <div class="speed-scale" aria-label="Current speed scale">
-        <div class="speed-scale-bar"><span></span><span></span><span></span></div>
-        <div class="speed-scale-labels">
-          <span>Low</span><strong id="speed-scale-mid">Median -</strong><span id="speed-scale-max">Max -</span>
+      <div class="section-card marinetraffic-card" id="marinetraffic-card">
+        <div class="section-heading-row">
+          <h3>Vessel traffic</h3>
+          <span class="tag">MarineTraffic AIS</span>
+        </div>
+        <p class="hint">Toggle live MarineTraffic vessel-density tiles directly on the map. Adds OpenSeaMap nautical
+          chart features for ports, lighthouses, and channels.</p>
+        <div class="row" style="gap:8px;flex-wrap:wrap">
+          <button id="marineToggleBtn" class="ghost small">Show vessel layer</button>
+          <button id="seamarkToggleBtn" class="ghost small">Show seamarks</button>
+          <a id="marineOpenLink" href="https://www.marinetraffic.com/" target="_blank" rel="noopener"
+            class="ghost small">Open MarineTraffic</a>
         </div>
       </div>
-      <div id="data-quality-note" class="hint">Dataset metadata will appear after the forcing file loads.</div>
-    </div>
 
-    <!-- Scenario family selector. This switches the active modeling path
+      <div class="section-card data-quality-card" id="data-quality-card">
+        <div class="section-heading-row">
+          <h3>Data quality</h3>
+          <span id="data-health" class="tag">Checking</span>
+        </div>
+        <div class="quality-grid">
+          <div><span>Forecast window</span><strong id="data-window">-</strong></div>
+          <div><span>Resolution</span><strong id="data-resolution">-</strong></div>
+          <div><span>Generated</span><strong id="data-generated">-</strong></div>
+          <div><span>Grid</span><strong id="data-grid">-</strong></div>
+        </div>
+        <div class="speed-scale" aria-label="Current speed scale">
+          <div class="speed-scale-bar"><span></span><span></span><span></span></div>
+          <div class="speed-scale-labels">
+            <span>Low</span><strong id="speed-scale-mid">Median -</strong><span id="speed-scale-max">Max -</span>
+          </div>
+        </div>
+        <div id="data-quality-note" class="hint">Dataset metadata will appear after the forcing file loads.</div>
+      </div>
+
+      <!-- Scenario family selector. This switches the active modeling path
          between S&R/leeway behavior and oil/weathering behavior. -->
-    <div class="section-card">
-      <h3>Scenario</h3>
-      <div class="scenario-tabs">
-        <button data-scenario="leeway" class="active">Man overboard</button>
-        <button data-scenario="oil">Oil spill</button>
+      <div class="section-card scenario-card">
+        <h3>Scenario</h3>
+        <div class="scenario-tabs">
+          <button data-scenario="leeway" class="active">Man overboard</button>
+          <button data-scenario="oil">Oil spill</button>
+        </div>
+
+        <div class="row sr-only">
+          <label>Preset</label>
+          <select id="scenarioPreset"></select>
+        </div>
+        <div id="presetCards" class="preset-card-grid"></div>
+        <div id="preset-guide" class="preset-guide">
+          <strong>Preset guide</strong>
+          <span>Choose a scenario preset to see what it is best for.</span>
+        </div>
+
+        <div id="leeway-params">
+          <div class="row">
+            <label>Object</label>
+            <select id="leewayCat"></select>
+          </div>
+          <div class="hint">
+            NOAA leeway categories combine downwind and crosswind response for different S&R targets.
+          </div>
+        </div>
+
+        <div id="oil-params" style="display:none">
+          <div class="row">
+            <label>Oil type</label>
+            <select id="oilType"></select>
+          </div>
+          <div class="row">
+            <label>Volume (m³)</label>
+            <input id="oilVol" type="number" min="0.1" max="100000" step="0.1" value="10" />
+          </div>
+          <div id="oil-props" class="oil-props-strip">
+            <div class="op-cell"><span class="op-label">API</span><span id="op-api">—</span></div>
+            <div class="op-cell"><span class="op-label">Density</span><span id="op-rho">—</span></div>
+            <div class="op-cell"><span class="op-label">Max evap.</span><span id="op-evap">—</span></div>
+            <div class="op-cell"><span class="op-label">Emulsion</span><span id="op-emuls">—</span></div>
+            <div class="op-cell sara-cell"><span class="op-label">SARA</span>
+              <div id="op-sara" class="sara-bar">
+                <div id="sara-S" class="sara-seg" title="Saturates"></div>
+                <div id="sara-A" class="sara-seg" title="Aromatics"></div>
+                <div id="sara-R" class="sara-seg" title="Resins"></div>
+                <div id="sara-As" class="sara-seg" title="Asphaltenes"></div>
+              </div>
+            </div>
+          </div>
+          <div class="hint" style="margin-top:6px">ADIOS-style oil catalog. Evaporation via Fingas (1998) log model.
+            Emulsification via Mackay (1980).</div>
+        </div>
       </div>
 
-      <div class="row sr-only">
-        <label>Preset</label>
-        <select id="scenarioPreset"></select>
-      </div>
-      <div id="presetCards" class="preset-card-grid"></div>
-      <div id="preset-guide" class="preset-guide">
-        <strong>Preset guide</strong>
-        <span>Choose a scenario preset to see what it is best for.</span>
-      </div>
-
-      <div id="leeway-params">
+      <!-- Advanced playback and ambient tracer tuning lives in the drawer so the
+         default map view stays focused on Run, Pause, Scenario, and Time. -->
+      <div class="section-card playback-tuning-card">
+        <h3>Playback tuning</h3>
         <div class="row">
-          <label>Object</label>
-          <select id="leewayCat"></select>
+          <label>Speed</label>
+          <input id="speedSlider" type="range" min="0.1" max="8" step="0.1" value="1.5" />
+          <span id="speed-label" class="val">1.5x</span>
+        </div>
+        <div class="row">
+          <label>Tracers</label>
+          <input id="nSlider" type="range" min="0" max="5000" step="100" value="2000" />
+          <span id="n-label" class="val">2000</span>
+        </div>
+      </div>
+
+      <div class="section-card reference-telemetry-card" aria-label="Current telemetry preview">
+        <h3>Max Velocity (knots) / Time</h3>
+        <svg viewBox="0 0 260 92" role="img" aria-label="Velocity trend line">
+          <defs>
+            <linearGradient id="telemetryGlow" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0" stop-color="#23f8ff" stop-opacity=".55" />
+              <stop offset=".58" stop-color="#23f8ff" />
+              <stop offset="1" stop-color="#ff9b43" />
+            </linearGradient>
+          </defs>
+          <path class="telemetry-grid" d="M0 72H260M0 46H260M0 20H260" />
+          <path class="telemetry-fill" d="M0 74 C12 58 18 40 34 43 S58 39 68 58 S88 22 104 18 S124 70 144 57 S166 26 180 44 S202 15 214 36 S236 20 260 30 L260 92 L0 92 Z" />
+          <path class="telemetry-line" d="M0 74 C12 58 18 40 34 43 S58 39 68 58 S88 22 104 18 S124 70 144 57 S166 26 180 44 S202 15 214 36 S236 20 260 30" />
+        </svg>
+        <div class="reference-readouts">
+          <span>Lat: 26 45' N</span>
+          <span>Lon: 56 10' E</span>
+          <span>Velocity: 2.1 knots</span>
+          <span>Direction: 112 deg</span>
+        </div>
+      </div>
+
+      <!-- Release perturbation and simplified physics knobs passed through to
+         the ensemble generator and deterministic integrator. -->
+      <div class="section-card">
+        <h3>Release and physics</h3>
+        <div class="row">
+          <label>Jitter (m)</label>
+          <input id="relRadius" type="number" min="0" max="5000" step="10" value="100" />
+        </div>
+        <div class="row">
+          <label>Diffusion K</label>
+          <input id="diffK" type="number" min="0" max="500" step="1" value="10" />
+        </div>
+        <div class="row">
+          <label>Duration (h)</label>
+          <input id="durHours" type="number" min="1" max="240" step="1" value="24" />
+        </div>
+        <div class="row">
+          <label>Ensemble size</label>
+          <input id="nEns" type="number" min="10" max="5000" step="10" value="300" />
+        </div>
+        <div class="row toggle-row">
+          <label for="useWind">Wind drift</label>
+          <input id="useWind" type="checkbox" checked />
+          <span id="windStatus" class="tag">Waiting for data</span>
+        </div>
+        <div class="term-grid">
+          <div class="term-card">
+            <strong>Release point</strong>
+            <span>The map click where particles, people, or oil are introduced into the model.</span>
+          </div>
+          <div class="term-card">
+            <strong>Jitter</strong>
+            <span>Initial scatter radius around the release point. Higher values represent less certainty about the
+              exact start location.</span>
+          </div>
+          <div class="term-card">
+            <strong>Diffusion K</strong>
+            <span>Random-walk mixing strength in m²/s. Larger K spreads the ensemble faster to mimic unresolved
+              turbulence.</span>
+          </div>
+          <div class="term-card">
+            <strong>Duration</strong>
+            <span>How many hours the scenario runs forward from the selected release time.</span>
+          </div>
+          <div class="term-card">
+            <strong>Ensemble size</strong>
+            <span>Number of simulated particles. More particles produce smoother probability patterns but run
+              slower.</span>
+          </div>
+          <div class="term-card">
+            <strong>Wind drift</strong>
+            <span>Adds wind-driven leeway and Stokes-style surface drift when the loaded dataset includes wind
+              vectors.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card caveat-card">
+        <h3>Model honesty</h3>
+        <div class="caveat-list">
+          <div><strong>Surface only</strong><span>No subsurface shear, vertical mixing, or wave-spectrum resolved Stokes
+              drift.</span></div>
+          <div><strong>Hourly browser grid</strong><span>RTOFS fallback is packed as hourly output; source snapshots may
+              be interpolated from coarser forecast files.</span></div>
+          <div><strong>Shoreline risk</strong><span>Stranding uses the model land mask, not high-resolution shoreline
+              polygons or port infrastructure.</span></div>
+          <div><strong>Operational handoff</strong><span>Use WebGNOME/OpenDrift for certified response planning, oil
+              chemistry, and official products.</span></div>
+        </div>
+      </div>
+
+      <!-- Browser-side approximations of operational response actions. -->
+      <div class="section-card" id="response-card" style="display:none">
+        <h3>Response options</h3>
+        <div class="response-tabs">
+          <button class="resp-tab active" data-resp="skimming">⛽ Skimming</button>
+          <button class="resp-tab" data-resp="burning">🔥 Burning</button>
+          <button class="resp-tab" data-resp="dispersant">💧 Dispersant</button>
+        </div>
+
+        <!-- Skimming -->
+        <div id="resp-skimming" class="resp-panel">
+          <div class="row toggle-row">
+            <label for="skimActive">Enable</label>
+            <input id="skimActive" type="checkbox" />
+            <span class="tag">Mechanical recovery</span>
+          </div>
+          <div class="row resp-param"><label>Start (h)</label><input id="skimStart" type="number" min="0" max="240"
+              value="2" step="0.5" /></div>
+          <div class="row resp-param"><label>End (h)</label><input id="skimEnd" type="number" min="0" max="240"
+              value="12" step="0.5" /></div>
+          <div class="row resp-param"><label>Rate (m³/h)</label><input id="skimRate" type="number" min="0.1" max="500"
+              value="5" step="0.5" /></div>
+          <div class="row resp-param"><label>Efficiency %</label><input id="skimEff" type="number" min="1" max="100"
+              value="30" step="1" /></div>
+          <div class="hint">Typical field efficiency 10–40 %. Reduced on high-viscosity emulsions.</div>
+        </div>
+
+        <!-- Burning -->
+        <div id="resp-burning" class="resp-panel" style="display:none">
+          <div class="row toggle-row">
+            <label for="burnActive">Enable</label>
+            <input id="burnActive" type="checkbox" />
+            <span class="tag">In-situ burning</span>
+          </div>
+          <div class="row resp-param"><label>Start (h)</label><input id="burnStart" type="number" min="0" max="240"
+              value="1" step="0.5" /></div>
+          <div class="row resp-param"><label>End (h)</label><input id="burnEnd" type="number" min="0" max="240"
+              value="4" step="0.5" /></div>
+          <div class="row resp-param"><label>Efficiency %</label><input id="burnEff" type="number" min="1" max="100"
+              value="90" step="1" /></div>
+          <div class="hint">ISB burn rate ≈ 3.5 mm/min. Less effective on emulsions (water fraction &gt; 25 %).</div>
+        </div>
+
+        <!-- Chemical Dispersant -->
+        <div id="resp-dispersant" class="resp-panel" style="display:none">
+          <div class="row toggle-row">
+            <label for="dispActive">Enable</label>
+            <input id="dispActive" type="checkbox" />
+            <span class="tag">Chemical dispersant</span>
+          </div>
+          <div class="row resp-param"><label>Start (h)</label><input id="dispStart" type="number" min="0" max="240"
+              value="0" step="0.5" /></div>
+          <div class="row resp-param"><label>End (h)</label><input id="dispEnd" type="number" min="0" max="240"
+              value="24" step="0.5" /></div>
+          <div class="row resp-param"><label>Effectiveness %</label><input id="dispEff" type="number" min="1" max="100"
+              value="50" step="1" /></div>
+          <div class="hint">Corexit-class. Most effective on light to medium crudes (API 20–35). Ineffective on HFO.
+          </div>
+        </div>
+      </div>
+
+      <!-- Purely visual toggles. These change rendering only, not the underlying
+         physical run that has already been precomputed. -->
+      <div class="section-card visual-overlay-card">
+        <h3>Visual overlays</h3>
+        <div class="toggle-grid">
+          <label class="check-pill"><input id="layerCurrents" type="checkbox" checked /> Currents</label>
+          <label class="check-pill"><input id="layerTracers" type="checkbox" checked /> Tracers</label>
+          <label class="check-pill"><input id="layerTrails" type="checkbox" checked /> Trails</label>
+          <label class="check-pill"><input id="layerDensity" type="checkbox" /> Density</label>
+          <label class="check-pill"><input id="layerUncertainty" type="checkbox" /> Uncertainty</label>
+          <label class="check-pill"><input id="layerRelease" type="checkbox" checked /> Release</label>
+          <label class="check-pill"><input id="layerOilRadius" type="checkbox" checked /> Oil radius</label>
         </div>
         <div class="hint">
-          NOAA leeway categories combine downwind and crosswind response for different S&R targets.
+          Density, uncertainty, and the oil radius are derived from the current playback time, not just the final state.
+        </div>
+        <div class="color-wheel-card" aria-label="Current direction color identification wheel">
+          <div class="direction-compass" aria-hidden="true">
+            <span class="direction-disc"></span>
+            <span class="direction-label direction-label-n">N</span>
+            <span class="direction-label direction-label-e">E</span>
+            <span class="direction-label direction-label-s">S</span>
+            <span class="direction-label direction-label-w">W</span>
+          </div>
+          <div class="color-wheel-copy">
+            <strong>Current direction colors</strong>
+            <span>Hue identifies flow direction. Opacity increases with current speed.</span>
+            <span class="wheel-key">Orange = particles, red = stranded, cyan = uncertainty.</span>
+          </div>
+        </div>
+        <div class="map-polish-note">
+          <strong>Speed styling</strong>
+          <span>Current opacity is normalized against the loaded dataset so low, medium, and high-flow areas stay
+            readable across refreshes.</span>
         </div>
       </div>
 
-      <div id="oil-params" style="display:none">
-        <div class="row">
-          <label>Oil type</label>
-          <select id="oilType"></select>
+      <!-- Run/start/clear/export affordances for the active scenario. -->
+      <div class="section-card">
+        <h3>Run and share</h3>
+        <div class="action-grid">
+          <button id="runBtn" class="primary">Run scenario</button>
+          <button id="clearBtn" class="danger">Clear</button>
+          <details id="exportMenu" class="export-menu">
+            <summary>Export / Share</summary>
+            <button id="copyLinkBtn" class="ghost">Share scenario link</button>
+            <button id="exportJsonBtn" class="ghost">Download scenario JSON</button>
+            <button id="exportCsvBtn" class="ghost">Download trajectory CSV</button>
+            <button id="exportBudgetCsvBtn" class="ghost" style="display:none">Download oil budget CSV</button>
+          </details>
         </div>
-        <div class="row">
-          <label>Volume (m³)</label>
-          <input id="oilVol" type="number" min="0.1" max="100000" step="0.1" value="10"/>
+        <div id="run-progress" class="run-progress" hidden>
+          <div class="progress-copy">
+            <strong id="progress-label">Preparing simulation</strong>
+            <span id="progress-detail">Particles queued</span>
+          </div>
+          <div class="progress-track"><span id="progress-fill"></span></div>
         </div>
-        <div id="oil-props" class="oil-props-strip">
-          <div class="op-cell"><span class="op-label">API</span><span id="op-api">—</span></div>
-          <div class="op-cell"><span class="op-label">Density</span><span id="op-rho">—</span></div>
-          <div class="op-cell"><span class="op-label">Max evap.</span><span id="op-evap">—</span></div>
-          <div class="op-cell"><span class="op-label">Emulsion</span><span id="op-emuls">—</span></div>
-          <div class="op-cell sara-cell"><span class="op-label">SARA</span><div id="op-sara" class="sara-bar"><div id="sara-S" class="sara-seg" title="Saturates"></div><div id="sara-A" class="sara-seg" title="Aromatics"></div><div id="sara-R" class="sara-seg" title="Resins"></div><div id="sara-As" class="sara-seg" title="Asphaltenes"></div></div></div>
-        </div>
-        <div class="hint" style="margin-top:6px">ADIOS-style oil catalog. Evaporation via Fingas (1998) log model. Emulsification via Mackay (1980).</div>
-      </div>
-    </div>
-
-    <!-- Advanced playback and ambient tracer tuning lives in the drawer so the
-         default map view stays focused on Run, Pause, Scenario, and Time. -->
-    <div class="section-card">
-      <h3>Playback tuning</h3>
-      <div class="row">
-        <label>Speed</label>
-        <input id="speedSlider" type="range" min="0.1" max="8" step="0.1" value="1.5"/>
-        <span id="speed-label" class="val">1.5x</span>
-      </div>
-      <div class="row">
-        <label>Tracers</label>
-        <input id="nSlider" type="range" min="0" max="5000" step="100" value="2000"/>
-        <span id="n-label" class="val">2000</span>
-      </div>
-    </div>
-
-    <!-- Release perturbation and simplified physics knobs passed through to
-         the ensemble generator and deterministic integrator. -->
-    <div class="section-card">
-      <h3>Release and physics</h3>
-      <div class="row">
-        <label>Jitter (m)</label>
-        <input id="relRadius" type="number" min="0" max="5000" step="10" value="100"/>
-      </div>
-      <div class="row">
-        <label>Diffusion K</label>
-        <input id="diffK" type="number" min="0" max="500" step="1" value="10"/>
-      </div>
-      <div class="row">
-        <label>Duration (h)</label>
-        <input id="durHours" type="number" min="1" max="240" step="1" value="24"/>
-      </div>
-      <div class="row">
-        <label>Ensemble size</label>
-        <input id="nEns" type="number" min="10" max="5000" step="10" value="300"/>
-      </div>
-      <div class="row toggle-row">
-        <label for="useWind">Wind drift</label>
-        <input id="useWind" type="checkbox" checked/>
-        <span id="windStatus" class="tag">Waiting for data</span>
-      </div>
-      <div class="term-grid">
-        <div class="term-card">
-          <strong>Release point</strong>
-          <span>The map click where particles, people, or oil are introduced into the model.</span>
-        </div>
-        <div class="term-card">
-          <strong>Jitter</strong>
-          <span>Initial scatter radius around the release point. Higher values represent less certainty about the exact start location.</span>
-        </div>
-        <div class="term-card">
-          <strong>Diffusion K</strong>
-          <span>Random-walk mixing strength in m²/s. Larger K spreads the ensemble faster to mimic unresolved turbulence.</span>
-        </div>
-        <div class="term-card">
-          <strong>Duration</strong>
-          <span>How many hours the scenario runs forward from the selected release time.</span>
-        </div>
-        <div class="term-card">
-          <strong>Ensemble size</strong>
-          <span>Number of simulated particles. More particles produce smoother probability patterns but run slower.</span>
-        </div>
-        <div class="term-card">
-          <strong>Wind drift</strong>
-          <span>Adds wind-driven leeway and Stokes-style surface drift when the loaded dataset includes wind vectors.</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-card caveat-card">
-      <h3>Model honesty</h3>
-      <div class="caveat-list">
-        <div><strong>Surface only</strong><span>No subsurface shear, vertical mixing, or wave-spectrum resolved Stokes drift.</span></div>
-        <div><strong>Hourly browser grid</strong><span>RTOFS fallback is packed as hourly output; source snapshots may be interpolated from coarser forecast files.</span></div>
-        <div><strong>Shoreline risk</strong><span>Stranding uses the model land mask, not high-resolution shoreline polygons or port infrastructure.</span></div>
-        <div><strong>Operational handoff</strong><span>Use WebGNOME/OpenDrift for certified response planning, oil chemistry, and official products.</span></div>
-      </div>
-    </div>
-
-    <!-- Browser-side approximations of operational response actions. -->
-    <div class="section-card" id="response-card" style="display:none">
-      <h3>Response options</h3>
-      <div class="response-tabs">
-        <button class="resp-tab active" data-resp="skimming">⛽ Skimming</button>
-        <button class="resp-tab" data-resp="burning">🔥 Burning</button>
-        <button class="resp-tab" data-resp="dispersant">💧 Dispersant</button>
+        <div id="run-status"></div>
       </div>
 
-      <!-- Skimming -->
-      <div id="resp-skimming" class="resp-panel">
-        <div class="row toggle-row">
-          <label for="skimActive">Enable</label>
-          <input id="skimActive" type="checkbox"/>
-          <span class="tag">Mechanical recovery</span>
+      <!-- Oil-budget analytics card. Hidden until an oil run exists. -->
+      <div class="section-card" id="oil-budget-card" style="display:none">
+        <div class="budget-header">
+          <h3>Oil budget</h3>
+          <div class="budget-legend">
+            <span class="bl-dot" style="background:#FF7F00"></span>Surface
+            <span class="bl-dot" style="background:#FFA040"></span>Evaporated
+            <span class="bl-dot" style="background:#00AAE7"></span>Dispersed
+            <span class="bl-dot" style="background:#0081b0"></span>Beached
+            <span class="bl-dot" style="background:#00FFCC"></span>Skimmed
+            <span class="bl-dot" style="background:#001220"></span>Burned
+          </div>
         </div>
-        <div class="row resp-param"><label>Start (h)</label><input id="skimStart" type="number" min="0" max="240" value="2" step="0.5"/></div>
-        <div class="row resp-param"><label>End (h)</label><input id="skimEnd" type="number" min="0" max="240" value="12" step="0.5"/></div>
-        <div class="row resp-param"><label>Rate (m³/h)</label><input id="skimRate" type="number" min="0.1" max="500" value="5" step="0.5"/></div>
-        <div class="row resp-param"><label>Efficiency %</label><input id="skimEff" type="number" min="1" max="100" value="30" step="1"/></div>
-        <div class="hint">Typical field efficiency 10–40 %. Reduced on high-viscosity emulsions.</div>
+        <div id="oil-budget-plot" aria-label="Oil budget stacked chart"></div>
+        <div id="oil-budget-summary" class="budget-summary-grid"></div>
+        <div id="oil-budget-insights" class="budget-insights"></div>
+        <div class="hint" id="emulsion-note" style="margin-top:8px"></div>
       </div>
 
-      <!-- Burning -->
-      <div id="resp-burning" class="resp-panel" style="display:none">
-        <div class="row toggle-row">
-          <label for="burnActive">Enable</label>
-          <input id="burnActive" type="checkbox"/>
-          <span class="tag">In-situ burning</span>
-        </div>
-        <div class="row resp-param"><label>Start (h)</label><input id="burnStart" type="number" min="0" max="240" value="1" step="0.5"/></div>
-        <div class="row resp-param"><label>End (h)</label><input id="burnEnd" type="number" min="0" max="240" value="4" step="0.5"/></div>
-        <div class="row resp-param"><label>Efficiency %</label><input id="burnEff" type="number" min="1" max="100" value="90" step="1"/></div>
-        <div class="hint">ISB burn rate ≈ 3.5 mm/min. Less effective on emulsions (water fraction &gt; 25 %).</div>
-      </div>
-
-      <!-- Chemical Dispersant -->
-      <div id="resp-dispersant" class="resp-panel" style="display:none">
-        <div class="row toggle-row">
-          <label for="dispActive">Enable</label>
-          <input id="dispActive" type="checkbox"/>
-          <span class="tag">Chemical dispersant</span>
-        </div>
-        <div class="row resp-param"><label>Start (h)</label><input id="dispStart" type="number" min="0" max="240" value="0" step="0.5"/></div>
-        <div class="row resp-param"><label>End (h)</label><input id="dispEnd" type="number" min="0" max="240" value="24" step="0.5"/></div>
-        <div class="row resp-param"><label>Effectiveness %</label><input id="dispEff" type="number" min="1" max="100" value="50" step="1"/></div>
-        <div class="hint">Corexit-class. Most effective on light to medium crudes (API 20–35). Ineffective on HFO.</div>
-      </div>
-    </div>
-
-    <!-- Purely visual toggles. These change rendering only, not the underlying
-         physical run that has already been precomputed. -->
-    <div class="section-card">
-      <h3>Visual overlays</h3>
-      <div class="toggle-grid">
-        <label class="check-pill"><input id="layerCurrents" type="checkbox" checked/> Currents</label>
-        <label class="check-pill"><input id="layerTracers" type="checkbox" checked/> Tracers</label>
-        <label class="check-pill"><input id="layerTrails" type="checkbox" checked/> Trails</label>
-        <label class="check-pill"><input id="layerDensity" type="checkbox"/> Density</label>
-        <label class="check-pill"><input id="layerUncertainty" type="checkbox"/> Uncertainty</label>
-        <label class="check-pill"><input id="layerRelease" type="checkbox" checked/> Release</label>
-        <label class="check-pill"><input id="layerOilRadius" type="checkbox" checked/> Oil radius</label>
-      </div>
-      <div class="hint">
-        Density, uncertainty, and the oil radius are derived from the current playback time, not just the final state.
-      </div>
-      <div class="color-wheel-card" aria-label="Current direction color identification wheel">
-        <div class="direction-compass" aria-hidden="true">
-          <span class="direction-disc"></span>
-          <span class="direction-label direction-label-n">N</span>
-          <span class="direction-label direction-label-e">E</span>
-          <span class="direction-label direction-label-s">S</span>
-          <span class="direction-label direction-label-w">W</span>
-        </div>
-        <div class="color-wheel-copy">
-          <strong>Current direction colors</strong>
-          <span>Hue identifies flow direction. Opacity increases with current speed.</span>
-          <span class="wheel-key">Orange = particles, red = stranded, cyan = uncertainty.</span>
-        </div>
-      </div>
-      <div class="map-polish-note">
-        <strong>Speed styling</strong>
-        <span>Current opacity is normalized against the loaded dataset so low, medium, and high-flow areas stay readable across refreshes.</span>
-      </div>
-    </div>
-
-    <!-- Run/start/clear/export affordances for the active scenario. -->
-    <div class="section-card">
-      <h3>Run and share</h3>
-      <div class="action-grid">
-        <button id="runBtn" class="primary">Run scenario</button>
-        <button id="clearBtn" class="danger">Clear</button>
-        <details id="exportMenu" class="export-menu">
-          <summary>Export / Share</summary>
-          <button id="copyLinkBtn" class="ghost">Share scenario link</button>
-          <button id="exportJsonBtn" class="ghost">Download scenario JSON</button>
-          <button id="exportCsvBtn" class="ghost">Download trajectory CSV</button>
-          <button id="exportBudgetCsvBtn" class="ghost" style="display:none">Download oil budget CSV</button>
-        </details>
-      </div>
-      <div id="run-progress" class="run-progress" hidden>
-        <div class="progress-copy">
-          <strong id="progress-label">Preparing simulation</strong>
-          <span id="progress-detail">Particles queued</span>
-        </div>
-        <div class="progress-track"><span id="progress-fill"></span></div>
-      </div>
-      <div id="run-status"></div>
-    </div>
-
-    <!-- Oil-budget analytics card. Hidden until an oil run exists. -->
-    <div class="section-card" id="oil-budget-card" style="display:none">
-      <div class="budget-header">
-        <h3>Oil budget</h3>
-        <div class="budget-legend">
-          <span class="bl-dot" style="background:#FF7F00"></span>Surface
-          <span class="bl-dot" style="background:#FFA040"></span>Evaporated
-          <span class="bl-dot" style="background:#00AAE7"></span>Dispersed
-          <span class="bl-dot" style="background:#0081b0"></span>Beached
-          <span class="bl-dot" style="background:#00FFCC"></span>Skimmed
-          <span class="bl-dot" style="background:#001220"></span>Burned
-        </div>
-      </div>
-      <div id="oil-budget-plot" aria-label="Oil budget stacked chart"></div>
-      <div id="oil-budget-summary" class="budget-summary-grid"></div>
-      <div id="oil-budget-insights" class="budget-insights"></div>
-      <div class="hint" id="emulsion-note" style="margin-top:8px"></div>
-    </div>
-
-    <!-- Fast summary cards and time-series analytics for the current playback
+      <!-- Fast summary cards and time-series analytics for the current playback
          instant. These update as the user scrubs or plays. -->
-    <div class="section-card">
-      <h3>Results</h3>
-      <div id="results"><div class="hint">No active simulation.</div></div>
-      <div id="ts-plot" aria-label="Run analytics chart"></div>
-    </div>
+      <div class="section-card">
+        <h3>Results</h3>
+        <div id="results">
+          <div class="hint">No active simulation.</div>
+        </div>
+        <div id="ts-plot" aria-label="Run analytics chart"></div>
+      </div>
 
-    <!-- Official-tool handoff. This stays in the side panel instead of inside
+      <!-- Official-tool handoff. This stays in the side panel instead of inside
          the map so the map viewport remains clean on smaller laptops. -->
-    <div class="section-card webgnome-card">
-      <div class="webgnome-header">
-        <div>
-          <div class="eyebrow">NOAA official tool</div>
-          <h3>WebGNOME integration</h3>
+      <div class="section-card webgnome-card">
+        <div class="webgnome-header">
+          <div>
+            <div class="eyebrow">NOAA official tool</div>
+            <h3>WebGNOME integration</h3>
+          </div>
+          <img src="https://response.restoration.noaa.gov/themes/custom/orr/images/logo-noaa-orr.svg" alt="NOAA ORR"
+            class="noaa-logo" onerror="this.style.display='none'" />
         </div>
-        <img src="https://response.restoration.noaa.gov/themes/custom/orr/images/logo-noaa-orr.svg" alt="NOAA ORR" class="noaa-logo" onerror="this.style.display='none'"/>
+        <p class="hint">Use this browser model for fast exploration, then transfer the same release setup into
+          <strong>WebGNOME</strong> for NOAA's fuller oil weathering and response-planning workflow.</p>
+        <div class="webgnome-feature-list">
+          <div class="wg-feat"><span class="wg-feat-icon">ADIOS</span><span>Oil weathering, emulsion, dispersion, and
+              budget outputs.</span></div>
+          <div class="wg-feat"><span class="wg-feat-icon">DATA</span><span>Load the project NetCDF currents as a
+              grid-current mover.</span></div>
+          <div class="wg-feat"><span class="wg-feat-icon">OPS</span><span>Compare trajectories, beached mass, and
+              operational exports.</span></div>
+        </div>
+        <div class="action-grid webgnome-actions">
+          <button id="openWebgnomeBtn" class="primary wg-primary">Open WebGNOME</button>
+          <button id="downloadPygnomeBtn" class="ghost">Download PyGNOME script</button>
+          <button id="copyValidationBtn" class="ghost">Copy validation summary</button>
+          <button id="webgnomeHelpBtn" class="ghost small" style="grid-column:1/-1;">View setup instructions</button>
+        </div>
+        <div class="validation-checklist">
+          <span>Compare release time and coordinates</span>
+          <span>Match current and wind source window</span>
+          <span>Compare trajectory spread, oil budget, and first shoreline contact</span>
+        </div>
+        <div id="wg-status" class="hint" style="margin-top:6px;"></div>
       </div>
-      <p class="hint">Use this browser model for fast exploration, then transfer the same release setup into <strong>WebGNOME</strong> for NOAA's fuller oil weathering and response-planning workflow.</p>
-      <div class="webgnome-feature-list">
-        <div class="wg-feat"><span class="wg-feat-icon">ADIOS</span><span>Oil weathering, emulsion, dispersion, and budget outputs.</span></div>
-        <div class="wg-feat"><span class="wg-feat-icon">DATA</span><span>Load the project NetCDF currents as a grid-current mover.</span></div>
-        <div class="wg-feat"><span class="wg-feat-icon">OPS</span><span>Compare trajectories, beached mass, and operational exports.</span></div>
-      </div>
-      <div class="action-grid webgnome-actions">
-        <button id="openWebgnomeBtn" class="primary wg-primary">Open WebGNOME</button>
-        <button id="downloadPygnomeBtn" class="ghost">Download PyGNOME script</button>
-        <button id="copyValidationBtn" class="ghost">Copy validation summary</button>
-        <button id="webgnomeHelpBtn" class="ghost small" style="grid-column:1/-1;">View setup instructions</button>
-      </div>
-      <div class="validation-checklist">
-        <span>Compare release time and coordinates</span>
-        <span>Match current and wind source window</span>
-        <span>Compare trajectory spread, oil budget, and first shoreline contact</span>
-      </div>
-      <div id="wg-status" class="hint" style="margin-top:6px;"></div>
-    </div>
 
-    <div class="section-card">
-      <h3>Data provenance</h3>
-      <div class="hint">
-        Currents come from the active dataset metadata: CMEMS when authenticated, or NOAA/NCEP RTOFS
-        when the no-login real-time fallback is used. Wind vectors are embedded when the dataset refresh
-        includes Open-Meteo/GFS or NCEP GFS forcing. Tiles by OpenStreetMap and CARTO.
+      <div class="section-card">
+        <h3>Data provenance</h3>
+        <div class="hint">
+          Currents come from the active dataset metadata: CMEMS when authenticated, or NOAA/NCEP RTOFS
+          when the no-login real-time fallback is used. Wind vectors are embedded when the dataset refresh
+          includes Open-Meteo/GFS or NCEP GFS forcing. Tiles by OpenStreetMap and CARTO.
+        </div>
       </div>
-    </div>
 
-    <div class="section-card science-roadmap-card">
-      <h3>Next fidelity upgrades</h3>
-      <div class="roadmap-list">
-        <div><strong>OpenOil oil engine</strong><span>Evaluate a server-side OpenDrift/OpenOil path for the oil-spill option instead of treating oil fate only in the browser.</span></div>
-        <div><strong>Abu Dhabi expansion</strong><span>Hold until the Sanjeev review and a supplied larger grid, then extend the domain and default map framing.</span></div>
-        <div><strong>Oil tanker layer</strong><span>Future AIS/tanker overlays can mirror the Greenpeace-style context layer without crowding the response controls.</span></div>
-        <div><strong>Tide/current comparison</strong><span>Add a harmonic tide layer or port-gauge feed to compare tidal phase against RTOFS/CMEMS currents.</span></div>
-        <div><strong>Shoreline polygons</strong><span>Replace grid-cell stranding with GSHHS or local coastline polygons for more precise contact points.</span></div>
-        <div><strong>Higher physics tier</strong><span>Run OpenDrift/WebGNOME server-side for vertical mixing, richer oil weathering, and uncertainty products.</span></div>
+      <div class="section-card science-roadmap-card">
+        <h3>Next fidelity upgrades</h3>
+        <div class="roadmap-list">
+          <div><strong>OpenOil oil engine</strong><span>Evaluate a server-side OpenDrift/OpenOil path for the oil-spill
+              option instead of treating oil fate only in the browser.</span></div>
+          <div><strong>Abu Dhabi expansion</strong><span>Hold until the Sanjeev review and a supplied larger grid, then
+              extend the domain and default map framing.</span></div>
+          <div><strong>Oil tanker layer</strong><span>Future AIS/tanker overlays can mirror the Greenpeace-style context
+              layer without crowding the response controls.</span></div>
+          <div><strong>Tide/current comparison</strong><span>Add a harmonic tide layer or port-gauge feed to compare
+              tidal phase against RTOFS/CMEMS currents.</span></div>
+          <div><strong>Shoreline polygons</strong><span>Replace grid-cell stranding with GSHHS or local coastline
+              polygons for more precise contact points.</span></div>
+          <div><strong>Higher physics tier</strong><span>Run OpenDrift/WebGNOME server-side for vertical mixing, richer
+              oil weathering, and uncertainty products.</span></div>
+        </div>
       </div>
-    </div>
-  </aside>
+    </aside>
 
-</div>
+  </div>
 
-<!-- Manual bridge for users who want to reproduce the browser scenario in
+  <!-- Manual bridge for users who want to reproduce the browser scenario in
      WebGNOME/PyGNOME with official NOAA tooling. -->
-<div id="webgnome-modal" class="wg-modal-overlay" style="display:none;">
-  <div class="wg-modal" role="dialog" aria-modal="true" aria-labelledby="wg-title">
-    <div class="wg-modal-head">
-      <h2 id="wg-title">Setting up WebGNOME with Hormuz data</h2>
-      <button id="closeWgModal" class="ghost small">Close</button>
-    </div>
-    <div class="wg-modal-body">
-      <div class="wg-step">
-        <span class="wg-step-num">1</span>
-        <div>
-          <strong>Open WebGNOME manual setup</strong>
-          <p>Click <em>Open WebGNOME</em>, then choose manual setup in the NOAA interface.</p>
+  <div id="webgnome-modal" class="wg-modal-overlay" style="display:none;">
+    <div class="wg-modal" role="dialog" aria-modal="true" aria-labelledby="wg-title">
+      <div class="wg-modal-head">
+        <h2 id="wg-title">Setting up WebGNOME with Hormuz data</h2>
+        <button id="closeWgModal" class="ghost small">Close</button>
+      </div>
+      <div class="wg-modal-body">
+        <div class="wg-step">
+          <span class="wg-step-num">1</span>
+          <div>
+            <strong>Open WebGNOME manual setup</strong>
+            <p>Click <em>Open WebGNOME</em>, then choose manual setup in the NOAA interface.</p>
+          </div>
+        </div>
+        <div class="wg-step">
+          <span class="wg-step-num">2</span>
+          <div>
+            <strong>Add project currents</strong>
+            <p>Add a grid-current mover and upload the CMEMS or NOAA RTOFS NetCDF currents file used for this project.
+            </p>
+            <code class="wg-code">cmems_*.nc or rtofs_glo_2ds_*.nc</code>
+          </div>
+        </div>
+        <div class="wg-step">
+          <span class="wg-step-num">3</span>
+          <div>
+            <strong>Add wind forcing</strong>
+            <p>Add a wind mover using GOODS/GFS, a constant wind, or a prepared local wind file for the same time
+              window.</p>
+          </div>
+        </div>
+        <div class="wg-step">
+          <span class="wg-step-num">4</span>
+          <div>
+            <strong>Place the spill or release</strong>
+            <p>Use the release latitude/longitude from this model, align the start time with the data window, then set
+              duration and output options.</p>
+          </div>
+        </div>
+        <div class="wg-step">
+          <span class="wg-step-num">5</span>
+          <div>
+            <strong>Run and compare</strong>
+            <p>Compare WebGNOME trajectories, oil budget, and beached mass outputs against the browser animation.</p>
+          </div>
+        </div>
+        <div class="wg-tip">
+          <strong>Repeatable workflow:</strong> download the PyGNOME script and run it locally after installing NOAA
+          GNOME dependencies.
         </div>
       </div>
-      <div class="wg-step">
-        <span class="wg-step-num">2</span>
-        <div>
-          <strong>Add project currents</strong>
-          <p>Add a grid-current mover and upload the CMEMS or NOAA RTOFS NetCDF currents file used for this project.</p>
-          <code class="wg-code">cmems_*.nc or rtofs_glo_2ds_*.nc</code>
-        </div>
+      <div class="wg-modal-foot">
+        <a href="https://gnome.orr.noaa.gov" target="_blank" rel="noopener" class="ghost wg-link">Open WebGNOME</a>
+        <button id="closeWgModal2" class="ghost">Close</button>
       </div>
-      <div class="wg-step">
-        <span class="wg-step-num">3</span>
-        <div>
-          <strong>Add wind forcing</strong>
-          <p>Add a wind mover using GOODS/GFS, a constant wind, or a prepared local wind file for the same time window.</p>
-        </div>
-      </div>
-      <div class="wg-step">
-        <span class="wg-step-num">4</span>
-        <div>
-          <strong>Place the spill or release</strong>
-          <p>Use the release latitude/longitude from this model, align the start time with the data window, then set duration and output options.</p>
-        </div>
-      </div>
-      <div class="wg-step">
-        <span class="wg-step-num">5</span>
-        <div>
-          <strong>Run and compare</strong>
-          <p>Compare WebGNOME trajectories, oil budget, and beached mass outputs against the browser animation.</p>
-        </div>
-      </div>
-      <div class="wg-tip">
-        <strong>Repeatable workflow:</strong> download the PyGNOME script and run it locally after installing NOAA GNOME dependencies.
-      </div>
-    </div>
-    <div class="wg-modal-foot">
-      <a href="https://gnome.orr.noaa.gov" target="_blank" rel="noopener" class="ghost wg-link">Open WebGNOME</a>
-      <button id="closeWgModal2" class="ghost">Close</button>
     </div>
   </div>
-</div>
 
-<!-- Runtime dependencies are loaded in order: vendors first, then data/model
+  <!-- Runtime dependencies are loaded in order: vendors first, then data/model
      helpers, then the main orchestration script. -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-<script src="js/field.js?v=4"></script>
-<script src="js/drift.js?v=4"></script>
-<script src="js/app.js?v=25"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="js/field.js?v=4"></script>
+  <script src="js/drift.js?v=4"></script>
+  <script src="js/app.js?v=26"></script>
 </body>
+
 </html>

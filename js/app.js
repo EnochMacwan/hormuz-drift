@@ -65,12 +65,12 @@ const els = {};
 
 /* Leaflet owns the geographic view and projection math. Canvas overlays are
    layered above it for field rendering, tracers, and drift results. */
-const map = L.map("map", { zoomControl: false, preferCanvas: true, attributionControl: false }).setView([25.8, 55.75], 8);
-L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-  subdomains: "abcd",
-  maxZoom: 13,
-  attribution: "OpenStreetMap | CARTO | Currents: live dataset",
+const map = L.map("map", { zoomControl: false, preferCanvas: true, attributionControl: false }).setView([26.0, 53.25], 7);
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+  attribution: "&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+  maxZoom: 19,
 }).addTo(map);
+L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
 /* MarineTraffic vessel-density overlay. The tile service is publicly readable
    and renders historical AIS density on top of the simulation. Toggleable via
@@ -310,13 +310,19 @@ function randomBgParticle() {
     const lat = grid.latMin + Math.random() * (grid.latMax - grid.latMin);
     const cur = Field.sampleCurrent(lon, lat, tIdxToSec(tIdx));
     if (cur) {
-      return { lon, lat, age: 320 + Math.random() * 420 };
+      return {
+        lon,
+        lat,
+        age: 320 + Math.random() * 420,
+        layer: Math.random() > 0.58 ? "depth" : "surface",
+      };
     }
   }
   return {
     lon: grid.lonMin + Math.random() * (grid.lonMax - grid.lonMin),
     lat: grid.latMin + Math.random() * (grid.latMax - grid.latMin),
     age: 1,
+    layer: Math.random() > 0.58 ? "depth" : "surface",
   };
 }
 
@@ -502,8 +508,10 @@ function drawField() {
   ctx.save();
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
+  ctx.globalAlpha = 1 - blend;
   ctx.drawImage(fieldSrcBuffers[0].canvas, dX, dY, dW, dH);
   if (blend > 0 && ti1 !== ti0) {
+    ctx.globalCompositeOperation = "lighter";
     ctx.globalAlpha = blend;
     ctx.drawImage(fieldSrcBuffers[1].canvas, dX, dY, dW, dH);
   }
@@ -524,24 +532,30 @@ function drawBgParticles() {
     return;
   }
   ctx.globalCompositeOperation = "destination-out";
-  ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.025)";
   ctx.fillRect(0, 0, size.x, size.y);
   ctx.globalCompositeOperation = "source-over";
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
   ctx.lineCap    = "round";
-  ctx.lineWidth  = 2.2;
-  ctx.beginPath();
-  for (const particle of bgParticles) {
-    if (!particle.prevOK) {
-      continue;
+  const drawLayer = (layer, strokeStyle, lineWidth) => {
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    for (const particle of bgParticles) {
+      if (!particle.prevOK || particle.layer !== layer) {
+        continue;
+      }
+      const a = map.latLngToContainerPoint([particle.prevLat, particle.prevLon]);
+      const b = map.latLngToContainerPoint([particle.lat, particle.lon]);
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
     }
-    const a = map.latLngToContainerPoint([particle.prevLat, particle.prevLon]);
-    const b = map.latLngToContainerPoint([particle.lat, particle.lon]);
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  };
+  drawLayer("surface", "rgba(24, 247, 255, 0.88)", 1.6);
+  drawLayer("depth", "rgba(255, 155, 67, 0.80)", 1.35);
+  for (const particle of bgParticles) {
     particle.prevOK = false;
   }
-  ctx.stroke();
 }
 
 /* Some drifters only append to track periodically, so this helper forces the
@@ -802,9 +816,9 @@ function drawDensity(ctx, points) {
     }
     const p = map.latLngToContainerPoint([point.lat, point.lon]);
     const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radiusPx);
-    gradient.addColorStop(0, "rgba(0, 170, 231, 0.24)");
-    gradient.addColorStop(0.55, "rgba(0, 18, 32, 0.14)");
-    gradient.addColorStop(1, "rgba(0, 18, 32, 0)");
+    gradient.addColorStop(0, "rgba(0, 229, 255, 0.6)");
+    gradient.addColorStop(0.5, "rgba(0, 229, 255, 0.15)");
+    gradient.addColorStop(1, "rgba(0, 229, 255, 0)");
     ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(p.x, p.y, radiusPx, 0, 2 * Math.PI);
@@ -820,7 +834,7 @@ function drawTrails(ctx, tSec) {
   }
   const stride = Math.max(1, Math.ceil(activeRun.ensemble.length / 700));
   ctx.save();
-  ctx.strokeStyle = "rgba(255, 127, 0, 0.36)";
+  ctx.strokeStyle = "rgba(255, 127, 0, 0.8)";
   ctx.lineWidth = 1.1;
   ctx.beginPath();
 
@@ -1236,6 +1250,7 @@ function buildAnalystSummary(metrics, frame) {
 /* Populate the metric cards for the current playback instant. */
 function updateResultsPanel(force) {
   if (!activeRun) {
+    if (els.areaHud) els.areaHud.style.display = "none";
     els.results.innerHTML = '<div class="result-card wide"><span class="result-label">Run state</span><span class="result-value">No active simulation</span><span class="result-subvalue">Run a scenario to chart stranding, spread, and uncertainty over time.</span></div>';
     return;
   }
@@ -1251,6 +1266,12 @@ function updateResultsPanel(force) {
   lastResultsKey = key;
 
   const metrics = frame.metrics;
+  if (els.areaHud) {
+    els.areaHud.style.display = "";
+    els.hudFootprint.textContent = `${fmt(metrics.footprintKm2, 2)} km²`;
+    els.hudTrail.textContent = `${fmt(frame.trailKm2 ?? 0, 2)} km²`;
+  }
+
   const centroidText = Number.isFinite(metrics.centroidLat) && Number.isFinite(metrics.centroidLon) ? `${metrics.centroidLat.toFixed(3)} N, ${metrics.centroidLon.toFixed(3)} E` : "Waiting for playback";
   const oilCards = activeRun.scenario === "oil" && oilSlickModel ? `
     <div class="result-card">
@@ -2045,6 +2066,10 @@ function collectDomRefs() {
     useWind: document.getElementById("useWind"),
     windNote: document.getElementById("wind-note"),
     windStatus: document.getElementById("windStatus"),
+    // Map HUD
+    areaHud: document.getElementById("areaHud"),
+    hudFootprint: document.getElementById("hudFootprint"),
+    hudTrail: document.getElementById("hudTrail"),
     // Response options
     responseCard: document.getElementById("response-card"),
     skimActive: document.getElementById("skimActive"),
