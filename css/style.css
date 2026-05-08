@@ -3664,3 +3664,212 @@ body.reference-map-ui .visual-overlay-card .check-pill:nth-child(n+5),
 body:not(.show-full-dashboard) .visual-overlay-card .check-pill:nth-child(n+5) {
   display: none !important;
 }
+
+/* --- Full mission-control pass: brand card on map, every function in panel --- */
+body:not(.compact-reference-ui) #banner {
+  display: grid !important;
+  visibility: visible !important;
+  grid-template-columns: 1fr !important;
+  gap: 22px !important;
+  top: 12px !important;
+  left: 48px !important;
+  width: min(640px, calc(100vw - 820px)) !important;
+  min-width: 520px !important;
+  padding: 36px 32px 32px !important;
+  border-radius: 20px !important;
+  background:
+    radial-gradient(circle at 78% 12%, rgba(0, 229, 255, 0.08), transparent 38%),
+    linear-gradient(135deg, rgba(35, 37, 39, 0.96), rgba(20, 31, 30, 0.96)) !important;
+  border: 1px solid rgba(0, 229, 255, 0.28) !important;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.52) !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-lockup {
+  display: flex !important;
+  gap: 28px !important;
+  align-items: center !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-logo {
+  width: 80px !important;
+  height: 80px !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-name {
+  color: #fff !important;
+  font-size: 34px !important;
+  font-weight: 800 !important;
+  letter-spacing: .18em !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 18px !important;
+  align-items: center !important;
+  justify-content: stretch !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy b {
+  color: #fff !important;
+  font-size: 24px !important;
+  line-height: 1.15 !important;
+  white-space: normal !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy span {
+  display: none !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy a {
+  min-width: 230px !important;
+  padding: 18px 28px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #10aee7, #0797ca) !important;
+  color: #fff !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+}
+
+body:not(.compact-reference-ui) #banner .partner-logo {
+  width: 100% !important;
+  height: 100px !important;
+  padding: 8px 28px !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+}
+
+body:not(.compact-reference-ui) #banner .partner-logo img {
+  max-height: 84px !important;
+  width: auto !important;
+  margin: 0 auto !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend {
+  top: 400px !important;
+  left: 48px !important;
+}
+
+body:not(.compact-reference-ui) #side {
+  top: 18px !important;
+  right: 24px !important;
+  bottom: 18px !important;
+  width: 430px !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 20px !important;
+  border-radius: 22px !important;
+}
+
+body:not(.compact-reference-ui) #side > *,
+body:not(.compact-reference-ui) #side > .side-header,
+body:not(.compact-reference-ui) #side > #controls,
+body:not(.compact-reference-ui) #side > .section-card {
+  display: block !important;
+}
+
+body:not(.compact-reference-ui) #side > .intro-card,
+body:not(.compact-reference-ui) #side > .tridel-area-card,
+body:not(.compact-reference-ui) #side > .marinetraffic-card,
+body:not(.compact-reference-ui) #side > .data-quality-card,
+body:not(.compact-reference-ui) #side > .scenario-card,
+body:not(.compact-reference-ui) #side > .release-physics-card,
+body:not(.compact-reference-ui) #side > .caveat-card,
+body:not(.compact-reference-ui) #side > .run-share-card,
+body:not(.compact-reference-ui) #side > .results-card,
+body:not(.compact-reference-ui) #side > .webgnome-card,
+body:not(.compact-reference-ui) #side > .data-provenance-card,
+body:not(.compact-reference-ui) #side > .science-roadmap-card,
+body:not(.compact-reference-ui) #side > #oil-budget-card {
+  display: block !important;
+}
+
+body:not(.compact-reference-ui) #side .hint,
+body:not(.compact-reference-ui) #side .color-wheel-card,
+body:not(.compact-reference-ui) #side .map-polish-note {
+  display: grid !important;
+}
+
+body:not(.compact-reference-ui) #app #side > .section-card,
+body:not(.compact-reference-ui) #app #side > a.section-card {
+  display: block !important;
+}
+
+body:not(.compact-reference-ui) #app #side .hint {
+  display: block !important;
+}
+
+body:not(.compact-reference-ui) #side .intro-card,
+body:not(.compact-reference-ui) #side .tridel-area-card,
+body:not(.compact-reference-ui) #side .marinetraffic-card,
+body:not(.compact-reference-ui) #side .data-quality-card,
+body:not(.compact-reference-ui) #side .section-card:not(.playback-tuning-card):not(.visual-overlay-card):not(.reference-telemetry-card):not(:has(#runBtn)) {
+  display: block !important;
+}
+
+body:not(.compact-reference-ui) #side .section-card,
+body:not(.compact-reference-ui) #side .playback-tuning-card,
+body:not(.compact-reference-ui) #side .reference-telemetry-card,
+body:not(.compact-reference-ui) #side .visual-overlay-card {
+  display: block !important;
+  margin-top: 14px !important;
+  padding: 16px !important;
+  border-radius: 18px !important;
+  background: rgba(7, 25, 44, 0.58) !important;
+  border: 1px solid rgba(105, 171, 224, 0.18) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18) !important;
+}
+
+body:not(.compact-reference-ui) #controls {
+  display: flex !important;
+  gap: 12px !important;
+}
+
+body:not(.compact-reference-ui) #controls .controls-top {
+  display: flex !important;
+  grid-template-columns: none !important;
+}
+
+body:not(.compact-reference-ui) #controls .controls-top .tag,
+body:not(.compact-reference-ui) #controls .timeline-meta,
+body:not(.compact-reference-ui) #controls #data-meta {
+  display: flex !important;
+}
+
+body:not(.compact-reference-ui) #controls #data-meta {
+  display: block !important;
+}
+
+body:not(.compact-reference-ui) .visual-overlay-card h3 {
+  display: block !important;
+}
+
+body:not(.compact-reference-ui) .visual-overlay-card .toggle-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+}
+
+body:not(.compact-reference-ui) .visual-overlay-card .check-pill,
+body:not(.compact-reference-ui) .visual-overlay-card .check-pill:nth-child(n+5) {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 56px !important;
+}
+
+@media (max-width: 1240px) {
+  body:not(.compact-reference-ui) #banner {
+    left: 24px !important;
+    width: 440px !important;
+    min-width: 0 !important;
+  }
+
+  body:not(.compact-reference-ui) #banner .banner-copy {
+    grid-template-columns: 1fr !important;
+  }
+
+  body:not(.compact-reference-ui) #banner .banner-copy a {
+    min-width: 0 !important;
+    font-size: 18px !important;
+  }
+}
