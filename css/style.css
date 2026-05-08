@@ -2949,6 +2949,7 @@ body.focus-mode #banner {
   from { opacity: 0; transform: translateY(4px); }
 
   to   { opacity: 1; transform: translateY(0); }
+}
 
 /* ============================================================
    MAP HUD - floating telemetry widget
@@ -3474,4 +3475,192 @@ input[type=range]::-webkit-slider-thumb {
     right: 16px !important;
     width: min(338px, calc(100vw - 32px)) !important;
   }
+}
+
+/* --- Live MCP fix: lock the page to the compact reference-map UI --- */
+body.reference-map-ui #banner,
+body:not(.show-full-dashboard) #banner {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+body.reference-map-ui #map-shell,
+body:not(.show-full-dashboard) #map-shell {
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+body.reference-map-ui #side,
+body:not(.show-full-dashboard) #side {
+  top: 8px !important;
+  right: 40px !important;
+  bottom: auto !important;
+  width: 338px !important;
+  max-height: calc(100vh - 16px) !important;
+  overflow: hidden !important;
+  padding: 20px 20px 18px !important;
+  border-radius: 12px !important;
+  background:
+    linear-gradient(180deg, rgba(31, 63, 92, 0.82), rgba(13, 36, 60, 0.78)),
+    radial-gradient(circle at 80% 0%, rgba(35, 248, 255, 0.14), transparent 42%) !important;
+  border: 1px solid rgba(105, 171, 224, 0.42) !important;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.48) !important;
+}
+
+body.reference-map-ui #side > *,
+body:not(.show-full-dashboard) #side > * {
+  display: none !important;
+}
+
+body.reference-map-ui #side > .side-header,
+body.reference-map-ui #side > #controls,
+body.reference-map-ui #side > .playback-tuning-card,
+body.reference-map-ui #side > .reference-telemetry-card,
+body.reference-map-ui #side > .visual-overlay-card,
+body:not(.show-full-dashboard) #side > .side-header,
+body:not(.show-full-dashboard) #side > #controls,
+body:not(.show-full-dashboard) #side > .playback-tuning-card,
+body:not(.show-full-dashboard) #side > .reference-telemetry-card,
+body:not(.show-full-dashboard) #side > .visual-overlay-card {
+  display: block !important;
+}
+
+body.reference-map-ui #side .side-header,
+body:not(.show-full-dashboard) #side .side-header {
+  margin: 0 0 18px !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+body.reference-map-ui #side h2,
+body:not(.show-full-dashboard) #side h2 {
+  color: #fff !important;
+  font-size: 17px !important;
+  line-height: 1.1 !important;
+  letter-spacing: .02em !important;
+  text-transform: uppercase !important;
+}
+
+body.reference-map-ui #side .dim,
+body:not(.show-full-dashboard) #side .dim {
+  color: rgba(255, 255, 255, 0.58) !important;
+  font-size: 12px !important;
+}
+
+body.reference-map-ui #controls,
+body:not(.show-full-dashboard) #controls {
+  display: grid !important;
+  gap: 12px !important;
+}
+
+body.reference-map-ui #controls .controls-top,
+body:not(.show-full-dashboard) #controls .controls-top {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+
+body.reference-map-ui #controls .controls-top .tag,
+body.reference-map-ui #controls .timeline-meta,
+body.reference-map-ui #controls #data-meta,
+body:not(.show-full-dashboard) #controls .controls-top .tag,
+body:not(.show-full-dashboard) #controls .timeline-meta,
+body:not(.show-full-dashboard) #controls #data-meta {
+  display: none !important;
+}
+
+body.reference-map-ui #controls button,
+body.reference-map-ui #controls .tag,
+body:not(.show-full-dashboard) #controls button,
+body:not(.show-full-dashboard) #controls .tag {
+  min-height: 42px !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+
+body.reference-map-ui #quickRunRailBtn,
+body:not(.show-full-dashboard) #quickRunRailBtn {
+  background: linear-gradient(90deg, #13b7f5, #009fd8) !important;
+  border-color: rgba(35, 248, 255, 0.32) !important;
+}
+
+body.reference-map-ui #controls .timeline-shell,
+body:not(.show-full-dashboard) #controls .timeline-shell {
+  gap: 10px !important;
+}
+
+body.reference-map-ui #controls #time-label,
+body:not(.show-full-dashboard) #controls #time-label {
+  margin-top: 6px !important;
+  color: transparent !important;
+  font-size: 0 !important;
+}
+
+body.reference-map-ui #controls #time-label::before,
+body:not(.show-full-dashboard) #controls #time-label::before {
+  content: "Time Step" !important;
+  color: rgba(255, 255, 255, 0.58) !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+}
+
+body.reference-map-ui #controls #time-label::after,
+body:not(.show-full-dashboard) #controls #time-label::after {
+  content: "3 hrs" !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-size: 13px !important;
+}
+
+body.reference-map-ui .playback-tuning-card,
+body.reference-map-ui .reference-telemetry-card,
+body.reference-map-ui .visual-overlay-card,
+body:not(.show-full-dashboard) .playback-tuning-card,
+body:not(.show-full-dashboard) .reference-telemetry-card,
+body:not(.show-full-dashboard) .visual-overlay-card {
+  margin-top: 12px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+body.reference-map-ui .visual-overlay-card h3,
+body:not(.show-full-dashboard) .visual-overlay-card h3 {
+  display: none !important;
+}
+
+body.reference-map-ui .visual-overlay-card .toggle-grid,
+body:not(.show-full-dashboard) .visual-overlay-card .toggle-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 7px !important;
+}
+
+body.reference-map-ui .visual-overlay-card .check-pill,
+body:not(.show-full-dashboard) .visual-overlay-card .check-pill {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 56px !important;
+  gap: 12px !important;
+  min-height: 30px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+  justify-content: space-between !important;
+  font-size: 15px !important;
+  line-height: 1.2 !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+body.reference-map-ui .visual-overlay-card .check-pill input,
+body:not(.show-full-dashboard) .visual-overlay-card .check-pill input {
+  flex: 0 0 auto !important;
+}
+
+body.reference-map-ui .visual-overlay-card .check-pill:nth-child(n+5),
+body:not(.show-full-dashboard) .visual-overlay-card .check-pill:nth-child(n+5) {
+  display: none !important;
 }

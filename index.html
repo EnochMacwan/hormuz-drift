@@ -22,7 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="icon" type="image/png" href="assets/tridel.png" />
-  <link rel="stylesheet" href="css/style.css?v=26" />
+  <link rel="stylesheet" href="css/style.css?v=27" />
 </head>
 
 <body>
@@ -299,7 +299,7 @@
 
       <!-- Release perturbation and simplified physics knobs passed through to
          the ensemble generator and deterministic integrator. -->
-      <div class="section-card">
+      <div class="section-card release-physics-card">
         <h3>Release and physics</h3>
         <div class="row">
           <label>Jitter (m)</label>
@@ -467,7 +467,7 @@
       </div>
 
       <!-- Run/start/clear/export affordances for the active scenario. -->
-      <div class="section-card">
+      <div class="section-card run-share-card">
         <h3>Run and share</h3>
         <div class="action-grid">
           <button id="runBtn" class="primary">Run scenario</button>
@@ -511,7 +511,7 @@
 
       <!-- Fast summary cards and time-series analytics for the current playback
          instant. These update as the user scrubs or plays. -->
-      <div class="section-card">
+      <div class="section-card results-card">
         <h3>Results</h3>
         <div id="results">
           <div class="hint">No active simulation.</div>
@@ -554,7 +554,7 @@
         <div id="wg-status" class="hint" style="margin-top:6px;"></div>
       </div>
 
-      <div class="section-card">
+      <div class="section-card data-provenance-card">
         <h3>Data provenance</h3>
         <div class="hint">
           Currents come from the active dataset metadata: CMEMS when authenticated, or NOAA/NCEP RTOFS
@@ -650,7 +650,7 @@
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <script src="js/field.js?v=4"></script>
   <script src="js/drift.js?v=4"></script>
-  <script src="js/app.js?v=26"></script>
+  <script src="js/app.js?v=27"></script>
 </body>
 
 </html>
