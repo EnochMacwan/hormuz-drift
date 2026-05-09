@@ -22,7 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="icon" type="image/png" href="assets/tridel.png" />
-  <link rel="stylesheet" href="css/style.css?v=30" />
+  <link rel="stylesheet" href="css/style.css?v=37" />
 </head>
 
 <body>
@@ -30,6 +30,9 @@
 
     <!-- Persistent Tridel masthead and research disclaimer. -->
     <div id="banner">
+      <button id="hideMapUiBtn" class="map-ui-hide-btn" type="button" aria-label="Hide map labels and branding">
+        Hide map UI
+      </button>
       <div class="brand-lockup" aria-label="Tridel">
         <img src="assets/tridel.png" alt="Tridel" class="brand-logo" />
         <div>
@@ -62,10 +65,16 @@
         </div>
       </div>
       <div class="reference-current-legend" aria-label="Current layer legend">
-        <div><strong>CYAN:</strong><span>Surface Currents</span></div>
-        <div><strong>ORANGE:</strong><span>Depth Currents</span></div>
+        <div><strong>HUE:</strong><span>Current direction field</span></div>
+        <div><strong>WHITE:</strong><span>Animated tracers</span></div>
         <div class="flow-key"><span></span><span>Flow Direction</span></div>
       </div>
+      <div class="map-status-chips" aria-label="Simulation data status">
+        <span id="map-chip-source">Loading currents</span>
+        <span id="map-chip-resolution">Hourly grid</span>
+        <span>OpenDRIFT-based physics</span>
+      </div>
+      <button id="showMapUiBtn" class="map-ui-show-btn" type="button">Show map UI</button>
     </div>
 
     <!-- Main side panel. Sections are conditionally shown/updated depending on
@@ -75,13 +84,26 @@
         <div class="side-brand">
           <div>
             <h2>SIMULATION CONTROLS</h2>
-            <div class="dim">Inter, Medium</div>
+            <div class="dim">Live Strait of Hormuz response lab</div>
           </div>
+        </div>
+      </div>
+
+      <div class="current-scenario-card" aria-label="Current scenario summary">
+        <div>
+          <span class="summary-kicker">Current scenario</span>
+          <strong id="summary-scenario">Man overboard</strong>
+        </div>
+        <div class="summary-chip-row">
+          <span id="summary-release">Release pending</span>
+          <span id="summary-window">Timeline loading</span>
+          <span id="summary-data">Data loading</span>
         </div>
       </div>
 
       <!-- Playback and quick-run controls live in the right rail so the left side
          stays map-only. -->
+      <div class="panel-section-label">Playback</div>
       <div id="controls">
         <div class="row controls-top">
           <div class="control-cluster">
@@ -107,6 +129,20 @@
           </div>
         </div>
 
+        <div class="time-step-control" aria-label="Timeline time step">
+          <div class="reference-control-label">
+            <span>Time Step</span>
+            <strong id="timeStepLabel">3 hr</strong>
+          </div>
+          <div class="time-step-options" role="group" aria-label="Choose timeline time step">
+            <button type="button" class="time-step-option" data-step-hours="1">1 hr</button>
+            <button type="button" class="time-step-option active" data-step-hours="3">3 hr</button>
+            <button type="button" class="time-step-option" data-step-hours="6">6 hr</button>
+            <button type="button" class="time-step-option" data-step-hours="12">12 hr</button>
+            <button type="button" class="time-step-option" data-step-hours="24">24 hr</button>
+          </div>
+        </div>
+
         <div class="reference-control-row">
           <div class="reference-control-label">
             <span>Current Speed</span>
@@ -129,6 +165,7 @@
         <div class="dim" id="data-meta">-</div>
       </div>
 
+      <div class="panel-section-label">Mission Context</div>
       <div class="section-card intro-card" id="mission-summary">
         <p class="lede">
           A Tridel research page for exploring live oil-spill and drifter trajectories using operational
@@ -202,6 +239,7 @@
         <div id="data-quality-note" class="hint">Dataset metadata will appear after the forcing file loads.</div>
       </div>
 
+      <div class="panel-section-label">Run Setup</div>
       <!-- Scenario family selector. This switches the active modeling path
          between S&R/leeway behavior and oil/weathering behavior. -->
       <div class="section-card scenario-card">
@@ -429,6 +467,7 @@
         </div>
       </div>
 
+      <div class="panel-section-label">Visual Layers</div>
       <!-- Purely visual toggles. These change rendering only, not the underlying
          physical run that has already been precomputed. -->
       <div class="section-card visual-overlay-card">
@@ -466,6 +505,7 @@
         </div>
       </div>
 
+      <div class="panel-section-label">Run And Outputs</div>
       <!-- Run/start/clear/export affordances for the active scenario. -->
       <div class="section-card run-share-card">
         <h3>Run and share</h3>
@@ -519,21 +559,22 @@
         <div id="ts-plot" aria-label="Run analytics chart"></div>
       </div>
 
+      <div class="panel-section-label">Validate And Provenance</div>
       <!-- Official-tool handoff. This stays in the side panel instead of inside
          the map so the map viewport remains clean on smaller laptops. -->
       <div class="section-card webgnome-card">
         <div class="webgnome-header">
           <div>
-            <div class="eyebrow">NOAA official tool</div>
-            <h3>WebGNOME integration</h3>
+            <div class="eyebrow">High-fidelity handoff</div>
+            <h3>OpenDrift / WebGNOME integration</h3>
           </div>
           <img src="https://response.restoration.noaa.gov/themes/custom/orr/images/logo-noaa-orr.svg" alt="NOAA ORR"
             class="noaa-logo" onerror="this.style.display='none'" />
         </div>
         <p class="hint">Use this browser model for fast exploration, then transfer the same release setup into
-          <strong>WebGNOME</strong> for NOAA's fuller oil weathering and response-planning workflow.</p>
+          <strong>OpenDrift/OpenOil</strong> or WebGNOME for higher-fidelity weathering and response planning.</p>
         <div class="webgnome-feature-list">
-          <div class="wg-feat"><span class="wg-feat-icon">ADIOS</span><span>Oil weathering, emulsion, dispersion, and
+          <div class="wg-feat"><span class="wg-feat-icon">OPENOIL</span><span>Oil weathering, emulsion, dispersion, and
               budget outputs.</span></div>
           <div class="wg-feat"><span class="wg-feat-icon">DATA</span><span>Load the project NetCDF currents as a
               grid-current mover.</span></div>
@@ -541,6 +582,7 @@
               operational exports.</span></div>
         </div>
         <div class="action-grid webgnome-actions">
+          <button id="downloadOpenDriftBtn" class="primary wg-primary">Download OpenDrift case</button>
           <button id="openWebgnomeBtn" class="primary wg-primary">Open WebGNOME</button>
           <button id="downloadPygnomeBtn" class="ghost">Download PyGNOME script</button>
           <button id="copyValidationBtn" class="ghost">Copy validation summary</button>
@@ -563,23 +605,6 @@
         </div>
       </div>
 
-      <div class="section-card science-roadmap-card">
-        <h3>Next fidelity upgrades</h3>
-        <div class="roadmap-list">
-          <div><strong>OpenOil oil engine</strong><span>Evaluate a server-side OpenDrift/OpenOil path for the oil-spill
-              option instead of treating oil fate only in the browser.</span></div>
-          <div><strong>Abu Dhabi expansion</strong><span>Hold until the Sanjeev review and a supplied larger grid, then
-              extend the domain and default map framing.</span></div>
-          <div><strong>Oil tanker layer</strong><span>Future AIS/tanker overlays can mirror the Greenpeace-style context
-              layer without crowding the response controls.</span></div>
-          <div><strong>Tide/current comparison</strong><span>Add a harmonic tide layer or port-gauge feed to compare
-              tidal phase against RTOFS/CMEMS currents.</span></div>
-          <div><strong>Shoreline polygons</strong><span>Replace grid-cell stranding with GSHHS or local coastline
-              polygons for more precise contact points.</span></div>
-          <div><strong>Higher physics tier</strong><span>Run OpenDrift/WebGNOME server-side for vertical mixing, richer
-              oil weathering, and uncertainty products.</span></div>
-        </div>
-      </div>
     </aside>
 
   </div>
@@ -589,7 +614,7 @@
   <div id="webgnome-modal" class="wg-modal-overlay" style="display:none;">
     <div class="wg-modal" role="dialog" aria-modal="true" aria-labelledby="wg-title">
       <div class="wg-modal-head">
-        <h2 id="wg-title">Setting up WebGNOME with Hormuz data</h2>
+        <h2 id="wg-title">Setting up OpenDrift / WebGNOME with Hormuz data</h2>
         <button id="closeWgModal" class="ghost small">Close</button>
       </div>
       <div class="wg-modal-body">
@@ -633,8 +658,8 @@
           </div>
         </div>
         <div class="wg-tip">
-          <strong>Repeatable workflow:</strong> download the PyGNOME script and run it locally after installing NOAA
-          GNOME dependencies.
+          <strong>Repeatable workflow:</strong> download the OpenDrift case for the most accurate OpenOil/Leeway path,
+          or download the PyGNOME script for NOAA GNOME workflows.
         </div>
       </div>
       <div class="wg-modal-foot">
@@ -648,9 +673,9 @@
      helpers, then the main orchestration script. -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-  <script src="js/field.js?v=4"></script>
+  <script src="js/field.js?v=5"></script>
   <script src="js/drift.js?v=4"></script>
-  <script src="js/app.js?v=30"></script>
+  <script src="js/app.js?v=38"></script>
 </body>
 
 </html>

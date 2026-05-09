@@ -73,12 +73,12 @@ window.Field = (() => {
     const j = (lat - g.latMin) / g.dlat;
     if (i < 0 || i >= g.nLon - 1 || j < 0 || j >= g.nLat - 1) return null;
 
-    const tf    = (tSec - F.t0Unix) / F.dtSec;          // fractional time idx
-    const nT    = F.times.length;
-    const tWrap = ((tf % nT) + nT) % nT;                // loop if past end
-    const t0    = Math.floor(tWrap) | 0;
-    const t1    = (t0 + 1) % nT;
-    const ft    = tWrap - Math.floor(tWrap);
+    const tf = (tSec - F.t0Unix) / F.dtSec;             // fractional time idx
+    const nT = F.times.length;
+    if (tf < 0 || tf > nT - 1) return null;
+    const t0 = Math.floor(tf) | 0;
+    const t1 = Math.min(t0 + 1, nT - 1);
+    const ft = tf - Math.floor(tf);
 
     const i0 = Math.floor(i), j0 = Math.floor(j);
     const fi = i - i0,        fj = j - j0;

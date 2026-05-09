@@ -24,9 +24,9 @@ import xarray as xr
 from prepare_data import fetch_wind_openmeteo, pack
 
 # Regional domain: full Arabian (Persian) Gulf including Kuwait, the UAE
-# Gulf coast through Abu Dhabi, and the Strait of Hormuz outflow.
-LON_MIN, LON_MAX = 47.5, 57.8
-LAT_MIN, LAT_MAX = 23.5, 30.5
+# Gulf coast through Abu Dhabi, and the Strait of Hormuz / Gulf of Oman outflow.
+LON_MIN, LON_MAX = 47.5, 59.0
+LAT_MIN, LAT_MAX = 22.0, 30.5
 DEFAULT_SOURCE_HOURS = tuple(range(0, 73, 6))
 DEFAULT_OUTPUT_STEP_HOURS = 1
 
@@ -137,7 +137,7 @@ def resample_time(arr, source_times, output_times):
 
     for idx, t_sec in enumerate(output_sec):
         right = np.searchsorted(source_sec, t_sec, side="right")
-        if right <= 1:
+        if right <= 0:
             out[idx] = arr[0]
             continue
         if right >= len(source_sec):

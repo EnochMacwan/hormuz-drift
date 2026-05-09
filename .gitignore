@@ -36,3 +36,7 @@ desktop.ini
 # ── Local scratch ───────────────────────────────────────────────────
 *.log
 *.tmp
+CLAUDE.md
+mcp.json
+patch*.py
+stitch_ui.html

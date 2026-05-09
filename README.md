@@ -51,7 +51,7 @@ value = (1-fi)(1-fj) * A00 + fi(1-fj) * A10
 
 If any of the four corners is `null` (land or missing), the sample returns `null`, which strands the particle immediately. This is the land-masking mechanism.
 
-The dataset wraps in time: once the simulation clock advances past the last available hour, it loops back to the beginning. This means a long forecast run gracefully repeats the available forcing rather than crashing.
+The dataset does not wrap in time. If a trajectory reaches the edge of the loaded forcing window, sampling returns missing data and the particle strands/stops instead of silently reusing an unrelated forecast hour.
 
 ---
 
@@ -253,6 +253,17 @@ Live URL: `https://<user>.github.io/<repo>/`
 | Subsurface / 3-D | no | Full depth profiles |
 
 For operational use, run [OpenDrift](https://github.com/OpenDrift/opendrift) directly.
+
+The highest-fidelity local path in this repo is:
+
+```bash
+pip install opendrift xarray netCDF4 numpy
+python scripts/run_opendrift_hormuz.py --scenario oil --lon 56.10 --lat 26.45
+```
+
+That script converts `data/currents.json` into a CF-style NetCDF forcing file and then runs real OpenDrift:
+`OpenOil` for oil spills or `Leeway` for S&R-style objects. The website also has a
+`Download OpenDrift case` button that exports the exact command/config for the selected release point and preset.
 
 ---
 

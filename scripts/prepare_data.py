@@ -26,9 +26,10 @@ ROOT     = Path(__file__).resolve().parent.parent
 NC_FILE  = ROOT / 'cmems_mod_glo_phy_anfc_merged-uv_PT1H-i_1776382234335.nc'
 OUT_JSON = ROOT / 'data' / 'currents.json'
 
-# ── Bounding box (entire Arabian Gulf: Kuwait through Hormuz) ─────────
-LON_MIN, LON_MAX = 47.5, 57.8
-LAT_MIN, LAT_MAX = 23.5, 30.5
+# ── Bounding box (entire Arabian Gulf: Kuwait through Abu Dhabi & Hormuz) ──
+LON_MIN, LON_MAX = 47.5, 59.0
+LAT_MIN, LAT_MAX = 22.0, 30.5
+MAX_OUTPUT_HOURS = 73
 
 
 def fetch_wind_openmeteo(cm_times, cm_lats, cm_lons):
@@ -179,6 +180,9 @@ def main():
     # Step 1: load the local CMEMS file and extract the surface current cube.
     print(f"Loading {NC_FILE.name}")
     ds = xr.open_dataset(NC_FILE)
+    if ds.sizes.get('time', 0) > MAX_OUTPUT_HOURS:
+        print(f"  Trimming browser payload to first {MAX_OUTPUT_HOURS} hourly frames.")
+        ds = ds.isel(time=slice(0, MAX_OUTPUT_HOURS))
 
     lats  = ds['latitude'].values.astype(float)
     lons  = ds['longitude'].values.astype(float)

@@ -38,6 +38,7 @@ const SCENARIO_PRESETS = {
 let tIdx = 0;
 let playing = true;
 let playSpeed = 1.5;
+let timelineStepHours = 3;
 let nParticles = 2000;
 let fieldLayer = null;
 let releasePoint = null;
@@ -47,6 +48,7 @@ let oilSlickModel = null;
 let oilBudgetModel = null;
 let runTimer = null;
 let focusMode = false;
+let mapChromeHidden = false;
 let frameCache = null;
 let lastResultsKey = null;
 let lastPlotMarkerKey = null;
@@ -87,14 +89,39 @@ const seamarkLayer = L.tileLayer(
   { maxZoom: 18, opacity: 0.9, attribution: "Seamarks (c) OpenSeaMap contributors" }
 );
 
+/* Visual-only alignment calibration for the forcing overlay. The model, export,
+   release point, and data coordinates remain unchanged; this only nudges the
+   rendered current field/tracer canvas to better sit on the imagery basemap. */
+const FORCING_VISUAL_OFFSET = {
+  xCells: 0,
+  yCells: 0.5,
+};
+
 function fitMapToDataDomain() {
   if (!Field.loaded || !Field.grid.lats?.length || !Field.grid.lons?.length) return;
   const bounds = L.latLngBounds(
     [Field.grid.latMin, Field.grid.lonMin],
     [Field.grid.latMax, Field.grid.lonMax]
   );
-  const zoom = map.getBoundsZoom(bounds, false, [0, 0]);
-  map.setView(bounds.getCenter(), zoom + 1, { animate: false });
+  const rightPadding = Math.min(520, Math.max(48, window.innerWidth * 0.32));
+  map.fitBounds(bounds, {
+    paddingTopLeft: [48, 48],
+    paddingBottomRight: [rightPadding, 48],
+    animate: false,
+  });
+}
+
+function forcingVisualOffsetPx(grid) {
+  if (!grid || grid.nLat < 2 || grid.nLon < 2) {
+    return { x: 0, y: 0 };
+  }
+  const origin = map.latLngToContainerPoint([grid.lats[grid.nLat - 1], grid.lons[0]]);
+  const east = map.latLngToContainerPoint([grid.lats[grid.nLat - 1], grid.lons[1]]);
+  const south = map.latLngToContainerPoint([grid.lats[grid.nLat - 2], grid.lons[0]]);
+  return {
+    x: (east.x - origin.x) * FORCING_VISUAL_OFFSET.xCells,
+    y: (south.y - origin.y) * FORCING_VISUAL_OFFSET.yCells,
+  };
 }
 
 /* Three stacked canvases:
@@ -150,6 +177,16 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function numericInputValue(element, fallback) {
+  const raw = Number(element.value);
+  const min = Number.isFinite(Number(element.min)) ? Number(element.min) : -Infinity;
+  const max = Number.isFinite(Number(element.max)) ? Number(element.max) : Infinity;
+  const value = Number.isFinite(raw) ? raw : fallback;
+  const clipped = clamp(value, min, max);
+  element.value = String(clipped);
+  return clipped;
+}
+
 function fmt(value, digits) {
   return Number.isFinite(value) ? value.toFixed(digits) : "-";
 }
@@ -183,6 +220,7 @@ function resetFrameCache() {
 
 function updateBodyState() {
   document.body.classList.toggle("focus-mode", focusMode);
+  document.body.classList.toggle("map-chrome-hidden", mapChromeHidden);
 }
 
 function setStatus(message) {
@@ -269,12 +307,15 @@ function updateDataQualityPanel() {
   const dataAge = Number.isFinite(generatedMs) ? formatAge(nowMs - generatedMs) : "generation time unknown";
 
   if (els.dataSourceChip) els.dataSourceChip.textContent = sourceKind;
+  if (els.summaryData) els.summaryData.textContent = sourceKind;
+  if (els.mapChipSource) els.mapChipSource.textContent = sourceKind;
   if (els.dataFreshness) els.dataFreshness.textContent = dataAge;
   if (els.dataHealth) els.dataHealth.textContent = sourceKind.includes("fallback") ? "Fallback live data" : "Primary live data";
   if (els.dataWindow) els.dataWindow.textContent = `${meta.time_start} to ${meta.time_end} UTC`;
   if (els.dataResolution) {
     const sourceStep = interpolated ? ` from ${Math.round(meta.source_time_step_sec / 3600)} h source` : "";
     els.dataResolution.textContent = `${Math.round(meta.time_step_sec / 3600)} h${sourceStep}`;
+    if (els.mapChipResolution) els.mapChipResolution.textContent = `${Math.round(meta.time_step_sec / 3600)} hr resolution`;
   }
   if (els.dataGenerated) els.dataGenerated.textContent = `${meta.generated_utc || "-"} (${dataAge})`;
   if (els.dataGrid) els.dataGrid.textContent = `${meta.n_lat} x ${meta.n_lon} cells | ${meta.n_times} frames`;
@@ -500,10 +541,11 @@ function drawField() {
   const se = map.latLngToContainerPoint([grid.lats[0],             grid.lons[grid.nLon - 1]]);
   const spanX = se.x - nw.x;
   const spanY = se.y - nw.y;
+  const offset = forcingVisualOffsetPx(grid);
   const dW = (grid.nLon * spanX) / (grid.nLon - 1);
   const dH = (grid.nLat * spanY) / (grid.nLat - 1);
-  const dX = nw.x - (0.5 * spanX) / (grid.nLon - 1);
-  const dY = nw.y - (0.5 * spanY) / (grid.nLat - 1);
+  const dX = nw.x - (0.5 * spanX) / (grid.nLon - 1) + offset.x;
+  const dY = nw.y - (0.5 * spanY) / (grid.nLat - 1) + offset.y;
 
   ctx.save();
   ctx.imageSmoothingEnabled = true;
@@ -536,6 +578,7 @@ function drawBgParticles() {
   ctx.fillRect(0, 0, size.x, size.y);
   ctx.globalCompositeOperation = "source-over";
   ctx.lineCap    = "round";
+  const offset = forcingVisualOffsetPx(Field.grid);
   const drawLayer = (layer, strokeStyle, lineWidth) => {
     ctx.strokeStyle = strokeStyle;
     ctx.lineWidth = lineWidth;
@@ -546,13 +589,13 @@ function drawBgParticles() {
       }
       const a = map.latLngToContainerPoint([particle.prevLat, particle.prevLon]);
       const b = map.latLngToContainerPoint([particle.lat, particle.lon]);
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
+      ctx.moveTo(a.x + offset.x, a.y + offset.y);
+      ctx.lineTo(b.x + offset.x, b.y + offset.y);
     }
     ctx.stroke();
   };
-  drawLayer("surface", "rgba(24, 247, 255, 0.88)", 1.6);
-  drawLayer("depth", "rgba(255, 155, 67, 0.80)", 1.35);
+  drawLayer("surface", "rgba(255, 255, 255, 0.86)", 1.6);
+  drawLayer("depth", "rgba(255, 255, 255, 0.68)", 1.35);
   for (const particle of bgParticles) {
     particle.prevOK = false;
   }
@@ -989,15 +1032,15 @@ function recordSnapshot(run, tSec) {
 /* Read the current scenario form into one canonical parameter object. */
 function collectScenarioParams() {
   const params = {
-    release_radius_m: Number(els.relRadius.value),
-    diffusion_K: Number(els.diffK.value),
+    release_radius_m: numericInputValue(els.relRadius, 100),
+    diffusion_K: numericInputValue(els.diffK, 10),
     useWind: Boolean(els.useWind.checked && Field.hasWind),
   };
   if (activeScenario === "leeway") {
     params.category = els.leewayCat.value;
   } else {
     params.oil_type = els.oilType.value;
-    params.volume_m3 = Number(els.oilVol.value);
+    params.volume_m3 = numericInputValue(els.oilVol, 10);
   }
   return params;
 }
@@ -1113,8 +1156,8 @@ function runEnsemble() {
   updatePlayButton();
 
   const startSec = tIdxToSec(tIdx);
-  const durationHours = Number(els.durHours.value);
-  const particleCount = Number(els.nEns.value);
+  const durationHours = numericInputValue(els.durHours, 24);
+  const particleCount = numericInputValue(els.nEns, 300);
   const params = collectScenarioParams();
   const ensemble = spawnEnsemble({
     lon: releasePoint.lon,
@@ -1665,9 +1708,83 @@ function downloadPygnomeScript() {
   }
 }
 
+function buildOpenDriftCaseConfig() {
+  const preset = selectedPreset();
+  const meta = Field.meta || {};
+  const isOil = activeScenario === "oil";
+  const currentIndex = Field.loaded ? clamp(Math.floor(tIdx), 0, Field.times.length - 1) : 0;
+  return {
+    runner: "scripts/run_opendrift_hormuz.py",
+    purpose: "Run the selected Tridel Hormuz web scenario in real OpenDrift/OpenOil.",
+    scenario: isOil ? "oil" : "leeway",
+    preset: preset ? preset.label : null,
+    release: {
+      lon: releasePoint ? Number(releasePoint.lon.toFixed(6)) : 56.1,
+      lat: releasePoint ? Number(releasePoint.lat.toFixed(6)) : 26.45,
+    },
+    start_time_utc: Field.loaded && Field.times.length ? Field.times[currentIndex] : null,
+    duration_hours: Number(els.durHours.value) || 24,
+    particles: Number(els.nEns.value) || 1000,
+    radius_m: Number(els.relRadius.value) || 100,
+    diffusion_k: Number(els.diffK.value) || 10,
+    forcing_json: "data/currents.json",
+    forcing_source: meta.source || "unknown",
+    wind_source: meta.wind_source || null,
+    output_dir: "opendrift_output",
+    oil: isOil ? {
+      oil_type: els.oilType ? els.oilType.value : "medium_crude",
+      volume_m3: els.oilVol ? Number(els.oilVol.value) || 10 : 10,
+      weathering_model: "noaa",
+    } : null,
+    leeway: !isOil ? {
+      category: els.leewayCat ? els.leewayCat.value : "piw_light",
+    } : null,
+    model_options: {
+      vertical_mixing: true,
+      time_step_minutes: 10,
+      output_step_minutes: 60,
+    },
+  };
+}
+
+function buildOpenDriftCommand(config) {
+  const parts = [
+    "python",
+    config.runner,
+    "--scenario", config.scenario,
+    "--lon", String(config.release.lon),
+    "--lat", String(config.release.lat),
+    "--start-time", `"${config.start_time_utc || ""}"`,
+    "--duration-hours", String(config.duration_hours),
+    "--particles", String(config.particles),
+    "--radius-m", String(config.radius_m),
+    "--diffusion-k", String(config.diffusion_k),
+    "--output-dir", config.output_dir,
+  ];
+  if (config.scenario === "oil" && config.oil) {
+    parts.push("--oil-type", config.oil.oil_type);
+    parts.push("--oil-volume-m3", String(config.oil.volume_m3));
+    parts.push("--weathering-model", config.oil.weathering_model);
+  } else if (config.leeway) {
+    parts.push("--category", config.leeway.category);
+  }
+  return parts.join(" ");
+}
+
+function downloadOpenDriftCase() {
+  const config = buildOpenDriftCaseConfig();
+  config.command = buildOpenDriftCommand(config);
+  downloadText("opendrift_hormuz_case.json", JSON.stringify(config, null, 2), "application/json");
+  const wgStatus = document.getElementById("wg-status");
+  if (wgStatus) {
+    wgStatus.textContent = `OpenDrift case downloaded. Run from the repo root: ${config.command}`;
+  }
+}
+
 function buildValidationSummary() {
   const preset = selectedPreset();
   const meta = Field.meta || {};
+  const openDriftConfig = buildOpenDriftCaseConfig();
   const lines = [
     "Hormuz Drift validation handoff",
     `Scenario: ${getScenarioLabel(activeScenario)}${preset ? ` / ${preset.label}` : ""}`,
@@ -1679,6 +1796,7 @@ function buildValidationSummary() {
     `Data window: ${meta.time_start || "?"} UTC to ${meta.time_end || "?"} UTC`,
     `Browser time step: ${meta.time_step_sec ? `${meta.time_step_sec / 3600} h` : "unknown"}`,
     `Source step: ${meta.source_time_step_sec ? `${meta.source_time_step_sec / 3600} h` : "native/unknown"}`,
+    `OpenDrift command: ${buildOpenDriftCommand(openDriftConfig)}`,
     "Compare in WebGNOME/OpenDrift: release coordinates, start time, current/wind forcing window, trajectory spread, oil budget, and first shoreline contact.",
   ];
   if (activeRun?.summary) {
@@ -1728,21 +1846,34 @@ function updateScenarioBadges() {
   const preset = selectedPreset();
   const scenarioText = `${getScenarioLabel(activeScenario)}${preset ? ` | ${preset.label}` : ""}`;
   if (els.controlScenario) els.controlScenario.textContent = scenarioText;
+  if (els.summaryScenario) els.summaryScenario.textContent = scenarioText;
 }
 
 /* Keep the release summary card in sync with the current map click. */
 function updateReleaseInfo() {
   if (!releasePoint) {
     els.releaseInfo.textContent = "Click on the map to set release point.";
+    if (els.summaryRelease) els.summaryRelease.textContent = "Release pending";
     els.runBtn.disabled = true;
     if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = true;
     updatePresetGuide();
     return;
   }
   els.releaseInfo.textContent = `${releasePoint.lat.toFixed(4)} N, ${releasePoint.lon.toFixed(4)} E`;
+  if (els.summaryRelease) els.summaryRelease.textContent = `${releasePoint.lat.toFixed(3)} N, ${releasePoint.lon.toFixed(3)} E`;
   els.runBtn.disabled = false;
   if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = false;
   updatePresetGuide();
+}
+
+function formatTimelineUtc(value) {
+  if (!value) return "";
+  if (typeof value === "string") {
+    return value.replace("T", " ").slice(0, 16);
+  }
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  return date.toISOString().slice(0, 16).replace("T", " ");
 }
 
 function updateTimelinePill() {
@@ -1752,9 +1883,10 @@ function updateTimelinePill() {
     if (hasField) {
       const currentIndex = Math.floor(tIdx);
       const currentSec = tIdxToSec(currentIndex);
-      els.timelineStart.textContent = `Start ${Field.times[0]} UTC`;
-      els.timelineEnd.textContent = `End ${Field.times[Field.times.length - 1]} UTC`;
-      els.timelineCurrent.textContent = `${Field.times[currentIndex] || ""} UTC`;
+      els.timelineStart.textContent = `Start ${formatTimelineUtc(Field.times[0])} UTC`;
+      els.timelineEnd.textContent = `End ${formatTimelineUtc(Field.times[Field.times.length - 1])} UTC`;
+      els.timelineCurrent.textContent = `${formatTimelineUtc(Field.times[currentIndex])} UTC`;
+      if (els.summaryWindow) els.summaryWindow.textContent = `${formatTimelineUtc(Field.times[0])} to ${formatTimelineUtc(Field.times[Field.times.length - 1])}`;
       if (els.timelinePhase) els.timelinePhase.textContent = timelinePhaseFor(currentSec);
       els.timelineEvents.innerHTML = "";
     }
@@ -1763,9 +1895,10 @@ function updateTimelinePill() {
   const viewSec = clamp(tIdxToSec(tIdx), activeRun.startSec, activeRun.endSec);
   const offsetHours = (viewSec - activeRun.startSec) / 3600;
   els.timeWindowLabel.textContent = `Viewing ${formatRunOffset(offsetHours)} of ${activeRun.durationHours} h`;
-  els.timelineStart.textContent = `Release ${new Date(activeRun.startSec * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC`;
-  els.timelineEnd.textContent = `End ${new Date(activeRun.endSec * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC`;
-  els.timelineCurrent.textContent = `${formatRunOffset(offsetHours)} | ${new Date(viewSec * 1000).toISOString().slice(0, 16).replace("T", " ")} UTC`;
+  els.timelineStart.textContent = `Release ${formatTimelineUtc(activeRun.startSec * 1000)} UTC`;
+  els.timelineEnd.textContent = `End ${formatTimelineUtc(activeRun.endSec * 1000)} UTC`;
+  els.timelineCurrent.textContent = `${formatRunOffset(offsetHours)} | ${formatTimelineUtc(viewSec * 1000)} UTC`;
+  if (els.summaryWindow) els.summaryWindow.textContent = `${activeRun.durationHours} h window`;
   if (els.timelinePhase) els.timelinePhase.textContent = timelinePhaseFor(viewSec);
   renderTimelineEvents();
 }
@@ -1928,14 +2061,20 @@ function applyStateFromUrl() {
   if (preset) buildPresetOptions(preset);
   if (params.get("category")) els.leewayCat.value = params.get("category");
   if (params.get("oilType")) els.oilType.value = params.get("oilType");
-  if (params.get("oilVol")) els.oilVol.value = params.get("oilVol");
+  if (params.get("oilVol")) {
+    els.oilVol.value = params.get("oilVol");
+    numericInputValue(els.oilVol, 10);
+  }
   [["dur", els.durHours], ["nEns", els.nEns], ["relRadius", els.relRadius], ["diffK", els.diffK]].forEach(([key, element]) => {
-    if (params.get(key)) element.value = params.get(key);
+    if (params.get(key)) {
+      element.value = params.get(key);
+      numericInputValue(element, Number(element.defaultValue) || 0);
+    }
   });
   if (params.get("useWind") !== null) els.useWind.checked = params.get("useWind") === "1";
   const lat = Number(params.get("lat"));
   const lon = Number(params.get("lon"));
-  if (Number.isFinite(lat) && Number.isFinite(lon)) {
+  if (params.has("lat") && params.has("lon") && Number.isFinite(lat) && Number.isFinite(lon)) {
     releasePoint = { lat, lon };
     map.panTo([lat, lon]);
   }
@@ -1956,6 +2095,41 @@ function seekHours(deltaHours) {
   updateTimelinePill();
   updateResultsPanel(false);
   updatePlotCursor(true);
+}
+
+function timelineStepToIndexDelta(stepHours = timelineStepHours) {
+  const secondsPerFrame = Field.meta?.time_step_sec || 3600;
+  return Math.max(1, Math.round((stepHours * 3600) / secondsPerFrame));
+}
+
+function snapToTimelineStep(indexValue) {
+  const stepFrames = timelineStepToIndexDelta();
+  const snappedIndex = clamp(Math.round(indexValue / stepFrames) * stepFrames, 0, Field.times.length - 1);
+  if (!activeRun) return snappedIndex;
+  const snappedSec = tIdxToSec(snappedIndex);
+  return secToTIdx(clamp(snappedSec, activeRun.startSec, activeRun.endSec));
+}
+
+function setTimelineStep(stepHours, snapCurrent = true) {
+  if (!Number.isFinite(stepHours) || stepHours <= 0) return;
+  timelineStepHours = stepHours;
+  if (els.timeStepLabel) els.timeStepLabel.textContent = `${stepHours} hr`;
+  document.querySelectorAll(".time-step-option").forEach((button) => {
+    const isActive = Number(button.dataset.stepHours) === stepHours;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+  if (els.timeSlider && Field.loaded) {
+    els.timeSlider.step = String(timelineStepToIndexDelta(stepHours));
+    if (snapCurrent) {
+      tIdx = snapToTimelineStep(tIdx);
+      els.timeSlider.value = Math.floor(tIdx);
+      resetFrameCache();
+      updateTimelinePill();
+      updateResultsPanel(false);
+      updatePlotCursor(true);
+    }
+  }
 }
 
 let lastTickTime = performance.now();
@@ -2022,7 +2196,10 @@ function collectDomRefs() {
     jumpForward6: document.getElementById("jumpForward6"),
     leewayCat: document.getElementById("leewayCat"),
     leewayParams: document.getElementById("leeway-params"),
+    hideMapUiBtn: document.getElementById("hideMapUiBtn"),
     missionSummary: document.getElementById("mission-summary"),
+    mapChipResolution: document.getElementById("map-chip-resolution"),
+    mapChipSource: document.getElementById("map-chip-source"),
     nEns: document.getElementById("nEns"),
     nLabel: document.getElementById("n-label"),
     nSlider: document.getElementById("nSlider"),
@@ -2052,6 +2229,11 @@ function collectDomRefs() {
     scenarioPreset: document.getElementById("scenarioPreset"),
     speedScaleMax: document.getElementById("speed-scale-max"),
     speedScaleMid: document.getElementById("speed-scale-mid"),
+    summaryData: document.getElementById("summary-data"),
+    summaryRelease: document.getElementById("summary-release"),
+    summaryScenario: document.getElementById("summary-scenario"),
+    summaryWindow: document.getElementById("summary-window"),
+    showMapUiBtn: document.getElementById("showMapUiBtn"),
     speedLabel: document.getElementById("speed-label"),
     speedSlider: document.getElementById("speedSlider"),
     timeLabel: document.getElementById("time-label"),
@@ -2060,6 +2242,7 @@ function collectDomRefs() {
     timelineEvents: document.getElementById("timeline-events"),
     timelinePhase: document.getElementById("timeline-phase"),
     timelineStart: document.getElementById("timeline-start"),
+    timeStepLabel: document.getElementById("timeStepLabel"),
     timeSlider: document.getElementById("timeSlider"),
     timeWindowLabel: document.getElementById("time-window-label"),
     tsPlot: document.getElementById("ts-plot"),
@@ -2142,12 +2325,17 @@ function toggleSeamarks() {
 /* Attach all event handlers after DOM refs have been collected. */
 function wireUi() {
   els.timeSlider.oninput = (event) => {
-    tIdx = Number(event.target.value);
+    tIdx = snapToTimelineStep(Number(event.target.value));
+    event.target.value = Math.floor(tIdx);
     resetFrameCache();
     updateTimelinePill();
     updateResultsPanel(false);
     updatePlotCursor(true);
   };
+
+  document.querySelectorAll(".time-step-option").forEach((button) => {
+    button.onclick = () => setTimelineStep(Number(button.dataset.stepHours));
+  });
 
   els.speedSlider.oninput = (event) => {
     playSpeed = Number(event.target.value);
@@ -2172,6 +2360,19 @@ function wireUi() {
   }
   map.on("moveend zoomend", refreshMarineLinks);
 
+  if (els.hideMapUiBtn) {
+    els.hideMapUiBtn.onclick = () => {
+      mapChromeHidden = true;
+      updateBodyState();
+    };
+  }
+  if (els.showMapUiBtn) {
+    els.showMapUiBtn.onclick = () => {
+      mapChromeHidden = false;
+      updateBodyState();
+    };
+  }
+
   els.playBtn.onclick = () => {
     playing = !playing;
     updatePlayButton();
@@ -2194,12 +2395,14 @@ function wireUi() {
   els.exportBudgetCsvBtn.onclick = () => { exportOilBudgetCsv(); els.exportMenu.open = false; };
 
   const openWebgnomeBtn = document.getElementById("openWebgnomeBtn");
+  const downloadOpenDriftBtn = document.getElementById("downloadOpenDriftBtn");
   const downloadPygnomeBtn = document.getElementById("downloadPygnomeBtn");
   const webgnomeHelpBtn = document.getElementById("webgnomeHelpBtn");
   const closeWgModal = document.getElementById("closeWgModal");
   const closeWgModal2 = document.getElementById("closeWgModal2");
   const webgnomeModal = document.getElementById("webgnome-modal");
   if (openWebgnomeBtn) openWebgnomeBtn.onclick = openWebgnome;
+  if (downloadOpenDriftBtn) downloadOpenDriftBtn.onclick = downloadOpenDriftCase;
   if (downloadPygnomeBtn) downloadPygnomeBtn.onclick = downloadPygnomeScript;
   if (els.copyValidationBtn) els.copyValidationBtn.onclick = copyValidationSummary;
   if (webgnomeHelpBtn) webgnomeHelpBtn.onclick = showWgModal;
@@ -2280,6 +2483,7 @@ async function boot() {
   syncLayerInputs();
 
   els.timeSlider.max = Field.times.length - 1;
+  setTimelineStep(timelineStepHours, false);
   els.dataMeta.textContent = `${Field.meta.source} | ${Field.times[0]} to ${Field.times[Field.times.length - 1]} UTC | ${Field.times.length} hourly frames`;
 
   /* Auto-set a default release point at the centre of the data grid so the
