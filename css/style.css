@@ -2248,15 +2248,25 @@ button.small { padding: 9px 12px; }
 
 }
 
-.noaa-logo {
-
-  width: 54px;
-
-  height: auto;
+.noaa-logo-text {
 
   flex: 0 0 auto;
 
-  opacity: 0.78;
+  padding: 8px 10px;
+
+  border: 1px solid rgba(0, 229, 255, 0.3);
+
+  border-radius: 999px;
+
+  color: #dbefff;
+
+  background: rgba(0, 18, 32, 0.42);
+
+  font-size: 11px;
+
+  font-weight: 900;
+
+  letter-spacing: 0.14em;
 
 }
 
@@ -2481,6 +2491,29 @@ canvas.overlay { position: absolute; top: 0; left: 0; pointer-events: none; }
 .leaflet-popup-content-wrapper,
 
 .leaflet-popup-tip { background: rgba(255, 255, 255, 0.96); color: var(--text); }
+
+.incident-popup {
+  display: grid;
+  gap: 6px;
+  min-width: 220px;
+  color: #062033;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.incident-popup strong {
+  color: #001220;
+  font-size: 15px;
+}
+
+.incident-popup span {
+  display: block;
+}
+
+.incident-popup a {
+  color: #0081b0;
+  font-weight: 800;
+}
 
 /* WebGNOME setup modal. It is intentionally lightweight: the heavy lifting
 

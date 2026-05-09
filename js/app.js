@@ -74,13 +74,10 @@ L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/
 }).addTo(map);
 L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
-/* MarineTraffic vessel-density overlay. The tile service is publicly readable
-   and renders historical AIS density on top of the simulation. Toggleable via
-   the side-panel button; not added to the map until the user opts in. */
-const vesselLayer = L.tileLayer(
-  "https://tiles.marinetraffic.com/ais_helpers/shipsdensity/{z}/{x}/{y}.png",
-  { maxZoom: 13, opacity: 0.75, attribution: "Vessel density (c) MarineTraffic" }
-);
+/* MarineTraffic does not expose a reliable public Leaflet tile endpoint for
+   live AIS density here, so the app opens a synced external MarineTraffic view
+   instead of adding a broken in-map tile layer. */
+const MARINE_TRAFFIC_BASE_URL = "https://www.marinetraffic.com/en/ais/home";
 
 /* OpenSeaMap seamark overlay - free nautical chart with lighthouses, channels,
    port boundaries. Useful sub-layer for marine-domain context. */
@@ -88,6 +85,21 @@ const seamarkLayer = L.tileLayer(
   "https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png",
   { maxZoom: 18, opacity: 0.9, attribution: "Seamarks (c) OpenSeaMap contributors" }
 );
+
+/* Approximate incident context from the Khaleej Times / New York Times report:
+   slick west of Kharg Island, larger than 20 square miles, drifting southward.
+   This is deliberately labeled as contextual geometry, not source satellite
+   segmentation. */
+const KHARG_SLICK_CONTEXT = {
+  island: { lat: 29.245, lon: 50.323 },
+  center: { lat: 29.205, lon: 50.215 },
+  areaKm2: 52,
+  radiusLongM: 6600,
+  radiusShortM: 2500,
+  reportUrl: "https://www.khaleejtimes.com/world/mena/us-iran-war-large-oil-slick-off-iran-island-kharg",
+};
+const khargSlickLayer = L.featureGroup();
+let khargSlickBuilt = false;
 
 /* Visual-only alignment calibration for the forcing overlay. The model, export,
    release point, and data coordinates remain unchanged; this only nudges the
@@ -109,6 +121,95 @@ function fitMapToDataDomain() {
     paddingBottomRight: [rightPadding, 48],
     animate: false,
   });
+}
+
+function ellipseLatLngs(center, radiusLongM, radiusShortM, steps = 96, rotationRad = 0) {
+  const points = [];
+  for (let i = 0; i < steps; i += 1) {
+    const theta = (i / steps) * Math.PI * 2;
+    const along = Math.cos(theta) * radiusLongM;
+    const across = Math.sin(theta) * radiusShortM;
+    const northM = along * Math.cos(rotationRad) - across * Math.sin(rotationRad);
+    const eastM = along * Math.sin(rotationRad) + across * Math.cos(rotationRad);
+    points.push([
+      center.lat + northM / mPerDegLat(center.lat),
+      center.lon + eastM / mPerDegLon(center.lat),
+    ]);
+  }
+  return points;
+}
+
+function ensureKhargSlickLayer() {
+  if (khargSlickBuilt) {
+    return;
+  }
+
+  const slickCenter = KHARG_SLICK_CONTEXT.center;
+  const slickShape = L.polygon(
+    ellipseLatLngs(
+      slickCenter,
+      KHARG_SLICK_CONTEXT.radiusLongM,
+      KHARG_SLICK_CONTEXT.radiusShortM,
+      96,
+      -0.18
+    ),
+    {
+      color: "#ff7a2f",
+      weight: 2,
+      opacity: 0.95,
+      fillColor: "#ff3d2e",
+      fillOpacity: 0.28,
+      dashArray: "8 7",
+      interactive: true,
+    }
+  );
+
+  const slickCore = L.circle([slickCenter.lat, slickCenter.lon], {
+    radius: 2600,
+    color: "#ffd35a",
+    weight: 1.5,
+    opacity: 0.8,
+    fillColor: "#ff7a2f",
+    fillOpacity: 0.18,
+  });
+
+  const driftArrow = L.polyline(
+    [
+      [slickCenter.lat + 0.045, slickCenter.lon],
+      [slickCenter.lat - 0.22, slickCenter.lon + 0.01],
+    ],
+    { color: "#ffd35a", weight: 3, opacity: 0.95, dashArray: "10 8" }
+  );
+  const arrowHead = L.polygon(
+    [
+      [slickCenter.lat - 0.245, slickCenter.lon + 0.01],
+      [slickCenter.lat - 0.195, slickCenter.lon - 0.025],
+      [slickCenter.lat - 0.197, slickCenter.lon + 0.045],
+    ],
+    { color: "#ffd35a", weight: 1, opacity: 0.95, fillOpacity: 0.85 }
+  );
+
+  const khargMarker = L.circleMarker([KHARG_SLICK_CONTEXT.island.lat, KHARG_SLICK_CONTEXT.island.lon], {
+    radius: 6,
+    color: "#00e5ff",
+    weight: 2,
+    fillColor: "#00e5ff",
+    fillOpacity: 0.45,
+  }).bindTooltip("Kharg Island oil terminal area", { direction: "top" });
+
+  const popupHtml = `
+    <div class="incident-popup">
+      <strong>Reported Kharg oil slick</strong>
+      <span>Approximate context overlay west of Kharg Island.</span>
+      <span>Report estimate: more than 20 sq mi / about ${KHARG_SLICK_CONTEXT.areaKm2} km2, drifting southward.</span>
+      <a href="${KHARG_SLICK_CONTEXT.reportUrl}" target="_blank" rel="noopener">Open source report</a>
+    </div>
+  `;
+
+  slickShape.bindPopup(popupHtml);
+  slickCore.bindPopup(popupHtml);
+  [slickShape, slickCore, driftArrow, arrowHead, khargMarker].forEach((layer) => khargSlickLayer.addLayer(layer));
+  khargSlickBuilt = true;
 }
 
 function forcingVisualOffsetPx(grid) {
@@ -2341,6 +2442,7 @@ function collectDomRefs() {
     marineToggleBtn: document.getElementById("marineToggleBtn"),
     marineOpenLink: document.getElementById("marineOpenLink"),
     seamarkToggleBtn: document.getElementById("seamarkToggleBtn"),
+    khargSlickBtn: document.getElementById("khargSlickBtn"),
   });
 }
 
@@ -2349,29 +2451,20 @@ function collectDomRefs() {
 function marineTrafficViewUrl() {
   const center = map.getCenter();
   const zoom = Math.max(5, Math.min(13, Math.round(map.getZoom())));
-  return `https://www.marinetraffic.com/en/ais/home/centerx:${center.lng.toFixed(3)}/centery:${center.lat.toFixed(3)}/zoom:${zoom}`;
-}
-
-function marineTrafficEmbedUrl() {
-  const center = map.getCenter();
-  const zoom = Math.max(5, Math.min(13, Math.round(map.getZoom())));
-  return `https://www.marinetraffic.com/en/ais/embed/zoom:${zoom}/centery:${center.lat.toFixed(3)}/centerx:${center.lng.toFixed(3)}/maptype:0/shownames:false/mmsi:0/shipid:0/fleet:0/fleet_id:0/vlist:false/showmenu:false/remember:false`;
+  return `${MARINE_TRAFFIC_BASE_URL}/centerx:${center.lng.toFixed(3)}/centery:${center.lat.toFixed(3)}/zoom:${zoom}`;
 }
 
 function refreshMarineLinks() {
   if (els.marineOpenLink) els.marineOpenLink.href = marineTrafficViewUrl();
+  if (els.marineToggleBtn) els.marineToggleBtn.title = `Open MarineTraffic centered at ${map.getCenter().lat.toFixed(3)}, ${map.getCenter().lng.toFixed(3)}`;
 }
 
-/* Toggle the MarineTraffic vessel-density tile overlay on the main map. */
-function toggleMarineEmbed() {
-  if (!els.marineToggleBtn) return;
-  if (map.hasLayer(vesselLayer)) {
-    map.removeLayer(vesselLayer);
-    els.marineToggleBtn.textContent = "Show vessel layer";
-  } else {
-    vesselLayer.addTo(map);
-    els.marineToggleBtn.textContent = "Hide vessel layer";
-  }
+/* MarineTraffic live AIS is opened externally because its authenticated map
+   layers are not stable public Leaflet tiles. */
+function openMarineTrafficView() {
+  refreshMarineLinks();
+  window.open(marineTrafficViewUrl(), "_blank", "noopener");
+  setStatus("MarineTraffic live AIS opened in a synced external view.");
 }
 
 /* Toggle the OpenSeaMap seamark overlay (lighthouses, channels, port marks). */
@@ -2384,6 +2477,26 @@ function toggleSeamarks() {
     seamarkLayer.addTo(map);
     els.seamarkToggleBtn.textContent = "Hide seamarks";
   }
+}
+
+function updateKhargSlickButton() {
+  if (!els.khargSlickBtn) return;
+  els.khargSlickBtn.textContent = map.hasLayer(khargSlickLayer) ? "Hide Kharg slick" : "Show Kharg slick";
+}
+
+/* Toggle the reported Kharg Island oil-slick context layer. The geometry is an
+   approximate incident marker, not a replacement for source satellite pixels. */
+function toggleKhargSlick() {
+  ensureKhargSlickLayer();
+  if (map.hasLayer(khargSlickLayer)) {
+    map.removeLayer(khargSlickLayer);
+    setStatus("Kharg slick context hidden.");
+  } else {
+    khargSlickLayer.addTo(map);
+    map.fitBounds(khargSlickLayer.getBounds(), { padding: [80, 80], maxZoom: 9 });
+    setStatus("Approximate Kharg slick context shown from the source report.");
+  }
+  updateKhargSlickButton();
 }
 
 /* Attach all event handlers after DOM refs have been collected. */
@@ -2413,10 +2526,13 @@ function wireUi() {
   };
 
   if (els.marineToggleBtn) {
-    els.marineToggleBtn.onclick = toggleMarineEmbed;
+    els.marineToggleBtn.onclick = openMarineTrafficView;
   }
   if (els.seamarkToggleBtn) {
     els.seamarkToggleBtn.onclick = toggleSeamarks;
+  }
+  if (els.khargSlickBtn) {
+    els.khargSlickBtn.onclick = toggleKhargSlick;
   }
   if (els.marineOpenLink) {
     els.marineOpenLink.addEventListener("click", refreshMarineLinks);
@@ -2571,15 +2687,15 @@ async function boot() {
     }
   }
 
-  /* Ensure vessel/seamark layers are off and buttons show correct initial state. */
-  if (map.hasLayer(vesselLayer)) {
-    map.removeLayer(vesselLayer);
-    if (els.marineToggleBtn) els.marineToggleBtn.textContent = "Show vessel layer";
-  }
+  /* Ensure optional context layers are off and buttons show correct initial state. */
   if (map.hasLayer(seamarkLayer)) {
     map.removeLayer(seamarkLayer);
     if (els.seamarkToggleBtn) els.seamarkToggleBtn.textContent = "Show seamarks";
   }
+  if (map.hasLayer(khargSlickLayer)) {
+    map.removeLayer(khargSlickLayer);
+  }
+  updateKhargSlickButton();
 
   updateReleaseInfo();
   updateStoryCard();

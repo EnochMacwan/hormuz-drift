@@ -22,7 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="icon" type="image/png" href="assets/tridel.png" />
-  <link rel="stylesheet" href="css/style.css?v=38" />
+  <link rel="stylesheet" href="css/style.css?v=39" />
 </head>
 
 <body>
@@ -202,20 +202,24 @@
         <span>Click here for options.</span>
       </a>
 
-      <!-- Live AIS vessel tracking via MarineTraffic. The iframe is loaded on
-         demand to keep first paint cheap and to respect MarineTraffic ToS. -->
+      <!-- Vessel context and incident overlays. MarineTraffic live AIS is opened
+         in a synced external tab because its density tiles are not public map
+         tiles; OpenSeaMap and incident geometry stay directly on this map. -->
       <div class="section-card marinetraffic-card" id="marinetraffic-card">
         <div class="section-heading-row">
-          <h3>Vessel traffic</h3>
-          <span class="tag">MarineTraffic AIS</span>
+          <h3>Vessel traffic & incidents</h3>
+          <span class="tag">AIS + oil context</span>
         </div>
-        <p class="hint">Toggle live MarineTraffic vessel-density tiles directly on the map. Adds OpenSeaMap nautical
-          chart features for ports, lighthouses, and channels.</p>
+        <p class="hint">Open a synced MarineTraffic live-AIS view, add OpenSeaMap nautical features, or overlay the
+          reported Kharg Island oil slick context from the Khaleej Times / New York Times report.</p>
         <div class="row" style="gap:8px;flex-wrap:wrap">
-          <button id="marineToggleBtn" class="ghost small">Show vessel layer</button>
+          <button id="marineToggleBtn" class="ghost small">Open live AIS</button>
           <button id="seamarkToggleBtn" class="ghost small">Show seamarks</button>
+          <button id="khargSlickBtn" class="ghost small">Show Kharg slick</button>
           <a id="marineOpenLink" href="https://www.marinetraffic.com/" target="_blank" rel="noopener"
             class="ghost small">Open MarineTraffic</a>
+          <a href="https://www.khaleejtimes.com/world/mena/us-iran-war-large-oil-slick-off-iran-island-kharg"
+            target="_blank" rel="noopener" class="ghost small">Source report</a>
         </div>
       </div>
 
@@ -568,8 +572,7 @@
             <div class="eyebrow">High-fidelity handoff</div>
             <h3>OpenDrift / WebGNOME integration</h3>
           </div>
-          <img src="https://response.restoration.noaa.gov/themes/custom/orr/images/logo-noaa-orr.svg" alt="NOAA ORR"
-            class="noaa-logo" onerror="this.style.display='none'" />
+          <span class="noaa-logo-text" aria-label="NOAA ORR">NOAA ORR</span>
         </div>
         <p class="hint">Use this browser model for fast exploration, then transfer the same release setup into
           <strong>OpenDrift/OpenOil</strong> or WebGNOME for higher-fidelity weathering and response planning.</p>
@@ -675,7 +678,7 @@
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <script src="js/field.js?v=6"></script>
   <script src="js/drift.js?v=4"></script>
-  <script src="js/app.js?v=39"></script>
+  <script src="js/app.js?v=40"></script>
 </body>
 
 </html>
