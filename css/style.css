@@ -4596,3 +4596,70 @@ body:not(.compact-reference-ui).map-chrome-hidden .map-ui-show-btn {
   display: inline-flex !important;
   align-items: center;
 }
+
+/* Map chrome collision fix: keep the brand card and legend compact enough for
+   laptop viewports so the legend never tucks under the Tridel panel. */
+body:not(.compact-reference-ui) #banner {
+  left: 28px !important;
+  top: 14px !important;
+  width: 392px !important;
+  min-width: 0 !important;
+  max-width: calc(100vw - 520px) !important;
+  padding: 18px 18px 16px !important;
+  gap: 14px !important;
+  border-radius: 16px !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-lockup {
+  gap: 16px !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-logo {
+  width: 54px !important;
+  height: 54px !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-name {
+  font-size: 24px !important;
+  letter-spacing: .16em !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 12px !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy b {
+  font-size: 18px !important;
+  max-width: 230px !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy a {
+  justify-self: start !important;
+  min-width: 0 !important;
+  padding: 11px 20px !important;
+  font-size: 15px !important;
+}
+
+body:not(.compact-reference-ui) #banner .partner-logo {
+  height: 56px !important;
+  padding: 5px 16px !important;
+}
+
+body:not(.compact-reference-ui) #banner .partner-logo img {
+  max-height: 44px !important;
+}
+
+body:not(.compact-reference-ui) .map-ui-hide-btn {
+  top: 10px !important;
+  right: 12px !important;
+  padding: 7px 11px !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend {
+  left: 28px !important;
+  top: 292px !important;
+  max-width: 392px !important;
+  padding: 18px 20px !important;
+  font-size: 18px !important;
+}
