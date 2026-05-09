@@ -22,6 +22,11 @@ from pathlib import Path
 import numpy as np
 import xarray as xr
 
+try:
+    from forcing_chunks import write_chunked_payload
+except ImportError:  # Allows importing this file as scripts.prepare_data.
+    from scripts.forcing_chunks import write_chunked_payload
+
 ROOT     = Path(__file__).resolve().parent.parent
 NC_FILE  = ROOT / 'cmems_mod_glo_phy_anfc_merged-uv_PT1H-i_1776382234335.nc'
 OUT_JSON = ROOT / 'data' / 'currents.json'
@@ -29,7 +34,7 @@ OUT_JSON = ROOT / 'data' / 'currents.json'
 # ── Bounding box (entire Arabian Gulf: Kuwait through Abu Dhabi & Hormuz) ──
 LON_MIN, LON_MAX = 47.5, 59.0
 LAT_MIN, LAT_MAX = 22.0, 30.5
-MAX_OUTPUT_HOURS = 73
+MAX_OUTPUT_HOURS = 241
 
 
 def fetch_wind_openmeteo(cm_times, cm_lats, cm_lons):
@@ -226,13 +231,9 @@ def main():
         'vw':    vw,
     }
 
-    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUT_JSON, 'w', encoding='utf-8') as f:
-        json.dump(payload, f, separators=(',', ':'))
-
-    sz = OUT_JSON.stat().st_size / 1e6
+    manifest = write_chunked_payload(payload, OUT_JSON)
     wind_flag = "with wind" if wind_source else "currents only"
-    print(f"\nWrote {OUT_JSON}  ({sz:.2f} MB, {wind_flag})")
+    print(f"\nWrote {OUT_JSON} manifest + {len(manifest['chunks'])} chunks ({wind_flag})")
 
 
 if __name__ == '__main__':

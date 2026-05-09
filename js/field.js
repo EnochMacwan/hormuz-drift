@@ -22,6 +22,7 @@ window.Field = (() => {
           latMin:0, latMax:0, lonMin:0, lonMax:0},
     u:null, v:null, uw:null, vw:null,
     hasWind:false,
+    chunked:false, chunks:[], manifestUrl:null,
     t0Unix:0, dtSec:3600,
   };
 
@@ -34,10 +35,11 @@ window.Field = (() => {
       );
     }
 
+    const manifestUrl = new URL(url, window.location.href).toString();
     let r;
     try {
       /* Network failures land here before an HTTP status even exists. */
-      r = await fetch(url);
+      r = await fetch(manifestUrl);
     } catch (err) {
       throw new Error(
         `Could not reach ${url}. Start a local server and open the site over http://localhost:8000.`
@@ -50,9 +52,14 @@ window.Field = (() => {
        directly without repeated JSON parsing or schema handling. */
     F.meta  = d.meta;
     F.times = d.times;
-    F.u = d.u; F.v = d.v;
-    F.uw = d.uw; F.vw = d.vw;   // may be null (wind not yet integrated)
-    F.hasWind = Array.isArray(F.uw) && Array.isArray(F.vw);
+    F.chunked = Array.isArray(d.chunks) && d.chunks.length > 0;
+    F.chunks = F.chunked ? d.chunks.map((chunk, index) => ({...chunk, index, promise:null, loaded:false})) : [];
+    F.manifestUrl = r.url || manifestUrl;
+    F.u = F.chunked ? new Array(F.times.length) : d.u;
+    F.v = F.chunked ? new Array(F.times.length) : d.v;
+    F.uw = F.chunked ? new Array(F.times.length) : d.uw;   // may be null (wind not yet integrated)
+    F.vw = F.chunked ? new Array(F.times.length) : d.vw;
+    F.hasWind = F.chunked ? Boolean(d.meta?.has_wind) : (Array.isArray(F.uw) && Array.isArray(F.vw));
     F.grid.lats = d.lats; F.grid.lons = d.lons;
     F.grid.nLat = d.lats.length; F.grid.nLon = d.lons.length;
     F.grid.dlat = d.meta.dlat;  F.grid.dlon = d.meta.dlon;
@@ -60,8 +67,72 @@ window.Field = (() => {
     F.grid.lonMin = d.lons[0]; F.grid.lonMax = d.lons[F.grid.nLon - 1];
     F.t0Unix = Date.parse(d.times[0].replace(' ','T') + 'Z') / 1000;
     F.dtSec = d.meta.time_step_sec;
+    if (F.chunked) {
+      await F.ensureTimeRange(F.t0Unix, F.t0Unix + F.dtSec);
+    }
     F.loaded = true;
     return F;
+  };
+
+  function _chunkForIndex(ti){
+    return F.chunks.find((chunk) => ti >= chunk.start_index && ti < chunk.end_index);
+  }
+
+  async function _loadChunk(chunk){
+    if (!F.chunked || !chunk) return;
+    if (chunk.loaded) return;
+    if (chunk.promise) return chunk.promise;
+    chunk.promise = (async () => {
+      const chunkUrl = new URL(chunk.href, F.manifestUrl).toString();
+      const response = await fetch(chunkUrl);
+      if (!response.ok) throw new Error(`Failed to load ${chunk.href}: ${response.status}`);
+      const data = await response.json();
+      const start = Number(data.start_index ?? chunk.start_index);
+      for (let local = 0; local < data.times.length; local += 1) {
+        const ti = start + local;
+        F.u[ti] = data.u[local];
+        F.v[ti] = data.v[local];
+        if (F.hasWind && Array.isArray(data.uw) && Array.isArray(data.vw)) {
+          F.uw[ti] = data.uw[local];
+          F.vw[ti] = data.vw[local];
+        }
+      }
+      chunk.loaded = true;
+    })();
+    return chunk.promise;
+  }
+
+  F.isTimeLoaded = function(ti){
+    if (!F.chunked) return true;
+    const index = Math.max(0, Math.min(F.times.length - 1, Math.floor(ti)));
+    return Boolean(F.u[index] && F.v[index]);
+  };
+
+  F.ensureTimeIndex = async function(ti){
+    if (!F.chunked) return;
+    const index = Math.max(0, Math.min(F.times.length - 1, Math.floor(ti)));
+    if (F.isTimeLoaded(index)) return;
+    await _loadChunk(_chunkForIndex(index));
+  };
+
+  F.ensureTimeRange = async function(startSec, endSec){
+    if (!F.chunked) return;
+    const startIdx = Math.max(0, Math.min(F.times.length - 1, Math.floor((startSec - F.t0Unix) / F.dtSec)));
+    const endIdx = Math.max(0, Math.min(F.times.length - 1, Math.ceil((endSec - F.t0Unix) / F.dtSec)));
+    const loads = F.chunks
+      .filter((chunk) => chunk.end_index > startIdx && chunk.start_index <= endIdx)
+      .map((chunk) => _loadChunk(chunk));
+    await Promise.all(loads);
+  };
+
+  F.slice = function(key, ti){
+    const arr = F[key];
+    if (!arr) return null;
+    const index = Math.max(0, Math.min(F.times.length - 1, Math.floor(ti)));
+    if (!arr[index] && F.chunked) {
+      F.ensureTimeIndex(index).catch(() => {});
+    }
+    return arr[index] || null;
   };
 
   /* ─── bilinear space + linear time on a 3-D (t,lat,lon) grid ─────── */
@@ -83,18 +154,28 @@ window.Field = (() => {
     const i0 = Math.floor(i), j0 = Math.floor(j);
     const fi = i - i0,        fj = j - j0;
 
-    function atT(ti){
+    const slice0 = arr[t0];
+    const slice1 = arr[t1];
+    if (!slice0 || !slice1) {
+      if (F.chunked) {
+        F.ensureTimeIndex(t0).catch(() => {});
+        F.ensureTimeIndex(t1).catch(() => {});
+      }
+      return null;
+    }
+
+    function atT(slice){
       /* Bilinear interpolation inside one time slice. Returning null when any
          corner is null prevents accidental blending across coastlines. */
-      const a = arr[ti][j0    ][i0    ];
-      const b = arr[ti][j0    ][i0 + 1];
-      const c = arr[ti][j0 + 1][i0    ];
-      const d = arr[ti][j0 + 1][i0 + 1];
+      const a = slice[j0    ][i0    ];
+      const b = slice[j0    ][i0 + 1];
+      const c = slice[j0 + 1][i0    ];
+      const d = slice[j0 + 1][i0 + 1];
       if (a === null || b === null || c === null || d === null) return null;
       return (1 - fi)*(1 - fj)*a + fi*(1 - fj)*b
            + (1 - fi)*fj      *c + fi*fj      *d;
     }
-    const A = atT(t0), B = atT(t1);
+    const A = atT(slice0), B = atT(slice1);
     if (A === null || B === null) return null;
     return A * (1 - ft) + B * ft;
   }
@@ -109,7 +190,7 @@ window.Field = (() => {
 
   F.sampleWind = function(lon, lat, tSec){
     /* Wind is optional in this project, so null doubles as "no wind field". */
-    if (!F.uw || !F.vw) return null;
+    if (!F.hasWind || !F.uw || !F.vw) return null;
     const u = _sample(F.uw, lon, lat, tSec);
     const v = _sample(F.vw, lon, lat, tSec);
     if (u === null || v === null) return null;

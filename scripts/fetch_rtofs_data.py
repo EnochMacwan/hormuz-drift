@@ -21,6 +21,10 @@ from pathlib import Path
 import numpy as np
 import xarray as xr
 
+try:
+    from forcing_chunks import write_chunked_payload
+except ImportError:  # Allows importing this file as scripts.fetch_rtofs_data.
+    from scripts.forcing_chunks import write_chunked_payload
 from prepare_data import fetch_wind_openmeteo, pack
 
 # Regional domain: full Arabian (Persian) Gulf including Kuwait, the UAE
@@ -219,15 +223,13 @@ def main():
         "vw": pack(vw_arr) if vw_arr is not None else None,
     }
 
-    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUT_JSON, "w", encoding="utf-8") as handle:
-        json.dump(payload, handle, separators=(",", ":"))
+    manifest = write_chunked_payload(payload, OUT_JSON)
 
     if not args.keep_cache:
         for path in downloaded:
             path.unlink(missing_ok=True)
 
-    print(f"Wrote {OUT_JSON} ({OUT_JSON.stat().st_size / 1e6:.2f} MB)")
+    print(f"Wrote {OUT_JSON} manifest + {len(manifest['chunks'])} chunks")
 
 
 if __name__ == "__main__":

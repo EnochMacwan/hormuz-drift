@@ -165,6 +165,21 @@ function maxDataSec() {
   return Field.t0Unix + (Field.times.length - 1) * Field.dtSec;
 }
 
+function maxRunHoursFrom(startSec) {
+  return Math.max(0, Math.floor((maxDataSec() - startSec) / 3600));
+}
+
+function constrainedDurationHours(startSec, requestedHours, updateInput = false) {
+  const maxHours = maxRunHoursFrom(startSec);
+  const safeMax = Math.max(1, maxHours);
+  const duration = clamp(requestedHours, 1, safeMax);
+  if (updateInput && els.durHours) {
+    els.durHours.max = String(safeMax);
+    els.durHours.value = String(duration);
+  }
+  return duration;
+}
+
 function tIdxToSec(ti) {
   return Field.t0Unix + ti * Field.dtSec;
 }
@@ -268,6 +283,14 @@ function dataSourceKind() {
 }
 
 function currentSpeedStats() {
+  const metaStats = Field.meta?.current_speed_stats;
+  if (metaStats) {
+    return {
+      median: Number(metaStats.median) || 0,
+      p90: Number(metaStats.p90) || 0,
+      max: Number(metaStats.max) || 0,
+    };
+  }
   if (!Field.u || !Field.v) return null;
   const speeds = [];
   Field.u.forEach((slice, ti) => {
@@ -428,6 +451,13 @@ function ensureFieldSrc(grid) {
 /* Paint a single time slice of the current field into the offscreen buffer. */
 function paintFieldSrc(ti, grid, buffer) {
   if (ti === buffer.ti) return;
+  const uSlice = Field.slice("u", ti);
+  const vSlice = Field.slice("v", ti);
+  if (!uSlice || !vSlice) {
+    buffer.ctx.clearRect(0, 0, grid.nLon, grid.nLat);
+    buffer.ti = -1;
+    return;
+  }
   const pix = buffer.data.data;
   const nW = grid.nLon;
   const nH = grid.nLat;
@@ -441,8 +471,8 @@ function paintFieldSrc(ti, grid, buffer) {
   for (let row = 0; row < nH; row += 1) {
     const j = nH - 1 - row;       // image row 0 = northernmost lat
     for (let i = 0; i < nW; i += 1) {
-      const u = Field.u[ti][j][i];
-      const v = Field.v[ti][j][i];
+      const u = uSlice[j][i];
+      const v = vSlice[j][i];
       const cellIdx = row * nW + i;
       const p = cellIdx * 4;
       if (u === null || v === null) {
@@ -523,6 +553,14 @@ function drawField() {
   const ti1 = clamp(ti0 + 1, 0, Field.times.length - 1);
   const blend = clamp(tIdx - ti0, 0, 1);
   const grid = Field.grid;
+
+  if (!Field.isTimeLoaded(ti0) || !Field.isTimeLoaded(ti1)) {
+    Field.ensureTimeRange(tIdxToSec(ti0), tIdxToSec(ti1)).then(() => {
+      fieldSrcBuffers.forEach((buffer) => { buffer.ti = -1; });
+      drawField();
+    }).catch((err) => setStatus(`Current chunk load failed: ${err.message}`));
+    return;
+  }
 
   ensureFieldSrc(grid);
   paintFieldSrc(ti0, grid, fieldSrcBuffers[0]);
@@ -1143,7 +1181,7 @@ function renderOilBudgetPlot() {
  * playback. Instead, pressing Run precomputes the ensemble forward, stores
  * tracks/snapshots, and then the UI plays back those stored results smoothly.
  */
-function runEnsemble() {
+async function runEnsemble() {
   if (!releasePoint) {
     setStatus("Click on the sea to set a release point first.");
     hideRunProgress();
@@ -1155,10 +1193,31 @@ function runEnsemble() {
   playing = false;
   updatePlayButton();
 
-  const startSec = tIdxToSec(tIdx);
-  const durationHours = numericInputValue(els.durHours, 24);
+  const startIndex = Math.floor(tIdx);
+  const startSec = tIdxToSec(startIndex);
+  tIdx = startIndex;
+  const requestedDurationHours = numericInputValue(els.durHours, 24);
+  const maxHours = maxRunHoursFrom(startSec);
+  if (maxHours < 1) {
+    setStatus("Move the timeline earlier; there is less than 1 h of forcing data after this start time.");
+    hideRunProgress();
+    return;
+  }
+  const durationHours = constrainedDurationHours(startSec, requestedDurationHours, true);
   const particleCount = numericInputValue(els.nEns, 300);
   const params = collectScenarioParams();
+  if (durationHours < requestedDurationHours) {
+    setStatus(`Duration capped to ${durationHours} h because the loaded forcing ends at ${Field.times[Field.times.length - 1]} UTC.`);
+  } else {
+    setStatus("Loading current chunks for run...");
+  }
+  try {
+    await Field.ensureTimeRange(startSec, startSec + durationHours * 3600);
+  } catch (err) {
+    setStatus(`Could not load current chunks for the run: ${err.message}`);
+    hideRunProgress();
+    return;
+  }
   const ensemble = spawnEnsemble({
     lon: releasePoint.lon,
     lat: releasePoint.lat,
@@ -1596,11 +1655,13 @@ function openWebgnome() {
 function buildPygnomeScript() {
   const lat = releasePoint ? releasePoint.lat.toFixed(5) : "26.45000";
   const lon = releasePoint ? releasePoint.lon.toFixed(5) : "56.10000";
-  const durationHours = Number(els.durHours.value) || 24;
+  const startIndex = Field.loaded ? clamp(Math.floor(tIdx), 0, Field.times.length - 1) : 0;
+  const startSec = Field.loaded ? tIdxToSec(startIndex) : Field.t0Unix;
+  const durationHours = Field.loaded ? constrainedDurationHours(startSec, Number(els.durHours.value) || 24, true) : (Number(els.durHours.value) || 24);
   const isOil = activeScenario === "oil";
   const oilType = els.oilType ? els.oilType.value : "light_crude";
   const oilVol = els.oilVol ? Number(els.oilVol.value) || 10 : 10;
-  const dataStartUtc = Field.loaded && Field.times.length ? Field.times[0] : "2024-01-01T00:00:00";
+  const dataStartUtc = Field.loaded && Field.times.length ? Field.times[startIndex] : "2024-01-01T00:00:00";
   const scenarioName = isOil ? "Oil spill" : "Man overboard / S&R";
   const oilBlock = isOil ? `
 # -- Oil spill setup ---------------------------------------------------------
@@ -1713,6 +1774,9 @@ function buildOpenDriftCaseConfig() {
   const meta = Field.meta || {};
   const isOil = activeScenario === "oil";
   const currentIndex = Field.loaded ? clamp(Math.floor(tIdx), 0, Field.times.length - 1) : 0;
+  const startSec = Field.loaded ? tIdxToSec(currentIndex) : Field.t0Unix;
+  const requestedDuration = numericInputValue(els.durHours, 24);
+  const durationHours = Field.loaded ? constrainedDurationHours(startSec, requestedDuration, true) : requestedDuration;
   return {
     runner: "scripts/run_opendrift_hormuz.py",
     purpose: "Run the selected Tridel Hormuz web scenario in real OpenDrift/OpenOil.",
@@ -1723,7 +1787,7 @@ function buildOpenDriftCaseConfig() {
       lat: releasePoint ? Number(releasePoint.lat.toFixed(6)) : 26.45,
     },
     start_time_utc: Field.loaded && Field.times.length ? Field.times[currentIndex] : null,
-    duration_hours: Number(els.durHours.value) || 24,
+    duration_hours: durationHours,
     particles: Number(els.nEns.value) || 1000,
     radius_m: Number(els.relRadius.value) || 100,
     diffusion_k: Number(els.diffK.value) || 10,

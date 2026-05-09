@@ -10,16 +10,20 @@ A fully client-side ocean drift simulator for the Strait of Hormuz. Click anywhe
 
 ### 1. Forcing data - what drives the particles
 
-The simulation is driven by a pre-built JSON file (`data/currents.json`) that contains a 3-D grid of ocean surface velocity vectors:
+The simulation is driven by a pre-built chunked JSON dataset. `data/currents.json` is a small manifest; the hourly velocity arrays live in `data/chunks/currents_*.json` so the app can ship a 10-day window without one oversized GitHub file:
 
 ```
 currents.json
+  |-- lats[], lons[]      - coordinate axes
+  |-- times[]             - full 10-day hourly time axis
+  |-- chunks[]            - daily chunk file references
+  +-- meta                - time step, resolution, source, generated timestamp
+
+data/chunks/currents_000.json
   |-- u[time][lat][lon]   - eastward current (m/s), null over land
   |-- v[time][lat][lon]   - northward current (m/s), null over land
   |-- uw[time][lat][lon]  - eastward 10-m wind (m/s), optional
-  |-- vw[time][lat][lon]  - northward 10-m wind (m/s), optional
-  |-- lats[], lons[]      - coordinate axes
-  +-- meta                - time step, resolution, source, generated timestamp
+  +-- vw[time][lat][lon]  - northward 10-m wind (m/s), optional
 ```
 
 This file is rebuilt daily by a GitHub Actions workflow that pulls from two sources:
@@ -33,7 +37,7 @@ Wind is added from **Open-Meteo / GFS** (`u10`, `v10`) for the same hourly time 
 
 ### 2. Sampling - reading the data cube in the browser
 
-`field.js` is a singleton (`window.Field`) that fetches and caches `currents.json`, then exposes a query API used by every particle:
+`field.js` is a singleton (`window.Field`) that fetches the manifest, loads chunks on demand, and exposes a query API used by every particle:
 
 ```
 Field.sampleCurrent(lon, lat, tSec)  ->  {u, v}  or  null
@@ -51,7 +55,7 @@ value = (1-fi)(1-fj) * A00 + fi(1-fj) * A10
 
 If any of the four corners is `null` (land or missing), the sample returns `null`, which strands the particle immediately. This is the land-masking mechanism.
 
-The dataset does not wrap in time. If a trajectory reaches the edge of the loaded forcing window, sampling returns missing data and the particle strands/stops instead of silently reusing an unrelated forecast hour.
+The dataset does not wrap in time. Browser and OpenDrift runs are capped to the loaded forcing window, so the model no longer mistakes "ran out of forecast data" for shoreline stranding.
 
 ---
 
@@ -234,7 +238,7 @@ python scripts/validate_currents.py
 1. Push this folder to a public repository.
 2. **Settings -> Pages** -> Deploy from branch `main`, root `/`.
 3. **Settings -> Secrets -> Actions** - add `CMEMS_USER` and `CMEMS_PASS` (free at [marine.copernicus.eu](https://marine.copernicus.eu)). If absent, the workflow falls back to NOAA RTOFS automatically.
-4. The daily workflow runs at 06:00 UTC, commits a fresh `data/currents.json`, and Pages redeploys automatically.
+4. The daily workflow runs at 06:00 UTC, commits a fresh `data/currents.json` plus `data/chunks/`, and Pages redeploys automatically.
 
 Live URL: `https://<user>.github.io/<repo>/`
 

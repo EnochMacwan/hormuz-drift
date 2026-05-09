@@ -26,6 +26,10 @@ from typing import Any
 import numpy as np
 import xarray as xr
 
+try:
+    from forcing_chunks import expand_chunked_payload
+except ImportError:  # Allows importing this file as scripts.run_opendrift_hormuz.
+    from scripts.forcing_chunks import expand_chunked_payload
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_FORCING_JSON = ROOT / "data" / "currents.json"
@@ -93,8 +97,7 @@ def parse_utc(value: str | None) -> datetime | None:
 
 
 def load_payload(path: Path) -> dict[str, Any]:
-    with path.open("r", encoding="utf-8") as handle:
-        return json.load(handle)
+    return expand_chunked_payload(path)
 
 
 def cube(payload: dict[str, Any], key: str) -> np.ndarray:
@@ -298,7 +301,22 @@ def main() -> None:
     else:
         print(f"[reuse] Using existing forcing NetCDF: {args.forcing_nc}")
 
-    start_time = parse_utc(args.start_time) or payload_times(payload)[0]
+    times = payload_times(payload)
+    start_time = parse_utc(args.start_time) or times[0]
+    forcing_start = times[0]
+    forcing_end = times[-1]
+    if start_time < forcing_start or start_time >= forcing_end:
+        raise SystemExit(
+            f"Start time {start_time} is outside forcing window "
+            f"{forcing_start} to {forcing_end}."
+        )
+    max_duration_hours = (forcing_end - start_time).total_seconds() / 3600
+    if args.duration_hours > max_duration_hours:
+        print(
+            f"[warn] Duration capped from {args.duration_hours:g} h to "
+            f"{max_duration_hours:g} h to stay inside the forcing window."
+        )
+        args.duration_hours = max_duration_hours
     if args.scenario == "oil":
         model = run_oil(args.forcing_nc, args, start_time)
     else:

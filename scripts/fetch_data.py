@@ -32,6 +32,11 @@ from pathlib import Path
 import numpy as np
 import xarray as xr
 
+try:
+    from forcing_chunks import write_chunked_payload
+except ImportError:  # Allows importing this file as scripts.fetch_data.
+    from scripts.forcing_chunks import write_chunked_payload
+
 # ── knobs ──────────────────────────────────────────────────────────────
 # Regional domain: full Arabian (Persian) Gulf including Kuwait, the UAE
 # Gulf coast through Abu Dhabi, and the Strait of Hormuz / Gulf of Oman outflow.
@@ -40,8 +45,8 @@ CMEMS_DATASET_ID = 'cmems_mod_glo_phy_anfc_merged-uv_PT1H-i'
 CMEMS_VARIABLES = ['utotal', 'vtotal']
 LON_MIN, LON_MAX = 47.5, 59.0
 LAT_MIN, LAT_MAX = 22.0, 30.5
-HINDCAST_DAYS    = 1     # keep the browser payload below GitHub's 100 MB limit
-FORECAST_DAYS    = 2     # 73 hourly frames: yesterday through the next two days
+HINDCAST_DAYS    = 1     # one day of context before the selected release
+FORECAST_DAYS    = 9     # ten-day hourly browser window after chunking
 
 ROOT      = Path(__file__).resolve().parent.parent
 OUT_JSON  = ROOT / 'data' / 'currents.json'
@@ -140,7 +145,7 @@ def main():
         uw = pack(uw_arr)
         vw = pack(vw_arr)
 
-    # Step 3: write the minimal schema the browser actually needs.
+    # Step 3: write a small manifest plus daily chunks for the browser.
     payload = {
         'meta': {
             'source':        f'CMEMS {CMEMS_PRODUCT_ID} ({CMEMS_DATASET_ID}, merged-uv hourly)',
@@ -159,10 +164,9 @@ def main():
         'uw':    uw,       'vw': vw,
     }
 
-    OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUT_JSON, 'w', encoding='utf-8') as f:
-        json.dump(payload, f, separators=(',', ':'))
-    print(f"Wrote {OUT_JSON}  ({OUT_JSON.stat().st_size / 1e6:.2f} MB · wind={wind_source is not None})")
+    manifest = write_chunked_payload(payload, OUT_JSON)
+    chunk_count = len(manifest["chunks"])
+    print(f"Wrote {OUT_JSON} manifest + {chunk_count} chunks · wind={wind_source is not None}")
 
 
 if __name__ == '__main__':

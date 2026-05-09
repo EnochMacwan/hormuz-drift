@@ -1,6 +1,6 @@
 name: Daily data refresh
 
-# Refreshes data/currents.json with the latest CMEMS currents + GFS winds.
+# Refreshes data/currents.json plus data/chunks/ with the latest currents + GFS winds.
 # Runs every day at 06:00 UTC and on manual dispatch.
 
 on:
@@ -40,7 +40,7 @@ jobs:
         run: |
           git config user.email "actions@github.com"
           git config user.name  "data-bot"
-          git add data/currents.json
+          git add data/currents.json data/chunks
           if git diff --cached --quiet; then
             echo "no changes"
             exit 0

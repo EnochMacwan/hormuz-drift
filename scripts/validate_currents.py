@@ -18,6 +18,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+try:
+    from forcing_chunks import expand_chunked_payload
+except ImportError:  # Allows importing this file as scripts.validate_currents.
+    from scripts.forcing_chunks import expand_chunked_payload
 
 REQUIRED_TOP_LEVEL_KEYS = ("meta", "times", "lats", "lons", "u", "v")
 
@@ -121,12 +125,12 @@ def main() -> int:
     warnings: list[str] = []
 
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = expand_chunked_payload(path)
     except FileNotFoundError:
-        print(f"FAIL: {path} does not exist", file=sys.stderr)
+        print(f"FAIL: {path} or one of its chunks does not exist", file=sys.stderr)
         return 1
     except json.JSONDecodeError as exc:
-        print(f"FAIL: {path} is not valid JSON: {exc}", file=sys.stderr)
+        print(f"FAIL: {path} or one of its chunks is not valid JSON: {exc}", file=sys.stderr)
         return 1
 
     if not isinstance(payload, dict):
