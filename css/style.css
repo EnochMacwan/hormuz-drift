@@ -4906,3 +4906,56 @@ body:not(.compact-reference-ui) .map-status-chips {
   justify-content: center !important;
   max-width: 560px !important;
 }
+
+/* Remove sticky/fixed-feeling chrome and reduce the direction legend to only a
+   transparent hue wheel. */
+body:not(.compact-reference-ui) #side .side-header,
+body:not(.compact-reference-ui) .current-scenario-card {
+  position: relative !important;
+  top: auto !important;
+  margin-top: 0 !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only {
+  top: 34px !important;
+  left: auto !important;
+  right: 452px !important;
+  width: 126px !important;
+  height: 126px !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only::before {
+  content: none !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-compass {
+  width: 126px !important;
+  height: 126px !important;
+  margin: 0 !important;
+  border-color: rgba(255, 255, 255, 0.78) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-compass::before,
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-compass::after,
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-label {
+  display: none !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-disc {
+  width: 74px !important;
+  height: 74px !important;
+  box-shadow:
+    0 0 18px rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18) !important;
+}

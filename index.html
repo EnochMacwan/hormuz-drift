@@ -22,7 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="icon" type="image/png" href="assets/tridel.png" />
-  <link rel="stylesheet" href="css/style.css?v=41" />
+  <link rel="stylesheet" href="css/style.css?v=42" />
 </head>
 
 <body>
@@ -64,10 +64,10 @@
           <strong id="hudTrail">0 km²</strong>
         </div>
       </div>
-      <div class="reference-current-legend" aria-label="Current layer legend">
-        <div><strong>HUE:</strong><span>Current direction field</span></div>
-        <div><strong>WHITE:</strong><span>Animated tracers</span></div>
-        <div class="flow-key"><span></span><span>Flow Direction</span></div>
+      <div class="reference-current-legend hue-wheel-only" aria-label="Current direction hue wheel">
+        <div class="direction-compass" aria-hidden="true">
+          <span class="direction-disc"></span>
+        </div>
       </div>
       <div class="map-status-chips" aria-label="Simulation data status">
         <span id="map-chip-source">Loading currents</span>
