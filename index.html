@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="icon" type="image/png" href="assets/tridel.png" />
   <link rel="stylesheet" href="css/style.css?v=48" />
-  <link rel="stylesheet" href="css/ui-cleanup.css?v=11" />
+  <link rel="stylesheet" href="css/ui-cleanup.css?v=12" />
 </head>
 
 <body>
@@ -77,8 +77,10 @@
       <div class="map-status-chips" aria-label="Simulation data status">
         <span id="map-chip-source">Loading currents</span>
         <span id="map-chip-resolution">Hourly grid</span>
+        <span id="map-chip-chunk">Preparing field</span>
         <span>OpenDRIFT-based physics</span>
       </div>
+      <button id="resetMapBtn" class="map-reset-btn" type="button">Reset view</button>
       <!-- Fast summary cards and time-series analytics for the current playback
          instant. Positioned as a transparent map island in the sketch layout. -->
       <div class="section-card results-card">
@@ -305,6 +307,10 @@
             Emulsification via Mackay (1980).</div>
         </div>
       </div>
+
+      <button id="expertToggleBtn" class="expert-toggle-btn" type="button" aria-expanded="false">
+        Show expert tools
+      </button>
 
       <!-- Advanced playback and ambient tracer tuning lives in the drawer so the
          default map view stays focused on Run, Pause, Scenario, and Time. -->

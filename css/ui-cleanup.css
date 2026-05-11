@@ -771,6 +771,212 @@ body:not(.compact-reference-ui) .map-ui-hide-btn {
   color: #ffffff !important;
 }
 
+/* UX pass: keep the first screen operational, then let expert-only material
+   expand on demand instead of crowding the run workflow. */
+body:not(.compact-reference-ui) #side > .label-playback {
+  order: 30 !important;
+}
+
+body:not(.compact-reference-ui) #side > #controls {
+  order: 40 !important;
+}
+
+body:not(.compact-reference-ui) #side > .scenario-card {
+  order: 50 !important;
+}
+
+body:not(.compact-reference-ui) #side > .run-share-card {
+  order: 60 !important;
+}
+
+body:not(.compact-reference-ui) #side > .expert-toggle-btn {
+  order: 70 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 40px !important;
+  margin: 0 0 10px !important;
+  border: 1px solid rgba(35, 248, 255, 0.30) !important;
+  border-radius: 999px !important;
+  color: #ffffff !important;
+  background: rgba(4, 18, 33, 0.64) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22) !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+}
+
+body:not(.compact-reference-ui) #side > .expert-toggle-btn::after {
+  content: " +" !important;
+  color: var(--ui-cyan) !important;
+}
+
+body:not(.compact-reference-ui).expert-tools-open #side > .expert-toggle-btn::after {
+  content: " -" !important;
+}
+
+body:not(.compact-reference-ui) #side > .release-physics-card,
+body:not(.compact-reference-ui) #side > .playback-tuning-card,
+body:not(.compact-reference-ui) #side > .visual-overlay-card,
+body:not(.compact-reference-ui) #side > .data-quality-card,
+body:not(.compact-reference-ui) #side > .intro-card,
+body:not(.compact-reference-ui) #side > .tridel-area-card,
+body:not(.compact-reference-ui) #side > .marinetraffic-card,
+body:not(.compact-reference-ui) #side > #response-card,
+body:not(.compact-reference-ui) #side > .webgnome-card,
+body:not(.compact-reference-ui) #side > .data-provenance-card,
+body:not(.compact-reference-ui) #side > .caveat-card,
+body:not(.compact-reference-ui) #side > .label-mission,
+body:not(.compact-reference-ui) #side > .label-run-outputs {
+  display: none !important;
+}
+
+body:not(.compact-reference-ui).expert-tools-open #side > .release-physics-card,
+body:not(.compact-reference-ui).expert-tools-open #side > .playback-tuning-card,
+body:not(.compact-reference-ui).expert-tools-open #side > .visual-overlay-card,
+body:not(.compact-reference-ui).expert-tools-open #side > .data-quality-card,
+body:not(.compact-reference-ui).expert-tools-open #side > .intro-card,
+body:not(.compact-reference-ui).expert-tools-open #side > .tridel-area-card,
+body:not(.compact-reference-ui).expert-tools-open #side > .marinetraffic-card,
+body:not(.compact-reference-ui).expert-tools-open #side > .webgnome-card,
+body:not(.compact-reference-ui).expert-tools-open #side > .data-provenance-card,
+body:not(.compact-reference-ui).expert-tools-open #side > .caveat-card,
+body:not(.compact-reference-ui).expert-tools-open #side > .label-mission,
+body:not(.compact-reference-ui).expert-tools-open #side > .label-run-outputs {
+  display: block !important;
+}
+
+body:not(.compact-reference-ui).expert-tools-open #side > .label-run-outputs,
+body:not(.compact-reference-ui).expert-tools-open #side > .label-mission {
+  display: flex !important;
+}
+
+body:not(.compact-reference-ui).expert-tools-open.oil-scenario #side > #response-card {
+  display: block !important;
+}
+
+body:not(.compact-reference-ui) #side > .release-physics-card {
+  order: 80 !important;
+}
+
+body:not(.compact-reference-ui) #side > .playback-tuning-card {
+  order: 90 !important;
+}
+
+body:not(.compact-reference-ui) #side > .visual-overlay-card {
+  order: 100 !important;
+}
+
+body:not(.compact-reference-ui) #side > .data-quality-card {
+  order: 110 !important;
+}
+
+body:not(.compact-reference-ui) #side > .label-mission {
+  order: 120 !important;
+}
+
+body:not(.compact-reference-ui) #side > .intro-card {
+  order: 130 !important;
+}
+
+body:not(.compact-reference-ui) #side > .tridel-area-card {
+  order: 140 !important;
+}
+
+body:not(.compact-reference-ui) #side > .marinetraffic-card {
+  order: 150 !important;
+}
+
+body:not(.compact-reference-ui) #side > #response-card {
+  order: 160 !important;
+}
+
+body:not(.compact-reference-ui) #side > #oil-budget-card {
+  order: 170 !important;
+}
+
+body:not(.compact-reference-ui) #side > .webgnome-card {
+  order: 180 !important;
+}
+
+body:not(.compact-reference-ui) #side > .data-provenance-card {
+  order: 190 !important;
+}
+
+body:not(.compact-reference-ui) #side > .caveat-card {
+  order: 200 !important;
+}
+
+body:not(.compact-reference-ui) .map-reset-btn {
+  position: absolute !important;
+  left: 42px !important;
+  top: 78px !important;
+  z-index: 1020 !important;
+  min-height: 34px !important;
+  padding: 8px 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 999px !important;
+  color: #ffffff !important;
+  background: rgba(4, 18, 33, 0.70) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+}
+
+body:not(.compact-reference-ui) .map-reset-btn:hover {
+  border-color: rgba(35, 248, 255, 0.48) !important;
+  color: var(--ui-cyan) !important;
+}
+
+body:not(.compact-reference-ui) #map-chip-chunk.loading {
+  color: #03111f !important;
+  background: linear-gradient(135deg, var(--ui-cyan), var(--ui-amber)) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .release-physics-card,
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .playback-tuning-card,
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .visual-overlay-card,
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .data-quality-card,
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .intro-card,
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .tridel-area-card,
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .marinetraffic-card,
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > #response-card,
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .webgnome-card,
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .data-provenance-card,
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .caveat-card,
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .label-mission,
+body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .label-run-outputs {
+  display: none !important;
+}
+
+body:not(.compact-reference-ui).expert-tools-open #app #side > .release-physics-card,
+body:not(.compact-reference-ui).expert-tools-open #app #side > .playback-tuning-card,
+body:not(.compact-reference-ui).expert-tools-open #app #side > .visual-overlay-card,
+body:not(.compact-reference-ui).expert-tools-open #app #side > .data-quality-card,
+body:not(.compact-reference-ui).expert-tools-open #app #side > .intro-card,
+body:not(.compact-reference-ui).expert-tools-open #app #side > .tridel-area-card,
+body:not(.compact-reference-ui).expert-tools-open #app #side > .marinetraffic-card,
+body:not(.compact-reference-ui).expert-tools-open #app #side > .webgnome-card,
+body:not(.compact-reference-ui).expert-tools-open #app #side > .data-provenance-card,
+body:not(.compact-reference-ui).expert-tools-open #app #side > .caveat-card {
+  display: block !important;
+}
+
+body:not(.compact-reference-ui).expert-tools-open #app #side > .label-mission,
+body:not(.compact-reference-ui).expert-tools-open #app #side > .label-run-outputs {
+  display: flex !important;
+}
+
+body:not(.compact-reference-ui).expert-tools-open.oil-scenario #app #side > #response-card {
+  display: block !important;
+}
+
 @media (max-width: 1320px) {
   body:not(.compact-reference-ui) #banner {
     width: 390px !important;

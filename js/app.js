@@ -49,9 +49,11 @@ let oilBudgetModel = null;
 let runTimer = null;
 let focusMode = false;
 let mapChromeHidden = false;
+let expertToolsOpen = false;
 let frameCache = null;
 let lastResultsKey = null;
 let lastPlotMarkerKey = null;
+let pendingFieldChunkKey = "";
 let bgParticles = [];
 
 const overlayState = {
@@ -418,10 +420,55 @@ function resetFrameCache() {
 function updateBodyState() {
   document.body.classList.toggle("focus-mode", focusMode);
   document.body.classList.toggle("map-chrome-hidden", mapChromeHidden);
+  document.body.classList.toggle("expert-tools-open", expertToolsOpen);
+  document.body.classList.toggle("oil-scenario", activeScenario === "oil");
+  if (els.expertToggleBtn) {
+    els.expertToggleBtn.setAttribute("aria-expanded", String(expertToolsOpen));
+    els.expertToggleBtn.textContent = expertToolsOpen ? "Hide expert tools" : "Show expert tools";
+  }
+  syncExpertVisibility();
 }
 
 function setStatus(message) {
   els.runStatus.textContent = message || "";
+}
+
+function setChunkStatus(message, isLoading = false) {
+  if (!els.mapChipChunk) return;
+  els.mapChipChunk.textContent = message;
+  els.mapChipChunk.classList.toggle("loading", isLoading);
+}
+
+function syncExpertVisibility() {
+  const expertSelectors = [
+    ".release-physics-card",
+    ".playback-tuning-card",
+    ".visual-overlay-card",
+    ".data-quality-card",
+    ".intro-card",
+    ".tridel-area-card",
+    ".marinetraffic-card",
+    ".webgnome-card",
+    ".data-provenance-card",
+    ".caveat-card",
+    ".label-mission",
+    ".label-run-outputs",
+  ];
+  document.querySelectorAll(expertSelectors.join(",")).forEach((node) => {
+    if (expertToolsOpen) {
+      node.style.removeProperty("display");
+    } else {
+      node.style.setProperty("display", "none", "important");
+    }
+  });
+  if (els.responseCard) {
+    const shouldShowResponse = expertToolsOpen && activeScenario === "oil";
+    if (shouldShowResponse) {
+      els.responseCard.style.removeProperty("display");
+    } else {
+      els.responseCard.style.setProperty("display", "none", "important");
+    }
+  }
 }
 
 function setRunProgress(percent, label, detail) {
@@ -521,6 +568,11 @@ function updateDataQualityPanel() {
     const sourceStep = interpolated ? ` from ${Math.round(meta.source_time_step_sec / 3600)} h source` : "";
     els.dataResolution.textContent = `${Math.round(meta.time_step_sec / 3600)} h${sourceStep}`;
     if (els.mapChipResolution) els.mapChipResolution.textContent = `${Math.round(meta.time_step_sec / 3600)} hr resolution`;
+  }
+  if (els.mapChipChunk) {
+    const loadedChunks = Field.chunked ? Field.chunks.filter((chunk) => chunk.loaded).length : 0;
+    const chunkText = Field.chunked ? `${loadedChunks}/${Field.chunks.length} chunks cached` : "Single data file";
+    setChunkStatus(chunkText, false);
   }
   if (els.dataGenerated) els.dataGenerated.textContent = `${meta.generated_utc || "-"} (${dataAge})`;
   if (els.dataGrid) els.dataGrid.textContent = `${meta.n_lat} x ${meta.n_lon} cells | ${meta.n_times} frames`;
@@ -746,10 +798,25 @@ function drawField() {
   const grid = Field.grid;
 
   if (!Field.isTimeLoaded(ti0) || !Field.isTimeLoaded(ti1)) {
+    const chunkKey = `${ti0}-${ti1}`;
+    if (pendingFieldChunkKey !== chunkKey) {
+      pendingFieldChunkKey = chunkKey;
+      const loadedChunks = Field.chunked ? Field.chunks.filter((chunk) => chunk.loaded).length : 0;
+      setChunkStatus(`Loading field chunk ${loadedChunks + 1}/${Field.chunks.length}`, true);
+      if (els.dataMeta) {
+        els.dataMeta.textContent = `Loading next forcing chunk for ${Field.times[ti0] || "selected time"} UTC; preserving last field while it arrives.`;
+      }
+    }
     Field.ensureTimeRange(tIdxToSec(ti0), tIdxToSec(ti1)).then(() => {
       fieldSrcBuffers.forEach((buffer) => { buffer.ti = -1; });
+      pendingFieldChunkKey = "";
+      updateDataQualityPanel();
       drawField();
-    }).catch((err) => setStatus(`Current chunk load failed: ${err.message}`));
+    }).catch((err) => {
+      pendingFieldChunkKey = "";
+      setChunkStatus("Chunk load failed", false);
+      setStatus(`Current chunk load failed: ${err.message}`);
+    });
     return;
   }
 
@@ -2331,6 +2398,7 @@ function setScenario(scenario, preservePreset) {
   updateScenarioBadges();
   updateOilProperties();
   updateStoryCard();
+  updateBodyState();
 }
 
 /* Wind controls depend on both dataset availability and scenario mode. */
@@ -2504,6 +2572,7 @@ function collectDomRefs() {
     exportJsonBtn: document.getElementById("exportJsonBtn"),
     exportBudgetCsvBtn: document.getElementById("exportBudgetCsvBtn"),
     exportMenu: document.getElementById("exportMenu"),
+    expertToggleBtn: document.getElementById("expertToggleBtn"),
     focusBtn: document.getElementById("focusBtn"),
     jumpBack24: document.getElementById("jumpBack24"),
     jumpBack6: document.getElementById("jumpBack6"),
@@ -2515,6 +2584,7 @@ function collectDomRefs() {
     missionSummary: document.getElementById("mission-summary"),
     mapChipResolution: document.getElementById("map-chip-resolution"),
     mapChipSource: document.getElementById("map-chip-source"),
+    mapChipChunk: document.getElementById("map-chip-chunk"),
     nEns: document.getElementById("nEns"),
     nLabel: document.getElementById("n-label"),
     nSlider: document.getElementById("nSlider"),
@@ -2542,6 +2612,7 @@ function collectDomRefs() {
     quickRunRailBtn: document.getElementById("quickRunRailBtn"),
     relRadius: document.getElementById("relRadius"),
     releaseInfo: document.getElementById("release-info"),
+    resetMapBtn: document.getElementById("resetMapBtn"),
     results: document.getElementById("results"),
     runBtn: document.getElementById("runBtn"),
     runProgress: document.getElementById("run-progress"),
@@ -2658,6 +2729,12 @@ function toggleKhargSlick() {
   updateKhargSlickButton();
 }
 
+function resetMapView() {
+  fitMapToDataDomain();
+  refreshMarineLinks();
+  setStatus("Map view reset to the active data grid.");
+}
+
 /* Attach all event handlers after DOM refs have been collected. */
 function wireUi() {
   els.timeSlider.oninput = (event) => {
@@ -2712,6 +2789,15 @@ function wireUi() {
       if (els.focusBtn) {
         els.focusBtn.textContent = "Focus mode";
       }
+      updateBodyState();
+    };
+  }
+  if (els.resetMapBtn) {
+    els.resetMapBtn.onclick = resetMapView;
+  }
+  if (els.expertToggleBtn) {
+    els.expertToggleBtn.onclick = () => {
+      expertToolsOpen = !expertToolsOpen;
       updateBodyState();
     };
   }
@@ -2810,6 +2896,7 @@ function wireUi() {
 async function boot() {
   collectDomRefs();
   wireUi();
+  updateBodyState();
   updatePlayButton();
 
   try {
