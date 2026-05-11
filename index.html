@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="icon" type="image/png" href="assets/tridel.png" />
   <link rel="stylesheet" href="css/style.css?v=48" />
-  <link rel="stylesheet" href="css/ui-cleanup.css?v=7" />
+  <link rel="stylesheet" href="css/ui-cleanup.css?v=11" />
 </head>
 
 <body>
@@ -249,7 +249,6 @@
         <div id="data-quality-note" class="hint">Dataset metadata will appear after the forcing file loads.</div>
       </div>
 
-      <div class="panel-section-label label-run-setup">Scenario Builder</div>
       <!-- Scenario family selector. This switches the active modeling path
          between S&R/leeway behavior and oil/weathering behavior. -->
       <div class="section-card scenario-card">
@@ -455,7 +454,6 @@
         </div>
       </div>
 
-      <div class="panel-section-label label-visual">Visual Layers</div>
       <!-- Purely visual toggles. These change rendering only, not the underlying
          physical run that has already been precomputed. -->
       <div class="section-card visual-overlay-card">
@@ -518,7 +516,6 @@
         <div class="hint" id="emulsion-note" style="margin-top:8px"></div>
       </div>
 
-      <div class="panel-section-label label-validate">Validate And Provenance</div>
       <!-- Official-tool handoff. This stays in the side panel instead of inside
          the map so the map viewport remains clean on smaller laptops. -->
       <div class="section-card webgnome-card">
@@ -622,7 +619,6 @@
       </div>
       <div class="wg-modal-foot">
         <a href="https://gnome.orr.noaa.gov" target="_blank" rel="noopener" class="ghost wg-link">Open WebGNOME</a>
-        <button id="closeWgModal2" class="ghost">Close</button>
       </div>
     </div>
   </div>
@@ -633,7 +629,8 @@
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <script src="js/field.js?v=6"></script>
   <script src="js/drift.js?v=4"></script>
-  <script src="js/app.js?v=51"></script>
+  <script src="js/weathering.js?v=1"></script>
+  <script src="js/app.js?v=53"></script>
 </body>
 
 </html>

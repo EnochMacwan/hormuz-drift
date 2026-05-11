@@ -736,8 +736,8 @@ function drawField() {
   }
   const ctx  = fieldLayer.fieldCtx();
   const size = fieldLayer.size();
-  ctx.clearRect(0, 0, size.x, size.y);
   if (!overlayState.currents) {
+    ctx.clearRect(0, 0, size.x, size.y);
     return;
   }
   const ti0 = clamp(Math.floor(tIdx), 0, Field.times.length - 1);
@@ -753,6 +753,7 @@ function drawField() {
     return;
   }
 
+  ctx.clearRect(0, 0, size.x, size.y);
   ensureFieldSrc(grid);
   paintFieldSrc(ti0, grid, fieldSrcBuffers[0]);
   if (blend > 0 && ti1 !== ti0) {
@@ -2199,6 +2200,58 @@ function buildOilOptions() {
   els.oilType.innerHTML = Object.entries(OIL_TYPES).map(([key, oil]) => `<option value="${key}">${oil.label}</option>`).join("");
 }
 
+function updateOilProperties() {
+  if (!els.oilType || !els.opApi || !els.opRho || !els.opEvap || !els.opEmuls) return;
+
+  const oilKey = els.oilType.value || "medium_crude";
+  const adiosKey = {
+    light_crude: "arabian_light",
+    medium_crude: "arabian_medium",
+    heavy_fuel: "hfo380",
+    diesel: "diesel_mgo",
+    condensate: "condensate",
+  }[oilKey] || oilKey;
+
+  const adiosOil = window.ADIOS_OILS?.[adiosKey];
+  const simpleOil = window.OIL_TYPES?.[oilKey];
+
+  if (adiosOil) {
+    els.opApi.textContent = String(adiosOil.api ?? "—");
+    els.opRho.textContent = Number.isFinite(adiosOil.rho) ? `${adiosOil.rho} kg/m³` : "—";
+    els.opEvap.textContent = Number.isFinite(adiosOil.f_max) ? `${adiosOil.f_max}%` : "—";
+    els.opEmuls.textContent = Number.isFinite(adiosOil.W_max) ? `${Math.round(adiosOil.W_max * 100)}%` : "—";
+
+    const sara = [
+      ["saraS", adiosOil.saturates],
+      ["saraA", adiosOil.aromatics],
+      ["saraR", adiosOil.resins],
+      ["saraAs", adiosOil.asphaltenes],
+    ];
+    sara.forEach(([key, value]) => {
+      if (els[key]) {
+        els[key].style.width = `${Math.max(0, Math.min(100, (value || 0) * 100))}%`;
+      }
+    });
+    if (els.opSara) {
+      els.opSara.title = `S ${Math.round((adiosOil.saturates || 0) * 100)}% | A ${Math.round((adiosOil.aromatics || 0) * 100)}% | R ${Math.round((adiosOil.resins || 0) * 100)}% | As ${Math.round((adiosOil.asphaltenes || 0) * 100)}%`;
+    }
+    return;
+  }
+
+  els.opApi.textContent = simpleOil?.label?.match(/API\s*(\d+)/i)?.[1] || "—";
+  els.opRho.textContent = Number.isFinite(simpleOil?.rho) ? `${simpleOil.rho} kg/m³` : "—";
+  els.opEvap.textContent = Number.isFinite(simpleOil?.tau_h) ? `t1/2 ${simpleOil.tau_h} h` : "—";
+  els.opEmuls.textContent = "—";
+  ["saraS", "saraA", "saraR", "saraAs"].forEach((key) => {
+    if (els[key]) {
+      els[key].style.width = "25%";
+    }
+  });
+  if (els.opSara) {
+    els.opSara.title = "Detailed SARA unavailable for this fallback oil preset.";
+  }
+}
+
 function buildPresetOptions(preferredId) {
   const presets = SCENARIO_PRESETS[activeScenario];
   els.scenarioPreset.innerHTML = presets.map((preset) => `<option value="${preset.id}">${preset.label}</option>`).join("");
@@ -2261,6 +2314,7 @@ function applyPreset(presetId, announce = true) {
   renderPresetCards();
   updatePresetGuide();
   updateScenarioBadges();
+  updateOilProperties();
   updateStoryCard();
 }
 
@@ -2275,6 +2329,7 @@ function setScenario(scenario, preservePreset) {
   els.responseCard.style.display = scenario === "oil" ? "" : "none";
   buildPresetOptions(preservePreset ? els.scenarioPreset.value : null);
   updateScenarioBadges();
+  updateOilProperties();
   updateStoryCard();
 }
 
@@ -2471,6 +2526,11 @@ function collectDomRefs() {
     layerTrails: document.getElementById("layerTrails"),
     layerUncertainty: document.getElementById("layerUncertainty"),
     oilParams: document.getElementById("oil-params"),
+    opApi: document.getElementById("op-api"),
+    opEmuls: document.getElementById("op-emuls"),
+    opEvap: document.getElementById("op-evap"),
+    opRho: document.getElementById("op-rho"),
+    opSara: document.getElementById("op-sara"),
     oilType: document.getElementById("oilType"),
     oilVol: document.getElementById("oilVol"),
     playBtn: document.getElementById("playBtn"),
@@ -2487,6 +2547,10 @@ function collectDomRefs() {
     runProgress: document.getElementById("run-progress"),
     runStatus: document.getElementById("run-status"),
     scenarioPreset: document.getElementById("scenarioPreset"),
+    saraA: document.getElementById("sara-A"),
+    saraAs: document.getElementById("sara-As"),
+    saraR: document.getElementById("sara-R"),
+    saraS: document.getElementById("sara-S"),
     speedScaleMax: document.getElementById("speed-scale-max"),
     speedScaleMid: document.getElementById("speed-scale-mid"),
     summaryData: document.getElementById("summary-data"),
@@ -2667,6 +2731,12 @@ function wireUi() {
   });
 
   els.scenarioPreset.onchange = () => applyPreset(els.scenarioPreset.value);
+  if (els.oilType) {
+    els.oilType.onchange = () => {
+      updateOilProperties();
+      updateStoryCard();
+    };
+  }
   els.runBtn.onclick = runEnsemble;
   els.clearBtn.onclick = clearRun;
   els.copyLinkBtn.onclick = copyShareLink;
@@ -2757,6 +2827,7 @@ async function boot() {
   buildOilOptions();
   buildPresetOptions();
   setScenario("leeway", true);
+  updateOilProperties();
   syncWindControls();
   updateDataQualityPanel();
   syncLayerInputs();
