@@ -1481,7 +1481,7 @@ function updateResultsPanel(force) {
 
   const metrics = frame.metrics;
   if (els.areaHud) {
-    els.areaHud.style.display = "";
+    els.areaHud.style.display = "none";
     els.hudFootprint.textContent = `${fmt(metrics.footprintKm2, 2)} km²`;
     els.hudTrail.textContent = `${fmt(frame.trailKm2 ?? 0, 2)} km²`;
   }
