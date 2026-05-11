@@ -68,7 +68,7 @@ const els = {};
 /* Leaflet owns the geographic view and projection math. Canvas overlays are
    layered above it for field rendering, tracers, and drift results. */
 const DEFAULT_CONTEXT_CENTER = [26.2, 53.35];
-const DEFAULT_CONTEXT_ZOOM = 6;
+const DEFAULT_CONTEXT_ZOOM = 7;
 const WIDE_GULF_CONTEXT_BOUNDS = {
   south: 21.45,
   west: 46.55,
@@ -144,7 +144,7 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.p
   opacity: 1,
   subdomains: "abcd",
 }).addTo(map);
-L.control.scale({ position: 'bottomleft', imperial: false, maxWidth: 62 }).addTo(map);
+L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
 /* MarineTraffic does not expose a reliable public Leaflet tile endpoint for
    live AIS density here, so the app opens a synced external MarineTraffic view
@@ -195,13 +195,13 @@ function fitMapToDataDomain() {
       Math.max(WIDE_GULF_CONTEXT_BOUNDS.east, Field.grid.lonMax + lonSpan * 0.12),
     ]
   );
-  const rightPadding = Math.min(580, Math.max(48, window.innerWidth * 0.30));
   map.fitBounds(bounds, {
     paddingTopLeft: [36, 36],
-    paddingBottomRight: [rightPadding, 48],
+    paddingBottomRight: [36, 48],
     maxZoom: DEFAULT_CONTEXT_ZOOM,
     animate: false,
   });
+  map.setView(DEFAULT_CONTEXT_CENTER, DEFAULT_CONTEXT_ZOOM, { animate: false });
 }
 
 function ellipseLatLngs(center, radiusLongM, radiusShortM, steps = 96, rotationRad = 0) {
