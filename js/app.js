@@ -67,23 +67,84 @@ const els = {};
 
 /* Leaflet owns the geographic view and projection math. Canvas overlays are
    layered above it for field rendering, tracers, and drift results. */
-const map = L.map("map", { zoomControl: false, preferCanvas: true, attributionControl: false }).setView([26.0, 53.25], 7);
-L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-  attribution: "&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
-  maxZoom: 19,
-}).addTo(map);
+const DEFAULT_CONTEXT_CENTER = [26.2, 53.35];
+const DEFAULT_CONTEXT_ZOOM = 6;
+const WIDE_GULF_CONTEXT_BOUNDS = {
+  south: 21.45,
+  west: 46.55,
+  north: 31.05,
+  east: 60.35,
+};
+
+const map = L.map("map", {
+  zoomControl: false,
+  preferCanvas: true,
+  attributionControl: false,
+  zoomSnap: 0.25,
+  zoomDelta: 0.5,
+}).setView(DEFAULT_CONTEXT_CENTER, DEFAULT_CONTEXT_ZOOM);
+map.getContainer().classList.add("greenpeace-reference-map");
+
+/* Greenpeace's Hormuz page uses this Mapbox style:
+   mapbox://styles/greenpeacegmh/cmmafi82g002z01pbhzceg6m3.
+   Its raster tiles are restricted to the Greenpeace domain, so localhost and
+   GitHub Pages fall back to a public dark CARTO basemap unless an authorized
+   token is supplied through window.TRIDEL_MAPBOX_TOKEN or ?mapbox_token=... */
+const GREENPEACE_MAPBOX_STYLE = {
+  owner: "greenpeacegmh",
+  id: "cmmafi82g002z01pbhzceg6m3",
+};
+const mapboxToken = window.TRIDEL_MAPBOX_TOKEN || new URLSearchParams(window.location.search).get("mapbox_token");
+const publicDarkAttribution = "&copy; OpenStreetMap contributors &copy; CARTO";
+
+function addPublicDarkBasemap() {
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
+    attribution: publicDarkAttribution,
+    className: "greenpeace-reference-base",
+    detectRetina: true,
+    maxZoom: 20,
+    subdomains: "abcd",
+  }).addTo(map);
+}
+
+if (mapboxToken) {
+  let exactMapFailed = false;
+  const exactGreenpeaceLayer = L.tileLayer(
+    `https://api.mapbox.com/styles/v1/${GREENPEACE_MAPBOX_STYLE.owner}/${GREENPEACE_MAPBOX_STYLE.id}/tiles/512/{z}/{x}/{y}?access_token=${encodeURIComponent(mapboxToken)}`,
+    {
+      attribution: "&copy; Mapbox &copy; OpenStreetMap",
+      className: "greenpeace-reference-base",
+      maxZoom: 20,
+      tileSize: 512,
+      zoomOffset: -1,
+    }
+  ).addTo(map);
+
+  exactGreenpeaceLayer.once("tileerror", () => {
+    if (exactMapFailed) return;
+    exactMapFailed = true;
+    map.removeLayer(exactGreenpeaceLayer);
+    addPublicDarkBasemap();
+  });
+} else {
+  addPublicDarkBasemap();
+}
+
 /* Keep country, city, and shoreline names readable above the animated current
    field by rendering labels in a dedicated pane over the canvas overlays. */
 const labelsPane = map.createPane("labels");
 labelsPane.style.zIndex = "650";
 labelsPane.style.pointerEvents = "none";
-L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png", {
   pane: "labels",
-  attribution: "&copy; Esri &mdash; World Boundaries and Places",
-  maxZoom: 19,
-  opacity: 0.95,
+  attribution: publicDarkAttribution,
+  className: "greenpeace-reference-labels",
+  detectRetina: true,
+  maxZoom: 20,
+  opacity: 1,
+  subdomains: "abcd",
 }).addTo(map);
-L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
+L.control.scale({ position: 'bottomleft', imperial: false, maxWidth: 62 }).addTo(map);
 
 /* MarineTraffic does not expose a reliable public Leaflet tile endpoint for
    live AIS density here, so the app opens a synced external MarineTraffic view
@@ -122,14 +183,23 @@ const FORCING_VISUAL_OFFSET = {
 
 function fitMapToDataDomain() {
   if (!Field.loaded || !Field.grid.lats?.length || !Field.grid.lons?.length) return;
+  const latSpan = Math.max(0.01, Field.grid.latMax - Field.grid.latMin);
+  const lonSpan = Math.max(0.01, Field.grid.lonMax - Field.grid.lonMin);
   const bounds = L.latLngBounds(
-    [Field.grid.latMin, Field.grid.lonMin],
-    [Field.grid.latMax, Field.grid.lonMax]
+    [
+      Math.min(WIDE_GULF_CONTEXT_BOUNDS.south, Field.grid.latMin - latSpan * 0.08),
+      Math.min(WIDE_GULF_CONTEXT_BOUNDS.west, Field.grid.lonMin - lonSpan * 0.08),
+    ],
+    [
+      Math.max(WIDE_GULF_CONTEXT_BOUNDS.north, Field.grid.latMax + latSpan * 0.07),
+      Math.max(WIDE_GULF_CONTEXT_BOUNDS.east, Field.grid.lonMax + lonSpan * 0.12),
+    ]
   );
-  const rightPadding = Math.min(520, Math.max(48, window.innerWidth * 0.32));
+  const rightPadding = Math.min(580, Math.max(48, window.innerWidth * 0.30));
   map.fitBounds(bounds, {
-    paddingTopLeft: [48, 48],
+    paddingTopLeft: [36, 36],
     paddingBottomRight: [rightPadding, 48],
+    maxZoom: DEFAULT_CONTEXT_ZOOM,
     animate: false,
   });
 }
@@ -481,16 +551,21 @@ function showStartupError(message) {
    alive before a scenario is run and while playback is paused. */
 function randomBgParticle() {
   const grid = Field.grid;
+  const layer = Field.hasWind && Math.random() > 0.72
+    ? "wind"
+    : Math.random() > 0.58 ? "depth" : "surface";
   for (let tries = 0; tries < 30; tries += 1) {
     const lon = grid.lonMin + Math.random() * (grid.lonMax - grid.lonMin);
     const lat = grid.latMin + Math.random() * (grid.latMax - grid.latMin);
-    const cur = Field.sampleCurrent(lon, lat, tIdxToSec(tIdx));
-    if (cur) {
+    const vector = layer === "wind"
+      ? Field.sampleWind(lon, lat, tIdxToSec(tIdx))
+      : Field.sampleCurrent(lon, lat, tIdxToSec(tIdx));
+    if (vector) {
       return {
         lon,
         lat,
         age: 320 + Math.random() * 420,
-        layer: Math.random() > 0.58 ? "depth" : "surface",
+        layer,
       };
     }
   }
@@ -498,7 +573,7 @@ function randomBgParticle() {
     lon: grid.lonMin + Math.random() * (grid.lonMax - grid.lonMin),
     lat: grid.latMin + Math.random() * (grid.latMax - grid.latMin),
     age: 1,
-    layer: Math.random() > 0.58 ? "depth" : "surface",
+    layer,
   };
 }
 
@@ -513,18 +588,22 @@ function makeBgParticles(n) {
    they are a Windy-style visual layer driven directly by the current field. */
 function stepBgParticles(dtReal) {
   const tSec = tIdxToSec(tIdx);
-  const dt = dtReal * 3600 * 2;
+  const currentDt = dtReal * 3600 * 2;
+  const windDt = dtReal * 3600 * 0.38;
   for (const particle of bgParticles) {
-    const cur = Field.sampleCurrent(particle.lon, particle.lat, tSec);
-    if (!cur || particle.age <= 0) {
+    const vector = particle.layer === "wind"
+      ? Field.sampleWind(particle.lon, particle.lat, tSec)
+      : Field.sampleCurrent(particle.lon, particle.lat, tSec);
+    if (!vector || particle.age <= 0) {
       Object.assign(particle, randomBgParticle());
       continue;
     }
     particle.prevLon = particle.lon;
     particle.prevLat = particle.lat;
     particle.prevOK = true;
-    particle.lon += cur.u * dt / mPerDegLon(particle.lat);
-    particle.lat += cur.v * dt / mPerDegLat(particle.lat);
+    const dt = particle.layer === "wind" ? windDt : currentDt;
+    particle.lon += vector.u * dt / mPerDegLon(particle.lat);
+    particle.lat += vector.v * dt / mPerDegLat(particle.lat);
     particle.age -= 1;
     const grid = Field.grid;
     if (particle.lon < grid.lonMin || particle.lon > grid.lonMax || particle.lat < grid.latMin || particle.lat > grid.latMax) {
@@ -724,14 +803,15 @@ function drawBgParticles() {
     return;
   }
   ctx.globalCompositeOperation = "destination-out";
-  ctx.fillStyle = "rgba(0, 0, 0, 0.025)";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.065)";
   ctx.fillRect(0, 0, size.x, size.y);
   ctx.globalCompositeOperation = "source-over";
   ctx.lineCap    = "round";
   const offset = forcingVisualOffsetPx(Field.grid);
-  const drawLayer = (layer, strokeStyle, lineWidth) => {
+  const drawLayer = (layer, strokeStyle, lineWidth, dash = []) => {
     ctx.strokeStyle = strokeStyle;
     ctx.lineWidth = lineWidth;
+    ctx.setLineDash(dash);
     ctx.beginPath();
     for (const particle of bgParticles) {
       if (!particle.prevOK || particle.layer !== layer) {
@@ -743,9 +823,11 @@ function drawBgParticles() {
       ctx.lineTo(b.x + offset.x, b.y + offset.y);
     }
     ctx.stroke();
+    ctx.setLineDash([]);
   };
   drawLayer("surface", "rgba(255, 255, 255, 0.86)", 1.6);
   drawLayer("depth", "rgba(255, 255, 255, 0.68)", 1.35);
+  drawLayer("wind", "rgba(255, 190, 86, 0.95)", 1.9, [8, 6]);
   for (const particle of bgParticles) {
     particle.prevOK = false;
   }
@@ -1486,7 +1568,9 @@ function updateResultsPanel(force) {
     els.hudTrail.textContent = `${fmt(frame.trailKm2 ?? 0, 2)} km²`;
   }
 
-  const centroidText = Number.isFinite(metrics.centroidLat) && Number.isFinite(metrics.centroidLon) ? `${metrics.centroidLat.toFixed(3)} N, ${metrics.centroidLon.toFixed(3)} E` : "Waiting for playback";
+  const centroidText = Number.isFinite(metrics.centroidLat) && Number.isFinite(metrics.centroidLon)
+    ? `${metrics.centroidLat.toFixed(3)}&nbsp;N, ${metrics.centroidLon.toFixed(3)}&nbsp;E`
+    : "Waiting for playback";
   const oilCards = activeRun.scenario === "oil" && oilSlickModel ? `
     <div class="result-card">
       <span class="result-label">Oil radius</span>
@@ -1520,7 +1604,7 @@ function updateResultsPanel(force) {
       <span class="result-value">${fmt(metrics.sigmaKm, 2)} km</span>
       <span class="result-subvalue">One-sigma ensemble spread</span>
     </div>
-    <div class="result-card">
+    <div class="result-card centroid-card">
       <span class="result-label">Centroid</span>
       <span class="result-value">${centroidText}</span>
       <span class="result-subvalue">Current ensemble center</span>
@@ -2559,7 +2643,11 @@ function wireUi() {
   }
   if (els.showMapUiBtn) {
     els.showMapUiBtn.onclick = () => {
+      focusMode = false;
       mapChromeHidden = false;
+      if (els.focusBtn) {
+        els.focusBtn.textContent = "Focus mode";
+      }
       updateBodyState();
     };
   }

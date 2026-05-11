@@ -22,7 +22,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="icon" type="image/png" href="assets/tridel.png" />
-  <link rel="stylesheet" href="css/style.css?v=45" />
+  <link rel="stylesheet" href="css/style.css?v=48" />
+  <link rel="stylesheet" href="css/ui-cleanup.css?v=7" />
 </head>
 
 <body>
@@ -116,7 +117,7 @@
 
       <!-- Playback and quick-run controls live in the right rail so the left side
          stays map-only. -->
-      <div class="panel-section-label">Playback</div>
+      <div class="panel-section-label label-playback">Playback</div>
       <div id="controls">
         <div class="row controls-top">
           <div class="control-cluster">
@@ -156,14 +157,6 @@
           </div>
         </div>
 
-        <div class="reference-control-row">
-          <div class="reference-control-label">
-            <span>Current Speed</span>
-            <strong>2.8 knots</strong>
-          </div>
-          <input class="reference-faux-range" type="range" min="0" max="5" step="0.1" value="2.8" aria-label="Current speed display" disabled />
-        </div>
-
         <div class="timeline-meta">
           <span id="timeline-start">Start -</span>
           <div class="control-cluster">
@@ -178,7 +171,7 @@
         <div class="dim" id="data-meta">-</div>
       </div>
 
-      <div class="panel-section-label">Mission Context</div>
+      <div class="panel-section-label label-mission">Mission Context</div>
       <div class="section-card intro-card" id="mission-summary">
         <p class="lede">
           A Tridel research page for exploring live oil-spill and drifter trajectories using operational
@@ -256,7 +249,7 @@
         <div id="data-quality-note" class="hint">Dataset metadata will appear after the forcing file loads.</div>
       </div>
 
-      <div class="panel-section-label">Run Setup</div>
+      <div class="panel-section-label label-run-setup">Scenario Builder</div>
       <!-- Scenario family selector. This switches the active modeling path
          between S&R/leeway behavior and oil/weathering behavior. -->
       <div class="section-card scenario-card">
@@ -327,28 +320,6 @@
           <label>Tracers</label>
           <input id="nSlider" type="range" min="0" max="5000" step="100" value="2000" />
           <span id="n-label" class="val">2000</span>
-        </div>
-      </div>
-
-      <div class="section-card reference-telemetry-card" aria-label="Current telemetry preview">
-        <h3>Max Velocity (knots) / Time</h3>
-        <svg viewBox="0 0 260 92" role="img" aria-label="Velocity trend line">
-          <defs>
-            <linearGradient id="telemetryGlow" x1="0" x2="1" y1="0" y2="0">
-              <stop offset="0" stop-color="#23f8ff" stop-opacity=".55" />
-              <stop offset=".58" stop-color="#23f8ff" />
-              <stop offset="1" stop-color="#ff9b43" />
-            </linearGradient>
-          </defs>
-          <path class="telemetry-grid" d="M0 72H260M0 46H260M0 20H260" />
-          <path class="telemetry-fill" d="M0 74 C12 58 18 40 34 43 S58 39 68 58 S88 22 104 18 S124 70 144 57 S166 26 180 44 S202 15 214 36 S236 20 260 30 L260 92 L0 92 Z" />
-          <path class="telemetry-line" d="M0 74 C12 58 18 40 34 43 S58 39 68 58 S88 22 104 18 S124 70 144 57 S166 26 180 44 S202 15 214 36 S236 20 260 30" />
-        </svg>
-        <div class="reference-readouts">
-          <span>Lat: 26 45' N</span>
-          <span>Lon: 56 10' E</span>
-          <span>Velocity: 2.1 knots</span>
-          <span>Direction: 112 deg</span>
         </div>
       </div>
 
@@ -484,7 +455,7 @@
         </div>
       </div>
 
-      <div class="panel-section-label">Visual Layers</div>
+      <div class="panel-section-label label-visual">Visual Layers</div>
       <!-- Purely visual toggles. These change rendering only, not the underlying
          physical run that has already been precomputed. -->
       <div class="section-card visual-overlay-card">
@@ -503,7 +474,7 @@
         </div>
       </div>
 
-      <div class="panel-section-label">Run And Outputs</div>
+      <div class="panel-section-label label-run-outputs">Run And Outputs</div>
       <!-- Run/start/clear/export affordances for the active scenario. -->
       <div class="section-card run-share-card">
         <h3>Run and share</h3>
@@ -547,7 +518,7 @@
         <div class="hint" id="emulsion-note" style="margin-top:8px"></div>
       </div>
 
-      <div class="panel-section-label">Validate And Provenance</div>
+      <div class="panel-section-label label-validate">Validate And Provenance</div>
       <!-- Official-tool handoff. This stays in the side panel instead of inside
          the map so the map viewport remains clean on smaller laptops. -->
       <div class="section-card webgnome-card">
@@ -662,7 +633,7 @@
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <script src="js/field.js?v=6"></script>
   <script src="js/drift.js?v=4"></script>
-  <script src="js/app.js?v=42"></script>
+  <script src="js/app.js?v=49"></script>
 </body>
 
 </html>

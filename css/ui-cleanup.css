@@ -1,0 +1,629 @@
+/*
+  Final UI cleanup layer.
+  Keep this file as the single source for the current Tridel map layout so the
+  older experimental rules in style.css do not keep fighting new UI fixes.
+*/
+
+:root {
+  --ui-cyan: #23f8ff;
+  --ui-blue: #12aee7;
+  --ui-amber: #ffbe56;
+  --ui-ink: #03111f;
+  --ui-glass: rgba(5, 18, 27, 0.54);
+  --ui-glass-strong: rgba(4, 18, 33, 0.72);
+  --ui-line: rgba(70, 236, 255, 0.32);
+  --ui-text: rgba(244, 250, 255, 0.94);
+  --ui-muted: rgba(218, 232, 244, 0.68);
+  --ui-shadow: 0 18px 54px rgba(0, 0, 0, 0.34);
+  --ui-glass-card:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.035) 46%, rgba(0, 38, 58, 0.28)),
+    var(--ui-glass);
+}
+
+body:not(.compact-reference-ui) #app {
+  grid-template-columns: minmax(760px, 1fr) 420px !important;
+}
+
+body:not(.compact-reference-ui) #banner,
+body:not(.compact-reference-ui) #side,
+body:not(.compact-reference-ui) #controls,
+body:not(.compact-reference-ui) #side > .section-card,
+body:not(.compact-reference-ui) .current-scenario-card {
+  border: 1px solid var(--ui-line) !important;
+  background: var(--ui-glass-card) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    var(--ui-shadow) !important;
+  backdrop-filter: blur(28px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(170%) !important;
+}
+
+body:not(.compact-reference-ui) #banner {
+  left: 32px !important;
+  top: 18px !important;
+  width: 500px !important;
+  max-width: calc(100vw - 520px) !important;
+  padding: 16px 22px 18px !important;
+  border-radius: 24px !important;
+  gap: 14px !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-lockup {
+  gap: 16px !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-logo {
+  width: 76px !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-name {
+  color: #ffffff !important;
+  font-size: 36px !important;
+  letter-spacing: .18em !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy {
+  gap: 6px !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy b {
+  color: #ffffff !important;
+  font-size: 22px !important;
+  line-height: 1.08 !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy span {
+  color: var(--ui-muted) !important;
+  font-size: 12px !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy a {
+  width: fit-content !important;
+  padding: 9px 16px !important;
+  border-radius: 999px !important;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, var(--ui-cyan), var(--ui-blue)) !important;
+  font-weight: 900 !important;
+  text-decoration: none !important;
+}
+
+body:not(.compact-reference-ui) #banner .partner-logo {
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+}
+
+body:not(.compact-reference-ui) #side {
+  top: 18px !important;
+  right: 22px !important;
+  bottom: 18px !important;
+  width: 410px !important;
+  max-height: calc(100vh - 36px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 14px !important;
+  border-radius: 24px !important;
+  color: var(--ui-text) !important;
+  scrollbar-color: rgba(35, 248, 255, 0.75) rgba(255, 255, 255, 0.08) !important;
+}
+
+body:not(.compact-reference-ui) #side > .side-header,
+body:not(.compact-reference-ui) #side > .current-scenario-card {
+  position: relative !important;
+  top: auto !important;
+  margin: 0 0 10px !important;
+  padding: 12px !important;
+  border-radius: 18px !important;
+}
+
+body:not(.compact-reference-ui) #side > .side-header {
+  order: 10 !important;
+}
+
+body:not(.compact-reference-ui) #side > .current-scenario-card {
+  order: 20 !important;
+}
+
+body:not(.compact-reference-ui) #side .side-header h2 {
+  color: #ffffff !important;
+  font-size: 17px !important;
+  letter-spacing: .18em !important;
+}
+
+body:not(.compact-reference-ui) #side .dim,
+body:not(.compact-reference-ui) #side .hint {
+  color: var(--ui-muted) !important;
+}
+
+body:not(.compact-reference-ui) .summary-kicker,
+body:not(.compact-reference-ui) .panel-section-label {
+  color: var(--ui-cyan) !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: .22em !important;
+  text-transform: uppercase !important;
+}
+
+body:not(.compact-reference-ui) .current-scenario-card strong {
+  color: #ffffff !important;
+  font-size: 18px !important;
+  line-height: 1.1 !important;
+}
+
+body:not(.compact-reference-ui) .summary-chip-row {
+  gap: 6px !important;
+}
+
+body:not(.compact-reference-ui) .summary-chip-row span,
+body:not(.compact-reference-ui) #side .tag {
+  border: 1px solid rgba(93, 181, 222, 0.22) !important;
+  color: rgba(230, 242, 250, 0.78) !important;
+  background: rgba(0, 16, 30, 0.46) !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+}
+
+body:not(.compact-reference-ui) #side > .label-playback {
+  order: 30 !important;
+}
+
+body:not(.compact-reference-ui) #side > #controls {
+  order: 40 !important;
+}
+
+body:not(.compact-reference-ui) #side > .label-run-setup {
+  order: 50 !important;
+}
+
+body:not(.compact-reference-ui) #side > .scenario-card {
+  order: 60 !important;
+}
+
+body:not(.compact-reference-ui) #side > .release-physics-card {
+  order: 70 !important;
+}
+
+body:not(.compact-reference-ui) #side > .playback-tuning-card {
+  order: 80 !important;
+}
+
+body:not(.compact-reference-ui) #side > .label-visual {
+  order: 90 !important;
+}
+
+body:not(.compact-reference-ui) #side > .visual-overlay-card {
+  order: 100 !important;
+}
+
+body:not(.compact-reference-ui) #side > .data-quality-card {
+  order: 110 !important;
+}
+
+body:not(.compact-reference-ui) #side > .label-mission {
+  order: 130 !important;
+}
+
+body:not(.compact-reference-ui) #side > .intro-card {
+  order: 140 !important;
+}
+
+body:not(.compact-reference-ui) #side > .tridel-area-card {
+  order: 150 !important;
+}
+
+body:not(.compact-reference-ui) #side > .marinetraffic-card {
+  order: 160 !important;
+}
+
+body:not(.compact-reference-ui) #side > #response-card {
+  order: 170 !important;
+}
+
+body:not(.compact-reference-ui) #side > .label-run-outputs {
+  order: 180 !important;
+}
+
+body:not(.compact-reference-ui) #side > .run-share-card {
+  order: 190 !important;
+}
+
+body:not(.compact-reference-ui) #side > #oil-budget-card {
+  order: 200 !important;
+}
+
+body:not(.compact-reference-ui) #side > .label-validate {
+  order: 210 !important;
+}
+
+body:not(.compact-reference-ui) #side > .webgnome-card {
+  order: 220 !important;
+}
+
+body:not(.compact-reference-ui) #side > .data-provenance-card {
+  order: 230 !important;
+}
+
+body:not(.compact-reference-ui) #side > .caveat-card {
+  order: 240 !important;
+}
+
+body:not(.compact-reference-ui) #side > .label-results,
+body:not(.compact-reference-ui) #side > .results-card {
+  display: none !important;
+}
+
+body:not(.compact-reference-ui) .panel-section-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 12px 2px 7px !important;
+}
+
+body:not(.compact-reference-ui) #side > .label-run-setup {
+  margin-top: 2px !important;
+}
+
+body:not(.compact-reference-ui) .panel-section-label::after {
+  content: "" !important;
+  flex: 1 !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, rgba(35, 248, 255, 0.32), transparent) !important;
+}
+
+body:not(.compact-reference-ui) #controls,
+body:not(.compact-reference-ui) #side > .section-card {
+  margin: 0 0 10px !important;
+  padding: 12px !important;
+  border-radius: 18px !important;
+}
+
+body:not(.compact-reference-ui) #controls {
+  display: grid !important;
+  grid-auto-rows: max-content !important;
+  gap: 10px !important;
+  height: auto !important;
+  min-height: max-content !important;
+  max-height: none !important;
+  overflow: visible !important;
+  margin-bottom: 18px !important;
+}
+
+body:not(.compact-reference-ui) #controls > * {
+  position: static !important;
+}
+
+body:not(.compact-reference-ui) #controls .controls-top {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  min-height: max-content !important;
+  overflow: visible !important;
+}
+
+body:not(.compact-reference-ui) #controls .control-cluster {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  min-height: max-content !important;
+}
+
+body:not(.compact-reference-ui) #controls #playBtn,
+body:not(.compact-reference-ui) #controls #quickRunRailBtn,
+body:not(.compact-reference-ui) #controls #focusBtn {
+  min-height: 38px !important;
+  padding: 9px 12px !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+}
+
+body:not(.compact-reference-ui) #controls #controlScenario {
+  display: inline-flex !important;
+  min-height: 38px !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+}
+
+body:not(.compact-reference-ui) #controls #time-window-label,
+body:not(.compact-reference-ui) #controls #timeline-phase {
+  display: none !important;
+}
+
+body:not(.compact-reference-ui) #controls .timeline-head {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  gap: 8px !important;
+  min-height: max-content !important;
+  overflow: visible !important;
+}
+
+body:not(.compact-reference-ui) #controls #time-label {
+  display: block !important;
+  padding: 8px 10px !important;
+  border-radius: 12px !important;
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+}
+
+body:not(.compact-reference-ui) #controls #time-label::before,
+body:not(.compact-reference-ui) #controls #time-label::after {
+  content: none !important;
+}
+
+body:not(.compact-reference-ui) #controls .time-step-control {
+  display: grid !important;
+  gap: 7px !important;
+  padding: 6px 0 0 !important;
+  min-height: max-content !important;
+}
+
+body:not(.compact-reference-ui) #controls .time-step-options {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 5px !important;
+}
+
+body:not(.compact-reference-ui) #controls .time-step-option {
+  min-width: 0 !important;
+  min-height: 30px !important;
+  padding: 7px 4px !important;
+  border-radius: 999px !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+}
+
+body:not(.compact-reference-ui) #controls .timeline-meta {
+  display: grid !important;
+  grid-template-columns: minmax(72px, .8fr) minmax(0, 1.3fr) minmax(72px, .8fr) !important;
+  gap: 8px !important;
+  min-height: max-content !important;
+}
+
+body:not(.compact-reference-ui) #controls .timeline-meta .control-cluster {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+}
+
+body:not(.compact-reference-ui) #controls .timeline-meta button {
+  min-height: 28px !important;
+  padding: 5px 4px !important;
+  font-size: 10px !important;
+}
+
+body:not(.compact-reference-ui) #controls #data-meta {
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+}
+
+body:not(.compact-reference-ui) #side .scenario-card .scenario-tabs {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 7px !important;
+}
+
+body:not(.compact-reference-ui) #side .preset-card-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+}
+
+body:not(.compact-reference-ui) #side .preset-card {
+  min-height: 0 !important;
+  padding: 9px !important;
+  border-radius: 14px !important;
+}
+
+body:not(.compact-reference-ui) #side .preset-card strong {
+  font-size: 12px !important;
+}
+
+body:not(.compact-reference-ui) #side .preset-card span,
+body:not(.compact-reference-ui) #side .preset-guide,
+body:not(.compact-reference-ui) #side .term-card span {
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+}
+
+body:not(.compact-reference-ui) #side .term-grid,
+body:not(.compact-reference-ui) #side .quality-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+}
+
+body:not(.compact-reference-ui) #side .term-card,
+body:not(.compact-reference-ui) #side .quality-grid > div {
+  padding: 8px !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+}
+
+body:not(.compact-reference-ui) #side .visual-overlay-card .toggle-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+}
+
+body:not(.compact-reference-ui) #side .visual-overlay-card .check-pill,
+body:not(.compact-reference-ui) #side .visual-overlay-card .check-pill:nth-child(n+5) {
+  min-height: 50px !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  justify-items: center !important;
+  gap: 5px !important;
+  padding: 8px 6px !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  font-size: 10px !important;
+  text-align: center !important;
+}
+
+body:not(.compact-reference-ui) #side .visual-overlay-card .check-pill input[type="checkbox"] {
+  width: 40px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+}
+
+body:not(.compact-reference-ui) #side .visual-overlay-card .hint {
+  margin-top: 8px !important;
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+}
+
+body:not(.compact-reference-ui) .map-status-chips {
+  display: none !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only {
+  top: 34px !important;
+  right: 462px !important;
+  left: auto !important;
+  width: 132px !important;
+  height: 132px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only::before {
+  content: none !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-compass {
+  width: 132px !important;
+  height: 132px !important;
+  border-color: rgba(255, 255, 255, 0.74) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-disc {
+  width: 78px !important;
+  height: 78px !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-label {
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  text-shadow: 0 2px 9px rgba(0, 0, 0, 0.88) !important;
+}
+
+body:not(.compact-reference-ui) #map-shell > .results-card {
+  left: 42px !important;
+  bottom: 34px !important;
+  width: 360px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+}
+
+body:not(.compact-reference-ui) #map-shell > .results-card h3,
+body:not(.compact-reference-ui) #map-shell > .results-card #ts-plot,
+body:not(.compact-reference-ui) #map-shell > .results-card .result-subvalue {
+  display: none !important;
+}
+
+body:not(.compact-reference-ui) #map-shell > .results-card #results {
+  display: grid !important;
+  grid-template-columns: minmax(0, 0.86fr) minmax(190px, 1.14fr) !important;
+  gap: 12px 24px !important;
+}
+
+body:not(.compact-reference-ui) #map-shell > .results-card .result-card {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body:not(.compact-reference-ui) #map-shell > .results-card .result-label {
+  color: var(--ui-cyan) !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: .18em !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.86) !important;
+}
+
+body:not(.compact-reference-ui) #map-shell > .results-card .result-value {
+  color: #ffffff !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  line-height: 1.08 !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.92), 0 0 18px rgba(0, 18, 32, 0.72) !important;
+}
+
+body:not(.compact-reference-ui) #map-shell > .results-card .centroid-card {
+  min-width: 190px !important;
+}
+
+body:not(.compact-reference-ui) #map-shell > .results-card .centroid-card .result-value {
+  display: inline-block !important;
+  white-space: nowrap !important;
+  font-size: 17px !important;
+  letter-spacing: -0.02em !important;
+}
+
+#map.greenpeace-reference-map .leaflet-tile-pane .leaflet-tile {
+  filter: grayscale(0.34) brightness(1.72) contrast(0.76) saturate(0.46) !important;
+}
+
+#map.greenpeace-reference-map::after {
+  background:
+    radial-gradient(circle at 52% 42%, transparent 0%, transparent 52%, rgba(0, 0, 0, 0.06) 100%),
+    linear-gradient(90deg, rgba(0, 15, 30, 0.06), transparent 24%, transparent 76%, rgba(0, 15, 30, 0.06)) !important;
+}
+
+#map.greenpeace-reference-map .leaflet-labels-pane .leaflet-tile {
+  filter: brightness(1.18) contrast(1.12) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85)) !important;
+  opacity: 1 !important;
+}
+
+body.focus-mode #banner,
+body.focus-mode #side,
+body.focus-mode .reference-current-legend,
+body.focus-mode .map-status-chips,
+body.focus-mode #map-shell > .results-card,
+body.focus-mode .area-hud,
+body.focus-mode .leaflet-control-scale {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body.focus-mode #showMapUiBtn,
+body.map-chrome-hidden #showMapUiBtn {
+  display: inline-flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+body:not(.compact-reference-ui) .map-ui-show-btn,
+body:not(.compact-reference-ui) .map-ui-hide-btn {
+  border-color: rgba(35, 248, 255, 0.36) !important;
+  background: rgba(4, 18, 33, 0.72) !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 1320px) {
+  body:not(.compact-reference-ui) #banner {
+    width: 390px !important;
+  }
+
+  body:not(.compact-reference-ui) #banner .brand-name {
+    font-size: 30px !important;
+  }
+
+  body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only {
+    right: 438px !important;
+  }
+}
