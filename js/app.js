@@ -72,6 +72,17 @@ L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/
   attribution: "&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
   maxZoom: 19,
 }).addTo(map);
+/* Keep country, city, and shoreline names readable above the animated current
+   field by rendering labels in a dedicated pane over the canvas overlays. */
+const labelsPane = map.createPane("labels");
+labelsPane.style.zIndex = "650";
+labelsPane.style.pointerEvents = "none";
+L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+  pane: "labels",
+  attribution: "&copy; Esri &mdash; World Boundaries and Places",
+  maxZoom: 19,
+  opacity: 0.95,
+}).addTo(map);
 L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
 /* MarineTraffic does not expose a reliable public Leaflet tile endpoint for
