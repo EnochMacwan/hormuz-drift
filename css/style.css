@@ -4947,8 +4947,7 @@ body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direct
 }
 
 body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-compass::before,
-body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-compass::after,
-body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-label {
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-compass::after {
   display: none !important;
 }
 
@@ -4958,4 +4957,28 @@ body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direct
   box-shadow:
     0 0 18px rgba(255, 255, 255, 0.18),
     inset 0 0 0 1px rgba(255, 255, 255, 0.18) !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-label {
+  display: block !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.82) !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-label-n {
+  top: 8px !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-label-e {
+  right: 8px !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-label-s {
+  bottom: 8px !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-label-w {
+  left: 8px !important;
 }
