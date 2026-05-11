@@ -4696,3 +4696,177 @@ body:not(.compact-reference-ui) .reference-current-legend {
   padding: 14px 16px !important;
   font-size: 16px !important;
 }
+
+/* Hand-sketched dashboard composition: keep the map dominant while turning the
+   functional blocks into separate floating islands. */
+body:not(.compact-reference-ui) #banner {
+  top: 28px !important;
+  left: 42px !important;
+  width: 310px !important;
+  min-width: 0 !important;
+  max-width: 310px !important;
+  padding: 18px !important;
+  gap: 14px !important;
+  border-radius: 18px !important;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(35, 248, 255, 0.13), transparent 38%),
+    linear-gradient(135deg, rgba(20, 29, 31, 0.90), rgba(4, 18, 33, 0.78)) !important;
+  border-color: rgba(35, 248, 255, 0.30) !important;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.42) !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-lockup {
+  gap: 14px !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-logo {
+  width: 56px !important;
+  height: 56px !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-name {
+  font-size: 22px !important;
+  letter-spacing: .18em !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy b {
+  max-width: none !important;
+  font-size: 18px !important;
+  line-height: 1.12 !important;
+  white-space: normal !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy a {
+  justify-self: start !important;
+  min-width: 0 !important;
+  padding: 10px 16px !important;
+  font-size: 14px !important;
+}
+
+body:not(.compact-reference-ui) #banner .partner-logo {
+  height: 52px !important;
+  padding: 6px 14px !important;
+}
+
+body:not(.compact-reference-ui) #banner .partner-logo img {
+  max-height: 38px !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend {
+  top: 34px !important;
+  left: auto !important;
+  right: 472px !important;
+  width: 230px !important;
+  max-width: 230px !important;
+  min-width: 0 !important;
+  padding: 13px 15px !important;
+  border-radius: 16px !important;
+  color: rgba(242, 249, 255, 0.90) !important;
+  background:
+    linear-gradient(135deg, rgba(4, 18, 33, 0.74), rgba(6, 45, 66, 0.54)) !important;
+  border: 1px solid rgba(35, 248, 255, 0.28) !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36) !important;
+  backdrop-filter: blur(16px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(150%) !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend::before {
+  content: "Direction colors";
+  display: block;
+  margin-bottom: 8px;
+  color: #23f8ff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend div {
+  font-size: 12px !important;
+  line-height: 1.28 !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend strong {
+  color: #23f8ff !important;
+}
+
+body:not(.compact-reference-ui) .reference-current-legend .flow-key {
+  margin-top: 8px !important;
+}
+
+body:not(.compact-reference-ui) #side {
+  top: 28px !important;
+  right: 32px !important;
+  bottom: auto !important;
+  width: 390px !important;
+  max-height: calc(100vh - 70px) !important;
+  padding: 18px !important;
+  border-radius: 18px !important;
+  background:
+    radial-gradient(circle at 98% 4%, rgba(35, 248, 255, 0.14), transparent 35%),
+    linear-gradient(160deg, rgba(4, 18, 33, 0.88), rgba(8, 38, 61, 0.76)) !important;
+  border-color: rgba(35, 248, 255, 0.30) !important;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.46) !important;
+}
+
+body:not(.compact-reference-ui) #side .side-header {
+  position: sticky !important;
+  top: -18px !important;
+  margin: -18px -18px 12px !important;
+  padding: 18px 18px 14px !important;
+  background: linear-gradient(180deg, rgba(4, 18, 33, 0.96), rgba(4, 18, 33, 0.74)) !important;
+  border-bottom: 1px solid rgba(35, 248, 255, 0.18) !important;
+}
+
+body:not(.compact-reference-ui) #side .side-header h2 {
+  color: #ffffff !important;
+  font-size: 18px !important;
+  letter-spacing: .14em !important;
+}
+
+body:not(.compact-reference-ui) #map-shell > .results-card {
+  position: absolute !important;
+  left: 42px !important;
+  bottom: 34px !important;
+  z-index: 1010 !important;
+  width: 372px !important;
+  max-height: 38vh !important;
+  overflow: auto !important;
+  margin: 0 !important;
+  padding: 16px !important;
+  border: 1px solid rgba(35, 248, 255, 0.24) !important;
+  border-radius: 18px !important;
+  background:
+    linear-gradient(135deg, rgba(4, 18, 33, 0.54), rgba(6, 45, 66, 0.30)) !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34) !important;
+  backdrop-filter: blur(14px) saturate(145%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(145%) !important;
+  pointer-events: auto !important;
+}
+
+body:not(.compact-reference-ui) #map-shell > .results-card h3 {
+  color: #23f8ff !important;
+  letter-spacing: .18em !important;
+  text-transform: uppercase !important;
+}
+
+body:not(.compact-reference-ui) #map-shell > .results-card .result-card,
+body:not(.compact-reference-ui) #map-shell > .results-card #ts-plot {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+body:not(.compact-reference-ui) .map-status-chips {
+  left: 50% !important;
+  right: auto !important;
+  bottom: 28px !important;
+  transform: translateX(-50%) !important;
+  justify-content: center !important;
+  max-width: 560px !important;
+}

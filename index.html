@@ -22,7 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="icon" type="image/png" href="assets/tridel.png" />
-  <link rel="stylesheet" href="css/style.css?v=39" />
+  <link rel="stylesheet" href="css/style.css?v=40" />
 </head>
 
 <body>
@@ -74,6 +74,15 @@
         <span id="map-chip-resolution">Hourly grid</span>
         <span>OpenDRIFT-based physics</span>
       </div>
+      <!-- Fast summary cards and time-series analytics for the current playback
+         instant. Positioned as a transparent map island in the sketch layout. -->
+      <div class="section-card results-card">
+        <h3>Results</h3>
+        <div id="results">
+          <div class="hint">No active simulation.</div>
+        </div>
+        <div id="ts-plot" aria-label="Run analytics chart"></div>
+      </div>
       <button id="showMapUiBtn" class="map-ui-show-btn" type="button">Show map UI</button>
     </div>
 
@@ -83,7 +92,7 @@
       <div class="side-header">
         <div class="side-brand">
           <div>
-            <h2>SIMULATION CONTROLS</h2>
+            <h2>SCENARIO BUILDER</h2>
             <div class="dim">Live Strait of Hormuz response lab</div>
           </div>
         </div>
@@ -551,16 +560,6 @@
         <div id="oil-budget-summary" class="budget-summary-grid"></div>
         <div id="oil-budget-insights" class="budget-insights"></div>
         <div class="hint" id="emulsion-note" style="margin-top:8px"></div>
-      </div>
-
-      <!-- Fast summary cards and time-series analytics for the current playback
-         instant. These update as the user scrubs or plays. -->
-      <div class="section-card results-card">
-        <h3>Results</h3>
-        <div id="results">
-          <div class="hint">No active simulation.</div>
-        </div>
-        <div id="ts-plot" aria-label="Run analytics chart"></div>
       </div>
 
       <div class="panel-section-label">Validate And Provenance</div>
