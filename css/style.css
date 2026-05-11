@@ -4985,3 +4985,45 @@ body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direct
 body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only .direction-label-w {
   left: 0 !important;
 }
+
+/* Compact the visual toggles after removing the side-panel legend card. */
+body:not(.compact-reference-ui) #side .visual-overlay-card {
+  padding: 10px 12px !important;
+}
+
+body:not(.compact-reference-ui) #side .visual-overlay-card h3 {
+  margin-bottom: 8px !important;
+  font-size: 11px !important;
+  letter-spacing: .18em !important;
+}
+
+body:not(.compact-reference-ui) #side .visual-overlay-card .toggle-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+body:not(.compact-reference-ui) #side .visual-overlay-card .check-pill,
+body:not(.compact-reference-ui) #side .visual-overlay-card .check-pill:nth-child(n+5) {
+  grid-template-columns: minmax(0, 1fr) 44px !important;
+  gap: 6px !important;
+  min-height: 24px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+body:not(.compact-reference-ui) #side .visual-overlay-card .check-pill input[type="checkbox"] {
+  width: 42px !important;
+  height: 20px !important;
+  min-height: 20px !important;
+}
+
+body:not(.compact-reference-ui) #side .visual-overlay-card .check-pill input[type="checkbox"]::after {
+  font-size: 9px !important;
+  letter-spacing: .03em !important;
+}
+
+body:not(.compact-reference-ui) #side .visual-overlay-card .hint {
+  margin-top: 8px !important;
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+}
