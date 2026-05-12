@@ -807,7 +807,7 @@ function drawField() {
       const loadedChunks = Field.chunked ? Field.chunks.filter((chunk) => chunk.loaded).length : 0;
       setChunkStatus(`Loading field chunk ${loadedChunks + 1}/${Field.chunks.length}`, true);
       if (els.dataMeta) {
-        els.dataMeta.textContent = `Loading next forcing chunk for ${Field.times[ti0] || "selected time"} UTC; preserving last field while it arrives.`;
+        els.dataMeta.textContent = "Loading forcing data…";
       }
     }
     Field.ensureTimeRange(tIdxToSec(ti0), tIdxToSec(ti1)).then(() => {
@@ -2238,8 +2238,8 @@ function updateTimelinePill() {
     if (hasField) {
       const currentIndex = Math.floor(tIdx);
       const currentSec = tIdxToSec(currentIndex);
-      els.timelineStart.textContent = `Start ${formatTimelineUtc(Field.times[0])} UTC`;
-      els.timelineEnd.textContent = `End ${formatTimelineUtc(Field.times[Field.times.length - 1])} UTC`;
+      els.timelineStart.innerHTML = `<span class="meta-kicker">Start</span> ${formatTimelineUtc(Field.times[0])}`;
+      els.timelineEnd.innerHTML = `<span class="meta-kicker">End</span> ${formatTimelineUtc(Field.times[Field.times.length - 1])}`;
       els.timelineCurrent.textContent = `${formatTimelineUtc(Field.times[currentIndex])} UTC`;
       if (els.summaryWindow) els.summaryWindow.textContent = `${formatTimelineUtc(Field.times[0])} to ${formatTimelineUtc(Field.times[Field.times.length - 1])}`;
       if (els.timelinePhase) els.timelinePhase.textContent = timelinePhaseFor(currentSec);
@@ -2250,8 +2250,8 @@ function updateTimelinePill() {
   const viewSec = clamp(tIdxToSec(tIdx), activeRun.startSec, activeRun.endSec);
   const offsetHours = (viewSec - activeRun.startSec) / 3600;
   els.timeWindowLabel.textContent = `Viewing ${formatRunOffset(offsetHours)} of ${activeRun.durationHours} h`;
-  els.timelineStart.textContent = `Release ${formatTimelineUtc(activeRun.startSec * 1000)} UTC`;
-  els.timelineEnd.textContent = `End ${formatTimelineUtc(activeRun.endSec * 1000)} UTC`;
+  els.timelineStart.innerHTML = `<span class="meta-kicker">Release</span> ${formatTimelineUtc(activeRun.startSec * 1000)}`;
+  els.timelineEnd.innerHTML = `<span class="meta-kicker">End</span> ${formatTimelineUtc(activeRun.endSec * 1000)}`;
   els.timelineCurrent.textContent = `${formatRunOffset(offsetHours)} | ${formatTimelineUtc(viewSec * 1000)} UTC`;
   if (els.summaryWindow) els.summaryWindow.textContent = `${activeRun.durationHours} h window`;
   if (els.timelinePhase) els.timelinePhase.textContent = timelinePhaseFor(viewSec);
@@ -2504,7 +2504,11 @@ function seekHours(deltaHours) {
   } else if (Field.loaded) {
     nextSec = clamp(nextSec, Field.t0Unix, maxDataSec());
   }
-  tIdx = secToTIdx(nextSec);
+  // Snap jumps onto the chosen time-step grid so consecutive presses don't
+  // drift off the slider tick alignment.
+  const nextIdx = snapToTimelineStep(secToTIdx(nextSec));
+  tIdx = nextIdx;
+  if (els.timeSlider) els.timeSlider.value = String(Math.floor(tIdx));
   resetFrameCache();
   updateTimelinePill();
   updateResultsPanel(false);

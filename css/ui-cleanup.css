@@ -1372,3 +1372,104 @@ body:not(.compact-reference-ui) .map-ui-show-btn,
 body:not(.compact-reference-ui) .map-ui-hide-btn:not(.map-toolbar-btn) {
   display: none !important;
 }
+
+/* ── Playback card — Run / Play / Clear as a 2-column grid ──────────────── */
+body:not(.compact-reference-ui) .controls-top .control-cluster {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+}
+
+/* RUN spans both columns — primary CTA gets the visual weight. */
+body:not(.compact-reference-ui) .controls-top .control-cluster #runTopBtn {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-height: 38px !important;
+  padding: 8px 18px !important;
+  font-size: 13px !important;
+}
+
+body:not(.compact-reference-ui) .controls-top .control-cluster #playBtn,
+body:not(.compact-reference-ui) .controls-top .control-cluster #clearTopBtn {
+  width: 100% !important;
+  min-height: 34px !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+}
+
+/* time-window-label tag sits on its own row, no overlap. */
+body:not(.compact-reference-ui) .controls-top {
+  flex-wrap: wrap !important;
+  gap: 6px 12px !important;
+}
+
+/* ── Timeline-meta: tighten the Release / jumps / End row ───────────────── */
+body:not(.compact-reference-ui) .timeline-meta {
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-top: 8px !important;
+}
+
+body:not(.compact-reference-ui) .timeline-meta > #timeline-start,
+body:not(.compact-reference-ui) .timeline-meta > #timeline-end {
+  font-size: 10px !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  color: rgba(218, 232, 244, 0.65) !important;
+  line-height: 1.25 !important;
+  white-space: normal !important;
+}
+
+body:not(.compact-reference-ui) .timeline-meta > #timeline-start { text-align: left !important; }
+body:not(.compact-reference-ui) .timeline-meta > #timeline-end { text-align: right !important; }
+
+body:not(.compact-reference-ui) .timeline-meta .meta-kicker {
+  display: block !important;
+  font-size: 9px !important;
+  letter-spacing: 0.18em !important;
+  color: var(--ui-cyan) !important;
+  opacity: 0.7 !important;
+  margin-bottom: 2px !important;
+}
+
+body:not(.compact-reference-ui) .timeline-meta > #timeline-start,
+body:not(.compact-reference-ui) .timeline-meta > #timeline-end {
+  font-family: "JetBrains Mono", "Fira Mono", "Consolas", monospace !important;
+  font-size: 11px !important;
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+  color: rgba(244, 250, 255, 0.85) !important;
+}
+
+/* Jump buttons — compact ghost pills inline. */
+body:not(.compact-reference-ui) .timeline-meta .control-cluster {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  gap: 4px !important;
+}
+
+body:not(.compact-reference-ui) .timeline-meta .control-cluster button.ghost.small {
+  min-height: 28px !important;
+  padding: 4px 8px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  border-radius: 999px !important;
+  white-space: nowrap !important;
+  min-width: 0 !important;
+  width: auto !important;
+}
+
+/* data-meta — quieter, single line caption (no longer a wall of text). */
+body:not(.compact-reference-ui) #data-meta {
+  margin-top: 8px !important;
+  font-size: 10px !important;
+  letter-spacing: 0.04em !important;
+  color: rgba(218, 232, 244, 0.55) !important;
+  text-align: center !important;
+  font-style: italic !important;
+}
