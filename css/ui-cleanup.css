@@ -644,11 +644,12 @@ body:not(.compact-reference-ui) .map-status-chips {
 }
 
 body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only {
-  top: 34px !important;
-  right: 462px !important;
+  top: auto !important;
+  bottom: 28px !important;
+  right: calc(420px + 32px) !important;
   left: auto !important;
-  width: 132px !important;
-  height: 132px !important;
+  width: 110px !important;
+  height: 110px !important;
   padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
@@ -1305,11 +1306,14 @@ body:not(.compact-reference-ui) #scenarioPreset {
   width: 100% !important;
 }
 
-/* ── Map toolbar — one grouped pill containing Hide UI + Reset ──────────── */
+/* ── Map toolbar — one grouped pill at top-center of the map area ───────── */
 body:not(.compact-reference-ui) #map-toolbar.map-toolbar {
   position: fixed !important;
   top: 22px !important;
-  right: calc(420px + 24px) !important;
+  /* Center over the map area = left half of viewport (side panel is 420px wide). */
+  left: calc((100vw - 420px) / 2) !important;
+  transform: translateX(-50%) !important;
+  right: auto !important;
   z-index: 1100 !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -1349,11 +1353,18 @@ body:not(.compact-reference-ui) #map-toolbar .map-toolbar-btn[aria-pressed="true
   color: var(--ui-cyan) !important;
 }
 
-/* When chrome is hidden, the toolbar stays — it holds the only way back. */
+/* When chrome is hidden, the toolbar stays — it holds the only way back.
+   Re-center over the full viewport (side panel is gone). */
 body:not(.compact-reference-ui).map-chrome-hidden #map-toolbar {
   visibility: visible !important;
   opacity: 1 !important;
   pointer-events: auto !important;
+  left: 50vw !important;
+}
+
+/* Color wheel — also re-center horizontally when chrome is hidden. */
+body:not(.compact-reference-ui).map-chrome-hidden .reference-current-legend.hue-wheel-only {
+  right: calc(50vw - 55px) !important;
 }
 
 /* Old standalone reset/show buttons no longer exist — disable any leftover
