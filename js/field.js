@@ -142,6 +142,17 @@ window.Field = (() => {
     }
   };
 
+  /* Aggressive background prefetch: fire all unloaded chunks in parallel.
+     Each request is independent and idempotent thanks to chunk.promise; the
+     service worker mirrors successful responses into CacheStorage so the
+     dataset becomes instantly scrubbable for the rest of the session. */
+  F.prefetchAll = function(){
+    if (!F.chunked) return [];
+    return F.chunks
+      .filter((chunk) => !chunk.loaded && !chunk.promise)
+      .map((chunk) => _loadChunk(chunk).catch(() => {}));
+  };
+
   F.slice = function(key, ti){
     const arr = F[key];
     if (!arr) return null;

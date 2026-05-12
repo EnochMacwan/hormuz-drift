@@ -1484,6 +1484,11 @@ async function runEnsemble() {
   }
   try {
     await Field.ensureTimeRange(startSec, startSec + durationHours * 3600);
+    /* Background-fetch every remaining chunk so post-run scrubbing of the
+       full forcing timeline never hits the network. Fire-and-forget; the
+       in-flight `chunk.promise` map prevents duplicates and the service
+       worker caches the responses for the rest of the session. */
+    if (typeof Field.prefetchAll === "function") Field.prefetchAll();
   } catch (err) {
     setStatus(`Could not load current chunks for the run: ${err.message}`);
     hideRunProgress();
@@ -2972,6 +2977,18 @@ async function boot() {
   } catch (err) {
     showStartupError(`Failed to load currents data: ${err.message}`);
     return;
+  }
+
+  /* Boot-time background warm-up: kick off the rest of the dataset chunks in
+     parallel so the user can scrub anywhere without hitting the network.
+     Fired during browser idle to avoid contending with paint/layout. */
+  if (typeof Field.prefetchAll === "function") {
+    const warm = () => Field.prefetchAll();
+    if (typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(warm, { timeout: 2000 });
+    } else {
+      setTimeout(warm, 800);
+    }
   }
 
   fieldLayer = new DualCanvasLayer().addTo(map);
