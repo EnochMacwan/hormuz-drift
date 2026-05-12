@@ -23,15 +23,19 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="icon" type="image/png" href="assets/tridel.png" />
   <link rel="stylesheet" href="css/style.css?v=48" />
-  <link rel="stylesheet" href="css/ui-cleanup.css?v=23" />
+  <link rel="stylesheet" href="css/ui-cleanup.css?v=24" />
 </head>
 
 <body>
   <div id="app">
 
-    <button id="hideMapUiBtn" class="map-ui-hide-btn" type="button" aria-label="Hide all UI except simulation stats">
-      Hide UI
-    </button>
+    <!-- Map controls toolbar: single Hide/Show toggle + Reset view, grouped. -->
+    <div id="map-toolbar" class="map-toolbar">
+      <button id="hideMapUiBtn" class="map-toolbar-btn" type="button"
+        aria-pressed="false" aria-label="Toggle UI visibility">Hide UI</button>
+      <button id="resetMapBtn" class="map-toolbar-btn" type="button"
+        aria-label="Reset view to default">Reset</button>
+    </div>
 
     <!-- Persistent Tridel + Austides masthead. -->
     <div id="banner">
@@ -76,12 +80,7 @@
         </div>
         <div id="ts-plot" aria-label="Run analytics chart"></div>
       </div>
-      <button id="showMapUiBtn" class="map-ui-show-btn" type="button">Show map UI</button>
     </div>
-
-    <!-- Reset view lives outside #map-shell so it paints above the banner
-         (map-shell has z-index:1 and creates its own stacking context). -->
-    <button id="resetMapBtn" class="map-reset-btn" type="button">Reset view</button>
 
     <!-- Main side panel. Sections are conditionally shown/updated depending on
        scenario type, data availability, and whether a run has been computed. -->

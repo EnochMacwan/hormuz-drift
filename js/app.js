@@ -2811,7 +2811,9 @@ function wireUi() {
 
   if (els.hideMapUiBtn) {
     els.hideMapUiBtn.onclick = () => {
-      mapChromeHidden = true;
+      mapChromeHidden = !mapChromeHidden;
+      els.hideMapUiBtn.textContent = mapChromeHidden ? "Show UI" : "Hide UI";
+      els.hideMapUiBtn.setAttribute("aria-pressed", String(mapChromeHidden));
       updateBodyState();
     };
   }
@@ -2819,6 +2821,10 @@ function wireUi() {
     els.showMapUiBtn.onclick = () => {
       focusMode = false;
       mapChromeHidden = false;
+      if (els.hideMapUiBtn) {
+        els.hideMapUiBtn.textContent = "Hide UI";
+        els.hideMapUiBtn.setAttribute("aria-pressed", "false");
+      }
       if (els.focusBtn) {
         els.focusBtn.textContent = "Focus mode";
       }

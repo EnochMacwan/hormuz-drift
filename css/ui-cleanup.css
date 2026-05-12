@@ -1304,3 +1304,62 @@ body:not(.compact-reference-ui) #scenarioPreset {
   min-width: 160px !important;
   width: 100% !important;
 }
+
+/* ── Map toolbar — one grouped pill containing Hide UI + Reset ──────────── */
+body:not(.compact-reference-ui) #map-toolbar.map-toolbar {
+  position: fixed !important;
+  top: 22px !important;
+  right: calc(420px + 24px) !important;
+  z-index: 1100 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 4px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(35, 248, 255, 0.36) !important;
+  background: rgba(4, 18, 33, 0.78) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28) !important;
+}
+
+body:not(.compact-reference-ui) #map-toolbar .map-toolbar-btn {
+  appearance: none !important;
+  border: none !important;
+  background: transparent !important;
+  color: rgba(244, 250, 255, 0.92) !important;
+  padding: 6px 14px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  min-height: 28px !important;
+  transition: background 0.15s ease, color 0.15s ease !important;
+}
+
+body:not(.compact-reference-ui) #map-toolbar .map-toolbar-btn:hover {
+  background: rgba(35, 248, 255, 0.12) !important;
+  color: var(--ui-cyan) !important;
+}
+
+body:not(.compact-reference-ui) #map-toolbar .map-toolbar-btn[aria-pressed="true"] {
+  background: rgba(35, 248, 255, 0.18) !important;
+  color: var(--ui-cyan) !important;
+}
+
+/* When chrome is hidden, the toolbar stays — it holds the only way back. */
+body:not(.compact-reference-ui).map-chrome-hidden #map-toolbar {
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Old standalone reset/show buttons no longer exist — disable any leftover
+   absolute-positioned rules so they don't paint phantom elements. */
+body:not(.compact-reference-ui) .map-reset-btn,
+body:not(.compact-reference-ui) .map-ui-show-btn,
+body:not(.compact-reference-ui) .map-ui-hide-btn:not(.map-toolbar-btn) {
+  display: none !important;
+}
