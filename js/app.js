@@ -479,12 +479,14 @@ function setRunProgress(percent, label, detail) {
   els.progressFill.style.width = `${clamp(percent, 0, 100)}%`;
   els.progressLabel.textContent = label;
   els.progressDetail.textContent = detail || "";
+  els.runProgress.dataset.done = percent >= 100 ? "true" : "false";
 }
 
 function hideRunProgress() {
   if (els.runProgress) {
     els.runProgress.hidden = true;
     els.progressFill.style.width = "0%";
+    els.runProgress.dataset.done = "false";
   }
 }
 
@@ -595,6 +597,7 @@ function showStartupError(message) {
   els.results.innerHTML = '<div class="result-card wide"><span class="result-label">Startup</span><span class="result-value">Data unavailable</span><span class="result-subvalue">This page was opened without a local web server.</span></div>';
   els.runBtn.disabled = true;
   if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = true;
+  if (els.runTopBtn) els.runTopBtn.disabled = true;
   els.useWind.disabled = true;
   Plotly.purge(els.tsPlot);
 }
@@ -1622,7 +1625,7 @@ function updateResultsPanel(force) {
   if (!activeRun) {
     if (els.areaHud) els.areaHud.style.display = "none";
     if (els.exportCsvBtn) els.exportCsvBtn.disabled = true;
-    els.results.innerHTML = '<div class="result-card wide"><span class="result-label">Run state</span><span class="result-value">No active simulation</span><span class="result-subvalue">Run a scenario to chart stranding, spread, and uncertainty over time.</span></div>';
+    els.results.innerHTML = '<div class="result-card wide empty-state"><span class="result-label">Ready</span><span class="result-value">No active run</span><span class="result-subvalue">Click open water to set a release point, then press <strong>Run</strong>.</span></div>';
     return;
   }
   if (els.exportCsvBtn) els.exportCsvBtn.disabled = false;
@@ -2206,6 +2209,7 @@ function updateReleaseInfo() {
     if (els.summaryRelease) els.summaryRelease.textContent = "Release pending";
     els.runBtn.disabled = true;
     if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = true;
+  if (els.runTopBtn) els.runTopBtn.disabled = true;
     updatePresetGuide();
     return;
   }
@@ -2213,6 +2217,7 @@ function updateReleaseInfo() {
   if (els.summaryRelease) els.summaryRelease.textContent = `${releasePoint.lat.toFixed(3)} N, ${releasePoint.lon.toFixed(3)} E`;
   els.runBtn.disabled = false;
   if (els.quickRunRailBtn) els.quickRunRailBtn.disabled = false;
+  if (els.runTopBtn) els.runTopBtn.disabled = false;
   updatePresetGuide();
 }
 
@@ -2415,6 +2420,11 @@ function setScenario(scenario, preservePreset) {
   });
   els.leewayParams.style.display = scenario === "leeway" ? "" : "none";
   els.oilParams.style.display = scenario === "oil" ? "" : "none";
+  if (scenario === "leeway") {
+    if (els.oilBudgetCard) els.oilBudgetCard.style.display = "none";
+    if (els.exportBudgetCsvBtn) els.exportBudgetCsvBtn.style.display = "none";
+    if (els.responseCard) els.responseCard.style.display = "none";
+  }
   buildPresetOptions(preservePreset ? els.scenarioPreset.value : null);
   updateScenarioBadges();
   updateOilProperties();
@@ -2575,6 +2585,8 @@ function tick(now) {
 function collectDomRefs() {
   Object.assign(els, {
     clearBtn: document.getElementById("clearBtn"),
+    clearTopBtn: document.getElementById("clearTopBtn"),
+    runTopBtn: document.getElementById("runTopBtn"),
     controlScenario: document.getElementById("controlScenario"),
     copyLinkBtn: document.getElementById("copyLinkBtn"),
     copyValidationBtn: document.getElementById("copyValidationBtn"),
@@ -2827,7 +2839,9 @@ function wireUi() {
     playing = !playing;
     updatePlayButton();
   };
-  els.quickRunRailBtn.onclick = runEnsemble;
+  if (els.quickRunRailBtn) els.quickRunRailBtn.onclick = runEnsemble;
+  if (els.runTopBtn) els.runTopBtn.onclick = runEnsemble;
+  if (els.clearTopBtn) els.clearTopBtn.onclick = clearRun;
   els.jumpBack24.onclick = () => seekHours(-24);
   els.jumpBack6.onclick = () => seekHours(-6);
   els.jumpForward6.onclick = () => seekHours(6);
@@ -2916,7 +2930,7 @@ function wireUi() {
   bindLayer("oilRadius", [els.layerOilRadius]);
   els.useWind.onchange = updateStoryCard;
 
-  els.focusBtn.onclick = () => {
+  if (els.focusBtn) els.focusBtn.onclick = () => {
     focusMode = !focusMode;
     els.focusBtn.textContent = focusMode ? "Exit focus" : "Focus mode";
     updateBodyState();

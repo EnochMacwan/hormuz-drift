@@ -1025,3 +1025,282 @@ body:not(.compact-reference-ui).expert-tools-open.oil-scenario #app #side > #res
     right: 438px !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Re-applied UI cleanup — banner shrink, paired logos, top-row controls,
+   hide-UI behavior, run progress states, empty state, label/font fixes.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+body:not(.compact-reference-ui) #banner {
+  left: 32px !important;
+  top: 18px !important;
+  width: fit-content !important;
+  min-width: 0 !important;
+  max-width: 280px !important;
+  padding: 10px 14px !important;
+  border-radius: 18px !important;
+  gap: 6px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-lockup {
+  gap: 10px !important;
+  align-items: center !important;
+  margin: 0 !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-logo {
+  width: 48px !important;
+  height: 48px !important;
+  object-fit: contain !important;
+}
+
+body:not(.compact-reference-ui) #banner .partner-logo-inline {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 48px !important;
+  padding: 2px 4px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(70, 236, 255, 0.18) !important;
+  text-decoration: none !important;
+  transition: transform 0.15s ease !important;
+}
+
+body:not(.compact-reference-ui) #banner .partner-logo-inline:hover {
+  transform: translateY(-1px) !important;
+}
+
+body:not(.compact-reference-ui) #banner .partner-logo-inline img {
+  height: 36px !important;
+  width: auto !important;
+  display: block !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy {
+  gap: 4px !important;
+  margin: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy b {
+  color: #ffffff !important;
+  font-size: 18px !important;
+  line-height: 1.1 !important;
+  margin: 0 !important;
+}
+
+body:not(.compact-reference-ui) #banner .banner-copy a[href="README.md"] {
+  margin-top: 4px !important;
+  padding: 6px 14px !important;
+  font-size: 11px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(35, 248, 255, 0.35) !important;
+  color: var(--ui-cyan) !important;
+  background: rgba(35, 248, 255, 0.07) !important;
+  text-decoration: none !important;
+}
+
+/* Hide UI button — fixed anchor between map and side panel. */
+body:not(.compact-reference-ui) .map-ui-hide-btn {
+  position: fixed !important;
+  top: 22px !important;
+  right: calc(420px + 24px) !important;
+  z-index: 1100 !important;
+  padding: 8px 14px !important;
+  border-radius: 999px !important;
+  min-height: 34px !important;
+  font-size: 11px !important;
+  letter-spacing: 0.08em !important;
+  border: 1px solid rgba(35, 248, 255, 0.36) !important;
+  background: rgba(4, 18, 33, 0.72) !important;
+  color: #ffffff !important;
+  cursor: pointer !important;
+}
+
+/* Reset View — outside #map-shell, painted above banner. */
+body:not(.compact-reference-ui) .map-reset-btn {
+  position: absolute !important;
+  left: 32px !important;
+  top: 210px !important;
+  z-index: 1020 !important;
+  min-height: 34px !important;
+  padding: 8px 14px !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 999px !important;
+  color: #ffffff !important;
+  background: rgba(4, 18, 33, 0.70) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+}
+
+body:not(.compact-reference-ui) .map-reset-btn:hover {
+  border-color: rgba(35, 248, 255, 0.48) !important;
+  color: var(--ui-cyan) !important;
+}
+
+/* Top controls row */
+body:not(.compact-reference-ui) #runTopBtn.primary {
+  min-height: 34px !important;
+  padding: 6px 18px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+body:not(.compact-reference-ui) #runTopBtn.primary:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(0.4) !important;
+}
+
+body:not(.compact-reference-ui) #playBtn.ghost,
+body:not(.compact-reference-ui) #clearTopBtn.clear-ghost {
+  min-height: 34px !important;
+}
+
+body:not(.compact-reference-ui) #clearTopBtn.clear-ghost {
+  padding: 6px 14px !important;
+  color: rgba(255, 138, 138, 0.92) !important;
+  border-color: rgba(255, 138, 138, 0.32) !important;
+  background: rgba(255, 138, 138, 0.06) !important;
+}
+
+body:not(.compact-reference-ui) #clearTopBtn.clear-ghost:hover {
+  color: #ff9d9d !important;
+  border-color: rgba(255, 138, 138, 0.55) !important;
+  background: rgba(255, 138, 138, 0.12) !important;
+}
+
+body:not(.compact-reference-ui) .tag.tag-muted {
+  background: transparent !important;
+  border-color: rgba(70, 236, 255, 0.18) !important;
+  color: rgba(218, 232, 244, 0.55) !important;
+}
+
+body:not(.compact-reference-ui) .tag.tag-muted:empty {
+  display: none !important;
+}
+
+body:not(.compact-reference-ui) #time-window-label.tag {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: 10px !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: rgba(218, 232, 244, 0.50) !important;
+}
+
+body:not(.compact-reference-ui) #time-label {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  font-family: "JetBrains Mono", "Fira Mono", "Consolas", monospace !important;
+  letter-spacing: 0.02em !important;
+}
+
+body:not(.compact-reference-ui) .controls-top {
+  align-items: center !important;
+  margin-bottom: 8px !important;
+}
+
+body:not(.compact-reference-ui) .controls-top .control-cluster {
+  gap: 8px !important;
+}
+
+/* Run-progress — dark glass + green "done" state via data-done attr. */
+body:not(.compact-reference-ui) .run-progress {
+  background:
+    radial-gradient(circle at top right, rgba(0, 170, 231, 0.10), transparent 40%),
+    rgba(6, 22, 36, 0.72) !important;
+  border: 1px solid rgba(70, 236, 255, 0.20) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+body:not(.compact-reference-ui) .progress-copy {
+  color: rgba(244, 250, 255, 0.90) !important;
+}
+
+body:not(.compact-reference-ui) .progress-copy span {
+  color: rgba(200, 220, 240, 0.65) !important;
+}
+
+body:not(.compact-reference-ui) .progress-track {
+  background: rgba(255, 255, 255, 0.10) !important;
+}
+
+body:not(.compact-reference-ui) #run-progress[data-done="true"] #progress-fill {
+  background: linear-gradient(90deg, #00e5a0, #00c48c) !important;
+  box-shadow: 0 0 10px rgba(0, 229, 160, 0.45) !important;
+}
+
+body:not(.compact-reference-ui) #run-progress[data-done="true"] #progress-label {
+  color: #00e5a0 !important;
+}
+
+/* Empty-state card */
+body:not(.compact-reference-ui) .result-card.empty-state {
+  border: 1px dashed rgba(70, 236, 255, 0.28) !important;
+  background: rgba(8, 22, 36, 0.45) !important;
+  text-align: center !important;
+  padding: 18px 14px !important;
+}
+
+body:not(.compact-reference-ui) .result-card.empty-state .result-label {
+  color: var(--ui-cyan) !important;
+  font-size: 9px !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase !important;
+}
+
+body:not(.compact-reference-ui) .result-card.empty-state .result-value {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: rgba(244, 250, 255, 0.92) !important;
+  margin: 4px 0 6px !important;
+}
+
+body:not(.compact-reference-ui) .result-card.empty-state .result-subvalue {
+  font-size: 12px !important;
+  color: rgba(218, 232, 244, 0.72) !important;
+  line-height: 1.45 !important;
+}
+
+body:not(.compact-reference-ui) .result-card.empty-state strong {
+  color: var(--ui-cyan) !important;
+  font-weight: 700 !important;
+}
+
+/* Hide UI extended — also hide side panel + reset button. */
+body:not(.compact-reference-ui).map-chrome-hidden #side,
+body:not(.compact-reference-ui).map-chrome-hidden .map-reset-btn {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body:not(.compact-reference-ui).map-chrome-hidden #app {
+  grid-template-columns: 1fr !important;
+}
+
+body:not(.compact-reference-ui).map-chrome-hidden .results-card {
+  z-index: 1050 !important;
+}
+
+/* scenarioPreset min-width so it doesn't collapse */
+body:not(.compact-reference-ui) #scenarioPreset {
+  min-width: 160px !important;
+  width: 100% !important;
+}

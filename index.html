@@ -23,48 +23,35 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="icon" type="image/png" href="assets/tridel.png" />
   <link rel="stylesheet" href="css/style.css?v=48" />
-  <link rel="stylesheet" href="css/ui-cleanup.css?v=22" />
+  <link rel="stylesheet" href="css/ui-cleanup.css?v=23" />
 </head>
 
 <body>
   <div id="app">
 
-    <!-- Persistent Tridel masthead and research disclaimer. -->
+    <button id="hideMapUiBtn" class="map-ui-hide-btn" type="button" aria-label="Hide all UI except simulation stats">
+      Hide UI
+    </button>
+
+    <!-- Persistent Tridel + Austides masthead. -->
     <div id="banner">
-      <button id="hideMapUiBtn" class="map-ui-hide-btn" type="button" aria-label="Hide map labels and branding">
-        Hide map UI
-      </button>
-      <div class="brand-lockup" aria-label="Tridel">
+      <div class="brand-lockup" aria-label="Tridel and Austides Consulting">
         <img src="assets/tridel.png" alt="Tridel" class="brand-logo" />
-        <div>
-          <span class="brand-name">TRIDEL</span>
-        </div>
+        <a class="partner-logo-inline" href="https://austides.com" target="_blank" rel="noopener"
+          aria-label="Austides Consulting">
+          <img src="assets/austides.png" alt="Austides Consulting" />
+        </a>
       </div>
       <div class="banner-copy">
-        <b>Strait of Hormuz simulation</b>
-        <span>Research / educational use only. Physics are based on OpenDRIFT.</span>
-        <a href="README.md">README and caveats</a>
+        <b>Strait of Hormuz<br />Simulation</b>
+        <a href="README.md">About &amp; caveats</a>
       </div>
-      <a class="partner-logo" href="https://austides.com" target="_blank" rel="noopener"
-        aria-label="Austides Consulting">
-        <img src="assets/austides.png" alt="Austides Consulting" />
-      </a>
     </div>
 
     <!-- Map region. Leaflet owns #map itself; keep this surface clear so the
        left side remains simulation-only. -->
     <div id="map-shell">
       <div id="map"></div>
-      <div id="areaHud" class="map-hud" style="display:none;">
-        <div class="hud-item">
-          <span class="hud-label">Instant footprint</span>
-          <strong id="hudFootprint">0 km²</strong>
-        </div>
-        <div class="hud-item">
-          <span class="hud-label">Swept trail area</span>
-          <strong id="hudTrail">0 km²</strong>
-        </div>
-      </div>
       <div class="reference-current-legend hue-wheel-only" aria-label="Current direction hue wheel">
         <div class="direction-compass" aria-hidden="true">
           <span class="direction-disc"></span>
@@ -80,7 +67,6 @@
         <span id="map-chip-chunk">Preparing field</span>
         <span>OpenDRIFT-based physics</span>
       </div>
-      <button id="resetMapBtn" class="map-reset-btn" type="button">Reset view</button>
       <!-- Fast summary cards and time-series analytics for the current playback
          instant. Positioned as a transparent map island in the sketch layout. -->
       <div class="section-card results-card">
@@ -92,6 +78,10 @@
       </div>
       <button id="showMapUiBtn" class="map-ui-show-btn" type="button">Show map UI</button>
     </div>
+
+    <!-- Reset view lives outside #map-shell so it paints above the banner
+         (map-shell has z-index:1 and creates its own stacking context). -->
+    <button id="resetMapBtn" class="map-reset-btn" type="button">Reset view</button>
 
     <!-- Main side panel. Sections are conditionally shown/updated depending on
        scenario type, data availability, and whether a run has been computed. -->
@@ -123,22 +113,21 @@
       <div id="controls">
         <div class="row controls-top">
           <div class="control-cluster">
-            <button id="playBtn">Play</button>
-            <button id="quickRunRailBtn" class="primary" disabled>Run current preset</button>
-            <button id="focusBtn" class="ghost">Focus mode</button>
-            <span id="controlScenario" class="tag">Man overboard</span>
+            <button id="runTopBtn" class="primary" title="Run scenario" disabled>Run</button>
+            <button id="playBtn" class="ghost" aria-pressed="false" title="Play/Pause (Space)">Play</button>
+            <button id="clearTopBtn" class="ghost clear-ghost" title="Clear active scenario">Clear</button>
           </div>
-          <span id="time-window-label" class="tag">Playback follows the forcing timeline.</span>
+          <span id="time-window-label" class="tag tag-muted">Forcing timeline</span>
         </div>
 
         <div class="row scrub-row timeline-head">
-          <span id="time-label">loading...</span>
-          <span id="timeline-current" class="tag">Waiting for data</span>
-          <span id="timeline-phase" class="tag">Timeline context pending</span>
+          <span id="time-label">Loading…</span>
+          <span id="timeline-current" class="tag tag-muted"></span>
+          <span id="timeline-phase" class="tag tag-muted"></span>
         </div>
 
         <div class="timeline-shell">
-          <input id="timeSlider" type="range" min="0" max="0" value="0" step="1" />
+          <input id="timeSlider" type="range" min="0" max="0" value="0" step="1" aria-label="Timeline scrubber" />
           <div id="timeline-events" class="timeline-events" aria-hidden="true"></div>
           <div class="timeline-ticks" aria-hidden="true">
             <span></span><span></span><span></span><span></span><span></span>
