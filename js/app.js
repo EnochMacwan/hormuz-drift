@@ -1397,9 +1397,9 @@ function renderOilBudgetPlot() {
     margin: { l: 40, r: 14, t: 10, b: 36 },
     paper_bgcolor: "rgba(255,255,255,0)",
     plot_bgcolor: "rgba(255,255,255,0)",
-    font: { family: "Inter, sans-serif", color: "#202124", size: 11 },
-    xaxis: { title: "Hours", showgrid: true, gridcolor: "rgba(0,0,0,0.08)", zeroline: false },
-    yaxis: { title: "% of spill", range: [0, 100], showgrid: true, gridcolor: "rgba(0,0,0,0.08)", zeroline: false },
+    font: { family: "Inter, sans-serif", color: "rgba(220,235,245,0.85)", size: 11 },
+    xaxis: { title: "Hours", showgrid: true, gridcolor: "rgba(255,255,255,0.08)", zeroline: false },
+    yaxis: { title: "% of spill", range: [0, 100], showgrid: true, gridcolor: "rgba(255,255,255,0.08)", zeroline: false },
     legend: { orientation: "h", y: 1.14, x: 0, font: { size: 10 } },
   }, { displayModeBar: false, responsive: true });
 
@@ -1542,8 +1542,14 @@ async function runEnsemble() {
         const responses = collectResponses();
         const beachSeries = [];
         for (let h = 0; h <= durationHours; h++) {
-          const snap = activeRun.snapshots.find((s) => s.tSec >= startSec + h * 3600);
-          beachSeries.push(snap ? snap.stranded / particleCount : 0);
+          const targetSec = startSec + h * 3600;
+          let best = null;
+          let bestDist = Infinity;
+          for (const s of activeRun.snapshots) {
+            const d = Math.abs(s.tSec - targetSec);
+            if (d < bestDist) { bestDist = d; best = s; }
+          }
+          beachSeries.push(best ? best.stranded / particleCount : 0);
         }
         // Estimate mean wind speed from the field at release point
         let meanWind = 5;
@@ -1615,9 +1621,11 @@ function buildAnalystSummary(metrics, frame) {
 function updateResultsPanel(force) {
   if (!activeRun) {
     if (els.areaHud) els.areaHud.style.display = "none";
+    if (els.exportCsvBtn) els.exportCsvBtn.disabled = true;
     els.results.innerHTML = '<div class="result-card wide"><span class="result-label">Run state</span><span class="result-value">No active simulation</span><span class="result-subvalue">Run a scenario to chart stranding, spread, and uncertainty over time.</span></div>';
     return;
   }
+  if (els.exportCsvBtn) els.exportCsvBtn.disabled = false;
 
   const frame = getRunFrame(tIdxToSec(tIdx));
   if (!frame) {
@@ -1631,7 +1639,7 @@ function updateResultsPanel(force) {
 
   const metrics = frame.metrics;
   if (els.areaHud) {
-    els.areaHud.style.display = "none";
+    els.areaHud.style.display = "";
     els.hudFootprint.textContent = `${fmt(metrics.footprintKm2, 2)} km²`;
     els.hudTrail.textContent = `${fmt(frame.trailKm2 ?? 0, 2)} km²`;
   }
@@ -1717,9 +1725,9 @@ function renderResultsPlot() {
     margin: { l: 44, r: 44, t: 20, b: 36 },
     paper_bgcolor: "rgba(255,255,255,0)",
     plot_bgcolor: "rgba(255,255,255,0)",
-    font: { family: "Inter, sans-serif", color: "#202124", size: 11 },
-    xaxis: { showgrid: true, gridcolor: "rgba(0,0,0,0.08)", zeroline: false },
-    yaxis: { title: "Drifting / mass (%)", rangemode: "tozero", showgrid: true, gridcolor: "rgba(0,0,0,0.08)", zeroline: false },
+    font: { family: "Inter, sans-serif", color: "rgba(220,235,245,0.85)", size: 11 },
+    xaxis: { showgrid: true, gridcolor: "rgba(255,255,255,0.08)", zeroline: false },
+    yaxis: { title: "Drifting / mass (%)", rangemode: "tozero", showgrid: true, gridcolor: "rgba(255,255,255,0.08)", zeroline: false },
     yaxis2: { title: "Spread (km)", overlaying: "y", side: "right", rangemode: "tozero", showgrid: false, zeroline: false },
     legend: { orientation: "h", y: 1.12, x: 0 },
     shapes: [{ type: "line", x0: markerTime, x1: markerTime, y0: 0, y1: 1, yref: "paper", line: { color: "#00AAE7", width: 1, dash: "dot" } }],
@@ -2151,6 +2159,20 @@ function hideWgModal() {
   if (modal) modal.style.display = "none";
 }
 
+function showMapToast(message, containerPoint) {
+  const existing = document.getElementById("map-toast");
+  if (existing) existing.remove();
+  const toast = document.createElement("div");
+  toast.id = "map-toast";
+  toast.className = "map-toast";
+  toast.textContent = message;
+  const mapContainer = map.getContainer();
+  toast.style.left = `${containerPoint.x}px`;
+  toast.style.top = `${containerPoint.y - 12}px`;
+  mapContainer.appendChild(toast);
+  setTimeout(() => toast.remove(), 2200);
+}
+
 function updatePlayButton() {
   els.playBtn.textContent = playing ? "Pause" : "Play";
 }
@@ -2393,7 +2415,6 @@ function setScenario(scenario, preservePreset) {
   });
   els.leewayParams.style.display = scenario === "leeway" ? "" : "none";
   els.oilParams.style.display = scenario === "oil" ? "" : "none";
-  els.responseCard.style.display = scenario === "oil" ? "" : "none";
   buildPresetOptions(preservePreset ? els.scenarioPreset.value : null);
   updateScenarioBadges();
   updateOilProperties();
@@ -2825,7 +2846,6 @@ function wireUi() {
   }
   els.runBtn.onclick = runEnsemble;
   els.clearBtn.onclick = clearRun;
-  els.copyLinkBtn.onclick = copyShareLink;
   els.exportJsonBtn.onclick = () => { exportRunJson(); els.exportMenu.open = false; };
   els.exportBudgetCsvBtn.onclick = () => { exportOilBudgetCsv(); els.exportMenu.open = false; };
 
@@ -2842,7 +2862,6 @@ function wireUi() {
   if (els.copyValidationBtn) els.copyValidationBtn.onclick = copyValidationSummary;
   if (webgnomeHelpBtn) webgnomeHelpBtn.onclick = showWgModal;
   if (closeWgModal) closeWgModal.onclick = hideWgModal;
-  if (closeWgModal2) closeWgModal2.onclick = hideWgModal;
   if (webgnomeModal) {
     webgnomeModal.addEventListener("click", (event) => {
       if (event.target === webgnomeModal) hideWgModal();
@@ -2861,6 +2880,20 @@ function wireUi() {
   });
   els.exportCsvBtn.onclick = () => { exportRunCsv(); els.exportMenu.open = false; };
   els.copyLinkBtn.onclick = () => { copyShareLink(); els.exportMenu.open = false; };
+
+  document.addEventListener("click", (event) => {
+    if (els.exportMenu && els.exportMenu.open && !els.exportMenu.contains(event.target)) {
+      els.exportMenu.open = false;
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.code === "Space" && event.target === document.body) {
+      event.preventDefault();
+      playing = !playing;
+      updatePlayButton();
+    }
+  });
 
   const bindLayer = (key, inputs) => {
     inputs.filter(Boolean).forEach((input) => {
@@ -2960,7 +2993,7 @@ async function boot() {
 
   map.on("click", (event) => {
     if (Field.isLand(event.latlng.lng, event.latlng.lat)) {
-      setStatus("Release point is on land or outside the data grid.");
+      showMapToast("On land — click open water to set a release point.", event.containerPoint);
       return;
     }
     releasePoint = { lat: event.latlng.lat, lon: event.latlng.lng };

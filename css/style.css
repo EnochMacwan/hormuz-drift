@@ -210,7 +210,7 @@ img {
 
   inset: 0;
 
-  display: block;
+  display: grid;
 
   grid-template-columns: minmax(800px, 1fr) 440px;
 

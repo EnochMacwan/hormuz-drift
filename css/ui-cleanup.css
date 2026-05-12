@@ -107,6 +107,15 @@ body:not(.compact-reference-ui) #side {
   border-radius: 24px !important;
   color: var(--ui-text) !important;
   scrollbar-color: rgba(35, 248, 255, 0.75) rgba(255, 255, 255, 0.08) !important;
+  background-attachment: local, local, scroll, scroll !important;
+  background-image:
+    linear-gradient(var(--ui-glass-strong) 30%, transparent),
+    linear-gradient(transparent, var(--ui-glass-strong) 70%),
+    linear-gradient(rgba(35, 248, 255, 0.18), transparent 60%),
+    linear-gradient(transparent 40%, rgba(35, 248, 255, 0.10)) !important;
+  background-size: 100% 28px, 100% 28px, 100% 28px, 100% 28px !important;
+  background-repeat: no-repeat !important;
+  background-position: top, bottom, top, bottom !important;
 }
 
 body:not(.compact-reference-ui) #side > .side-header,
@@ -810,12 +819,12 @@ body:not(.compact-reference-ui) #side > .expert-toggle-btn {
 }
 
 body:not(.compact-reference-ui) #side > .expert-toggle-btn::after {
-  content: " +" !important;
+  content: " ▾" !important;
   color: var(--ui-cyan) !important;
 }
 
 body:not(.compact-reference-ui).expert-tools-open #side > .expert-toggle-btn::after {
-  content: " -" !important;
+  content: " ▴" !important;
 }
 
 body:not(.compact-reference-ui) #side > .release-physics-card,
@@ -975,6 +984,32 @@ body:not(.compact-reference-ui).expert-tools-open #app #side > .label-run-output
 
 body:not(.compact-reference-ui).expert-tools-open.oil-scenario #app #side > #response-card {
   display: block !important;
+}
+
+.map-toast {
+  position: absolute;
+  z-index: 2000;
+  transform: translate(-50%, -100%);
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(4, 18, 33, 0.88);
+  border: 1px solid rgba(255, 51, 102, 0.55);
+  color: #ff6688;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: map-toast-in 0.18s ease, map-toast-out 0.3s ease 1.9s forwards;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+@keyframes map-toast-in {
+  from { opacity: 0; transform: translate(-50%, -80%); }
+  to   { opacity: 1; transform: translate(-50%, -100%); }
+}
+
+@keyframes map-toast-out {
+  to { opacity: 0; transform: translate(-50%, -110%); }
 }
 
 @media (max-width: 1320px) {
