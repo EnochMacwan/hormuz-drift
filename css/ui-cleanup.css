@@ -1024,7 +1024,7 @@ body:not(.compact-reference-ui).expert-tools-open.oil-scenario #app #side > #res
   }
 
   body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only {
-    right: 438px !important;
+    right: 500px !important;
   }
 }
 
