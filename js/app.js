@@ -69,7 +69,7 @@ const els = {};
 
 /* Leaflet owns the geographic view and projection math. Canvas overlays are
    layered above it for field rendering, tracers, and drift results. */
-const DEFAULT_CONTEXT_CENTER = [26.2, 53.35];
+const DEFAULT_CONTEXT_CENTER = [25.661, 55.778];
 const DEFAULT_CONTEXT_ZOOM = 7;
 const WIDE_GULF_CONTEXT_BOUNDS = {
   south: 21.45,
