@@ -823,6 +823,12 @@ function drawField() {
     return;
   }
 
+  /* Predictive prefetch: hide chunk-boundary stutter by warming the next chunk
+     once playback enters the last 25% of the current one. No-op if not needed. */
+  if (Field.chunked && typeof Field.prefetchNext === "function") {
+    Field.prefetchNext(ti1);
+  }
+
   ctx.clearRect(0, 0, size.x, size.y);
   ensureFieldSrc(grid);
   paintFieldSrc(ti0, grid, fieldSrcBuffers[0]);
@@ -2953,6 +2959,11 @@ function wireUi() {
 async function boot() {
   collectDomRefs();
   wireUi();
+  /* Register the chunk-caching service worker; ignore failures (some browsers
+     block sw on insecure contexts and Safari Private Mode). */
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
   updateBodyState();
   updatePlayButton();
 

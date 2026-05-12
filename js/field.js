@@ -125,6 +125,23 @@ window.Field = (() => {
     await Promise.all(loads);
   };
 
+  /* Predictive prefetch: once we're in the last 25% of the current chunk during
+     playback, kick off a background fetch for the next one so the boundary
+     crossing is seamless. Cheap to call every frame — early returns dominate. */
+  F.prefetchNext = function(ti){
+    if (!F.chunked) return;
+    const idx = Math.max(0, Math.min(F.times.length - 1, Math.floor(ti)));
+    const current = _chunkForIndex(idx);
+    if (!current) return;
+    const len = current.end_index - current.start_index;
+    const pos = idx - current.start_index;
+    if (len <= 0 || pos / len < 0.75) return;
+    const next = F.chunks[current.index + 1];
+    if (next && !next.loaded && !next.promise) {
+      _loadChunk(next).catch(() => {});
+    }
+  };
+
   F.slice = function(key, ti){
     const arr = F[key];
     if (!arr) return null;
