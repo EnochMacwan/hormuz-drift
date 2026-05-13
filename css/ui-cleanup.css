@@ -1596,16 +1596,83 @@ body:not(.compact-reference-ui) .map-legend-compass-title {
   opacity: 0.85 !important;
 }
 
-/* Inline (in-legend) wheel — reset the floating positioning. */
+/* Inline (in-legend) wheel — reset the floating positioning and shrink the
+   compass so the N/E/S/W labels stay centered on the visible wheel. */
 body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only.hue-wheel-inline {
   position: relative !important;
   top: auto !important;
   bottom: auto !important;
   left: auto !important;
   right: auto !important;
-  width: 88px !important;
-  height: 88px !important;
+  width: 110px !important;
+  height: 110px !important;
   margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body:not(.compact-reference-ui) .hue-wheel-inline .direction-compass,
+body:not(.compact-reference-ui) .reference-current-legend.hue-wheel-only.hue-wheel-inline .direction-compass {
+  width: 110px !important;
+  height: 110px !important;
+  min-height: 110px !important;
+  max-height: 110px !important;
+  position: relative !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+body:not(.compact-reference-ui) .hue-wheel-inline .direction-disc {
+  width: 70px !important;
+  height: 70px !important;
+}
+
+/* Re-center the N/E/S/W labels using the standard top:50% / left:50% pattern
+   so they sit on the four cardinal edges of the visible wheel — overriding
+   the earlier {top:0 / right:0 / bottom:0 / left:0} corner rule. */
+body:not(.compact-reference-ui) .hue-wheel-inline .direction-label {
+  position: absolute !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85) !important;
+  line-height: 1 !important;
+  pointer-events: none !important;
+}
+
+body:not(.compact-reference-ui) .hue-wheel-inline .direction-label-n {
+  top: 2px !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translateX(-50%) !important;
+}
+
+body:not(.compact-reference-ui) .hue-wheel-inline .direction-label-s {
+  bottom: 2px !important;
+  left: 50% !important;
+  right: auto !important;
+  top: auto !important;
+  transform: translateX(-50%) !important;
+}
+
+body:not(.compact-reference-ui) .hue-wheel-inline .direction-label-w {
+  left: 2px !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
+}
+
+body:not(.compact-reference-ui) .hue-wheel-inline .direction-label-e {
+  right: 2px !important;
+  top: 50% !important;
+  left: auto !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
 }
 
 /* If the inline wheel exists, hide any leftover floating instance (defensive). */
