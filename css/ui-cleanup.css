@@ -195,7 +195,9 @@ body:not(.compact-reference-ui) #side > .release-physics-card {
 }
 
 body:not(.compact-reference-ui) #side > .playback-tuning-card {
-  order: 80 !important;
+  /* Promoted: sits right under #controls so Speed + Tracers are reachable
+     without scrolling past mission/data-quality/etc. */
+  order: 45 !important;
 }
 
 body:not(.compact-reference-ui) #side > .label-visual {
