@@ -39,7 +39,7 @@ let tIdx = 0;
 let playing = true;
 let playSpeed = 1.5;
 let timelineStepHours = 3;
-let nParticles = 2000;
+let nParticles = 3200;
 let fieldLayer = null;
 let releasePoint = null;
 let activeScenario = "leeway";
@@ -656,6 +656,11 @@ function stepBgParticles(dtReal) {
     particle.prevLon = particle.lon;
     particle.prevLat = particle.lat;
     particle.prevOK = true;
+    /* Persist the velocity sample so the renderer can tint current streaks by
+       direction (matching the compass hue mapping) and modulate width by speed. */
+    particle.vu = vector.u;
+    particle.vv = vector.v;
+    particle.spd = Math.hypot(vector.u, vector.v);
     const dt = particle.layer === "wind" ? windDt : currentDt;
     particle.lon += vector.u * dt / mPerDegLon(particle.lat);
     particle.lat += vector.v * dt / mPerDegLat(particle.lat);
@@ -879,21 +884,22 @@ function drawBgParticles() {
     ctx.clearRect(0, 0, size.x, size.y);
     return;
   }
+  /* Gentler fade — leaves longer, more delicate streak trails (windy.com feel). */
   ctx.globalCompositeOperation = "destination-out";
-  ctx.fillStyle = "rgba(0, 0, 0, 0.065)";
+  ctx.fillStyle = "rgba(0, 0, 0, 0.045)";
   ctx.fillRect(0, 0, size.x, size.y);
   ctx.globalCompositeOperation = "source-over";
-  ctx.lineCap    = "round";
+  ctx.lineCap = "round";
   const offset = forcingVisualOffsetPx(Field.grid);
-  const drawLayer = (layer, strokeStyle, lineWidth, dash = []) => {
+
+  /* Single-color batched path (used for wind orange dashes). */
+  const drawBatchLayer = (layer, strokeStyle, lineWidth, dash = []) => {
     ctx.strokeStyle = strokeStyle;
     ctx.lineWidth = lineWidth;
     ctx.setLineDash(dash);
     ctx.beginPath();
     for (const particle of bgParticles) {
-      if (!particle.prevOK || particle.layer !== layer) {
-        continue;
-      }
+      if (!particle.prevOK || particle.layer !== layer) continue;
       const a = map.latLngToContainerPoint([particle.prevLat, particle.prevLon]);
       const b = map.latLngToContainerPoint([particle.lat, particle.lon]);
       ctx.moveTo(a.x + offset.x, a.y + offset.y);
@@ -902,9 +908,46 @@ function drawBgParticles() {
     ctx.stroke();
     ctx.setLineDash([]);
   };
-  drawLayer("surface", "rgba(255, 255, 255, 0.86)", 1.6);
-  drawLayer("depth", "rgba(255, 255, 255, 0.68)", 1.35);
-  drawLayer("wind", "rgba(255, 190, 86, 0.95)", 1.9, [8, 6]);
+
+  /* Hue-binned current streaks — group by 12 direction buckets so we only
+     issue ~12 strokes per layer (cheap) but each particle still reads as
+     "color = its direction". Matches the compass wheel hue mapping. */
+  const HUE_BINS = 12;
+  const drawCurrentLayer = (layer, lineWidth, alpha) => {
+    ctx.lineWidth = lineWidth;
+    ctx.setLineDash([]);
+    const bins = new Array(HUE_BINS);
+    for (let i = 0; i < HUE_BINS; i += 1) bins[i] = [];
+    for (const particle of bgParticles) {
+      if (!particle.prevOK || particle.layer !== layer) continue;
+      if (particle.vu == null || particle.vv == null) continue;
+      const hue = directionHue(particle.vu, -particle.vv);
+      const bin = Math.min(HUE_BINS - 1, Math.floor((hue / 360) * HUE_BINS));
+      bins[bin].push(particle);
+    }
+    for (let i = 0; i < HUE_BINS; i += 1) {
+      const list = bins[i];
+      if (!list.length) continue;
+      const hue = ((i + 0.5) / HUE_BINS) * 360;
+      /* Mostly-white with a directional tint so the field stays readable but
+         every streak carries a hint of its direction's hue. */
+      ctx.strokeStyle = `hsla(${hue.toFixed(0)}, 90%, 78%, ${alpha})`;
+      ctx.beginPath();
+      for (const particle of list) {
+        const a = map.latLngToContainerPoint([particle.prevLat, particle.prevLon]);
+        const b = map.latLngToContainerPoint([particle.lat, particle.lon]);
+        ctx.moveTo(a.x + offset.x, a.y + offset.y);
+        ctx.lineTo(b.x + offset.x, b.y + offset.y);
+      }
+      ctx.stroke();
+    }
+  };
+
+  /* Currents: thinner, denser streaks with direction-tinted whites. */
+  drawCurrentLayer("surface", 1.1, 0.92);
+  drawCurrentLayer("depth", 0.9, 0.65);
+  /* Wind: keep distinctive orange dashed streaks, slightly thinner. */
+  drawBatchLayer("wind", "rgba(255, 190, 86, 0.95)", 1.4, [7, 5]);
   for (const particle of bgParticles) {
     particle.prevOK = false;
   }
