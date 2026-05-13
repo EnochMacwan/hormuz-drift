@@ -951,7 +951,6 @@ body:not(.compact-reference-ui) #map-chip-chunk.loading {
 }
 
 body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .release-physics-card,
-body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .playback-tuning-card,
 body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .visual-overlay-card,
 body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .data-quality-card,
 body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .intro-card,
@@ -1700,11 +1699,13 @@ body:not(.compact-reference-ui) #controls input[type="range"]::-moz-range-thumb 
 }
 
 /* ── Tuning card: compact tuning rows for Speed + Tracers ──────────────── */
-body:not(.compact-reference-ui) #playback-tuning-card.playback-tuning-card {
-  padding: 10px 14px 12px !important;
+body:not(.compact-reference-ui) #app #side > #playback-tuning-card.playback-tuning-card {
   display: flex !important;
   flex-direction: column !important;
   gap: 8px !important;
+  padding: 10px 14px 12px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 body:not(.compact-reference-ui) .tuning-row {
