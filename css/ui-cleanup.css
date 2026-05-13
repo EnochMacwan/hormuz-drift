@@ -876,7 +876,8 @@ body:not(.compact-reference-ui) #side > .release-physics-card {
 }
 
 body:not(.compact-reference-ui) #side > .playback-tuning-card {
-  order: 90 !important;
+  /* Promoted: positioned right after #controls. */
+  order: 45 !important;
 }
 
 body:not(.compact-reference-ui) #side > .visual-overlay-card {
