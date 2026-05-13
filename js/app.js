@@ -913,9 +913,9 @@ function drawBgParticles() {
      issue ~12 strokes per layer (cheap) but each particle still reads as
      "color = its direction". Matches the compass wheel hue mapping. */
   const HUE_BINS = 12;
-  const drawCurrentLayer = (layer, lineWidth, alpha) => {
+  const drawCurrentLayer = (layer, lineWidth, alpha, dash) => {
     ctx.lineWidth = lineWidth;
-    ctx.setLineDash([]);
+    ctx.setLineDash(dash || []);
     const bins = new Array(HUE_BINS);
     for (let i = 0; i < HUE_BINS; i += 1) bins[i] = [];
     for (const particle of bgParticles) {
@@ -941,13 +941,15 @@ function drawBgParticles() {
       }
       ctx.stroke();
     }
+    ctx.setLineDash([]);
   };
 
-  /* Currents: thinner, denser streaks with direction-tinted whites. */
-  drawCurrentLayer("surface", 1.1, 0.92);
-  drawCurrentLayer("depth", 0.9, 0.65);
-  /* Wind: keep distinctive orange dashed streaks, slightly thinner. */
-  drawBatchLayer("wind", "rgba(255, 190, 86, 0.95)", 1.4, [7, 5]);
+  /* Currents: dashed streaks (windy.com-style flow dashes) tinted by direction.
+     Dashes are short with small gaps to read as "moving marks" not solid lines. */
+  drawCurrentLayer("surface", 1.2, 0.95, [5, 4]);
+  drawCurrentLayer("depth", 1.0, 0.65, [4, 4]);
+  /* Wind: longer orange dashes — distinct from the current pattern. */
+  drawBatchLayer("wind", "rgba(255, 190, 86, 0.95)", 1.4, [9, 6]);
   for (const particle of bgParticles) {
     particle.prevOK = false;
   }
