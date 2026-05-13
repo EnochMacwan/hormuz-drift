@@ -249,13 +249,16 @@ window.ADIOS_OILS = {
 
 /* Also keep the old OIL_TYPES as a compatibility shim (used by old presets) */
 /* Compatibility shim so older presets and UI code paths can still reference
-   the smaller OIL_TYPES table. */
+   the smaller OIL_TYPES table. Each entry needs `tau_h` for the simple
+   Drifter mass-evaporation model used by spawnEnsemble in drift.js — without
+   it tau_evap is NaN, drifter.tau_evap never gets set, and the "Mass left"
+   HUD stat freezes at 100%. Values mirror the original drift.js table. */
 window.OIL_TYPES = {
-  light_crude:  window.ADIOS_OILS.arabian_light,
-  medium_crude: window.ADIOS_OILS.arabian_medium,
-  heavy_fuel:   window.ADIOS_OILS.hfo380,
-  diesel:       window.ADIOS_OILS.diesel_mgo,
-  condensate:   window.ADIOS_OILS.condensate,
+  light_crude:  { ...window.ADIOS_OILS.arabian_light,  tau_h: 12 },
+  medium_crude: { ...window.ADIOS_OILS.arabian_medium, tau_h: 36 },
+  heavy_fuel:   { ...window.ADIOS_OILS.hfo380,         tau_h: 200 },
+  diesel:       { ...window.ADIOS_OILS.diesel_mgo,     tau_h: 24 },
+  condensate:   { ...window.ADIOS_OILS.condensate,     tau_h: 6 },
 };
 
 /* ─────────────────────────────────────────────────────────────────────────

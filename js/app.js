@@ -986,12 +986,16 @@ function sampleTrackPosition(drifter, tSec) {
   const last = track[track.length - 1];
   const sampleSec = Math.min(tSec, last[2]);
   if (sampleSec >= last[2]) {
+    /* Mass weathering continues even after the drifter is stranded — base it
+       on the requested playback time (tSec - t0), not the truncated track
+       time. Otherwise drifters that strand at t=t0 would always read 100% */
+    const elapsed = Math.max(0, tSec - drifter.t0);
     return {
       lon: last[0],
       lat: last[1],
-      ageSec: Math.max(0, sampleSec - drifter.t0),
+      ageSec: elapsed,
       stranded: drifter.stranded && sampleSec >= drifter.t,
-      massFrac: drifter.tau_evap ? Math.exp(-(sampleSec - drifter.t0) / drifter.tau_evap) : drifter.mass_frac,
+      massFrac: drifter.tau_evap ? Math.exp(-elapsed / drifter.tau_evap) : drifter.mass_frac,
     };
   }
 
