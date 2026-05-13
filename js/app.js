@@ -456,7 +456,6 @@ function syncExpertVisibility() {
     ".visual-overlay-card",
     ".data-quality-card",
     ".intro-card",
-    ".tridel-area-card",
     ".marinetraffic-card",
     ".webgnome-card",
     ".data-provenance-card",

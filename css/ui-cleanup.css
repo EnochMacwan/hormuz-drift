@@ -832,11 +832,9 @@ body:not(.compact-reference-ui).expert-tools-open #side > .expert-toggle-btn::af
 }
 
 body:not(.compact-reference-ui) #side > .release-physics-card,
-body:not(.compact-reference-ui) #side > .playback-tuning-card,
 body:not(.compact-reference-ui) #side > .visual-overlay-card,
 body:not(.compact-reference-ui) #side > .data-quality-card,
 body:not(.compact-reference-ui) #side > .intro-card,
-body:not(.compact-reference-ui) #side > .tridel-area-card,
 body:not(.compact-reference-ui) #side > .marinetraffic-card,
 body:not(.compact-reference-ui) #side > #response-card,
 body:not(.compact-reference-ui) #side > .webgnome-card,
@@ -897,7 +895,12 @@ body:not(.compact-reference-ui) #side > .intro-card {
 }
 
 body:not(.compact-reference-ui) #side > .tridel-area-card {
-  order: 140 !important;
+  /* Promoted: sits right after Playback + tuning so the "recreate this map
+     for your area" CTA is visible without scrolling. */
+  order: 47 !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 body:not(.compact-reference-ui) #side > .marinetraffic-card {
@@ -957,7 +960,6 @@ body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .release-ph
 body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .visual-overlay-card,
 body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .data-quality-card,
 body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .intro-card,
-body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .tridel-area-card,
 body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .marinetraffic-card,
 body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > #response-card,
 body:not(.compact-reference-ui):not(.expert-tools-open) #app #side > .webgnome-card,
