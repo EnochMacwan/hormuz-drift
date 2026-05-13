@@ -433,6 +433,17 @@ function setStatus(message) {
   els.runStatus.textContent = message || "";
 }
 
+/* Paint a slider's cyan progress fill — WebKit has no native ::-webkit-range-
+   progress pseudo, so we set a CSS var that the track gradient interpolates. */
+function paintSliderProgress(slider) {
+  if (!slider) return;
+  const min = Number(slider.min || 0);
+  const max = Number(slider.max || 100);
+  const val = Number(slider.value || 0);
+  const pct = max > min ? ((val - min) / (max - min)) * 100 : 0;
+  slider.style.setProperty("--slider-pct", `${pct}%`);
+}
+
 function setChunkStatus(message, isLoading = false) {
   if (!els.mapChipChunk) return;
   els.mapChipChunk.textContent = message;
@@ -442,7 +453,6 @@ function setChunkStatus(message, isLoading = false) {
 function syncExpertVisibility() {
   const expertSelectors = [
     ".release-physics-card",
-    ".playback-tuning-card",
     ".visual-overlay-card",
     ".data-quality-card",
     ".intro-card",
@@ -2564,7 +2574,10 @@ function seekHours(deltaHours) {
   // drift off the slider tick alignment.
   const nextIdx = snapToTimelineStep(secToTIdx(nextSec));
   tIdx = nextIdx;
-  if (els.timeSlider) els.timeSlider.value = String(Math.floor(tIdx));
+  if (els.timeSlider) {
+    els.timeSlider.value = String(Math.floor(tIdx));
+    paintSliderProgress(els.timeSlider);
+  }
   resetFrameCache();
   updateTimelinePill();
   updateResultsPanel(false);
@@ -2598,6 +2611,7 @@ function setTimelineStep(stepHours, snapCurrent = true) {
     if (snapCurrent) {
       tIdx = snapToTimelineStep(tIdx);
       els.timeSlider.value = Math.floor(tIdx);
+      paintSliderProgress(els.timeSlider);
       resetFrameCache();
       updateTimelinePill();
       updateResultsPanel(false);
@@ -2627,6 +2641,7 @@ function tick(now) {
     }
     const currentIndex = Math.floor(tIdx);
     els.timeSlider.value = currentIndex;
+    paintSliderProgress(els.timeSlider);
     els.timeLabel.textContent = `${Field.times[currentIndex] || ""} UTC`;
     drawField();
     stepBgParticles(dt);
@@ -2833,11 +2848,15 @@ function wireUi() {
   els.timeSlider.oninput = (event) => {
     tIdx = snapToTimelineStep(Number(event.target.value));
     event.target.value = Math.floor(tIdx);
+    paintSliderProgress(event.target);
     resetFrameCache();
     updateTimelinePill();
     updateResultsPanel(false);
     updatePlotCursor(true);
   };
+
+  /* Prime the cyan progress fill for all three sliders at boot. */
+  [els.timeSlider, els.speedSlider, els.nSlider].forEach(paintSliderProgress);
 
   document.querySelectorAll(".time-step-option").forEach((button) => {
     button.onclick = () => setTimelineStep(Number(button.dataset.stepHours));
@@ -2845,13 +2864,15 @@ function wireUi() {
 
   els.speedSlider.oninput = (event) => {
     playSpeed = Number(event.target.value);
-    els.speedLabel.textContent = `${playSpeed.toFixed(1)}x`;
+    els.speedLabel.textContent = `${playSpeed.toFixed(1)}×`;
+    paintSliderProgress(event.target);
   };
 
   els.nSlider.oninput = (event) => {
     nParticles = Number(event.target.value);
     els.nLabel.textContent = String(nParticles);
     makeBgParticles(nParticles);
+    paintSliderProgress(event.target);
   };
 
   if (els.marineToggleBtn) {
@@ -3050,6 +3071,7 @@ async function boot() {
   syncLayerInputs();
 
   els.timeSlider.max = Field.times.length - 1;
+  paintSliderProgress(els.timeSlider);
   setTimelineStep(timelineStepHours, false);
   els.dataMeta.textContent = `${Field.meta.source} | ${Field.times[0]} to ${Field.times[Field.times.length - 1]} UTC | ${Field.times.length} hourly frames`;
 

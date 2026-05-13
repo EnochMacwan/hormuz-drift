@@ -1620,3 +1620,111 @@ body:not(.compact-reference-ui).map-chrome-hidden .map-legend {
 @media (max-width: 1100px) {
   body:not(.compact-reference-ui) .map-legend { width: 200px !important; }
 }
+
+/* ── Unified range-slider styling for ALL sliders in the side panel ──────── */
+body:not(.compact-reference-ui) #side input[type="range"],
+body:not(.compact-reference-ui) #controls input[type="range"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 100% !important;
+  height: 22px !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Track — WebKit */
+body:not(.compact-reference-ui) #side input[type="range"]::-webkit-slider-runnable-track,
+body:not(.compact-reference-ui) #controls input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, rgba(35, 248, 255, 0.85) 0%, rgba(35, 248, 255, 0.85) var(--slider-pct, 0%), rgba(255, 255, 255, 0.10) var(--slider-pct, 0%), rgba(255, 255, 255, 0.10) 100%) !important;
+  border: 1px solid rgba(70, 236, 255, 0.25) !important;
+}
+
+/* Track — Firefox */
+body:not(.compact-reference-ui) #side input[type="range"]::-moz-range-track,
+body:not(.compact-reference-ui) #controls input[type="range"]::-moz-range-track {
+  height: 6px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  border: 1px solid rgba(70, 236, 255, 0.25) !important;
+}
+
+body:not(.compact-reference-ui) #side input[type="range"]::-moz-range-progress,
+body:not(.compact-reference-ui) #controls input[type="range"]::-moz-range-progress {
+  height: 6px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, #12aee7, #23f8ff) !important;
+}
+
+/* Thumb — WebKit */
+body:not(.compact-reference-ui) #side input[type="range"]::-webkit-slider-thumb,
+body:not(.compact-reference-ui) #controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin-top: -6px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 2px solid var(--ui-cyan) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 0 8px rgba(35, 248, 255, 0.35) !important;
+  cursor: grab !important;
+  transition: transform 0.12s ease, box-shadow 0.12s ease !important;
+}
+
+body:not(.compact-reference-ui) #side input[type="range"]::-webkit-slider-thumb:hover,
+body:not(.compact-reference-ui) #controls input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), 0 0 14px rgba(35, 248, 255, 0.65) !important;
+}
+
+body:not(.compact-reference-ui) #side input[type="range"]::-webkit-slider-thumb:active,
+body:not(.compact-reference-ui) #controls input[type="range"]::-webkit-slider-thumb:active {
+  cursor: grabbing !important;
+  transform: scale(1.18) !important;
+}
+
+/* Thumb — Firefox */
+body:not(.compact-reference-ui) #side input[type="range"]::-moz-range-thumb,
+body:not(.compact-reference-ui) #controls input[type="range"]::-moz-range-thumb {
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  border: 2px solid var(--ui-cyan) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 0 8px rgba(35, 248, 255, 0.35) !important;
+  cursor: grab !important;
+}
+
+/* ── Tuning card: compact tuning rows for Speed + Tracers ──────────────── */
+body:not(.compact-reference-ui) #playback-tuning-card.playback-tuning-card {
+  padding: 10px 14px 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+body:not(.compact-reference-ui) .tuning-row {
+  display: grid !important;
+  grid-template-columns: 64px 1fr 52px !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+body:not(.compact-reference-ui) .tuning-label {
+  font-size: 10px !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: rgba(218, 232, 244, 0.75) !important;
+  font-weight: 600 !important;
+}
+
+body:not(.compact-reference-ui) .tuning-val {
+  font-family: "JetBrains Mono", "Fira Mono", "Consolas", monospace !important;
+  font-size: 12px !important;
+  text-align: right !important;
+  color: var(--ui-cyan) !important;
+}
