@@ -1435,6 +1435,109 @@ function collectResponses() {
 }
 
 /* Render the stacked oil-budget chart after a completed oil run. */
+/* Canvas-based stacked area chart for the oil budget. Bypasses Plotly's SVG
+   paint issues inside the side panel by drawing directly. */
+function drawOilBudgetCanvas(container, history) {
+  if (!container || !history || !history.length) return;
+  let canvas = container.querySelector("canvas.budget-canvas");
+  if (!canvas) {
+    container.innerHTML = "";
+    canvas = document.createElement("canvas");
+    canvas.className = "budget-canvas";
+    canvas.style.display = "block";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+    container.appendChild(canvas);
+  }
+  const rect = container.getBoundingClientRect();
+  const cssW = Math.max(160, rect.width);
+  const cssH = Math.max(160, rect.height || 220);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = `${cssW}px`;
+  canvas.style.height = `${cssH}px`;
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const pad = { l: 38, r: 12, t: 8, b: 28 };
+  const plotW = cssW - pad.l - pad.r;
+  const plotH = cssH - pad.t - pad.b;
+  if (plotW <= 0 || plotH <= 0) return;
+
+  const tMin = history[0].t_h;
+  const tMax = history[history.length - 1].t_h;
+  const tRange = Math.max(1e-6, tMax - tMin);
+  const xOf = (t) => pad.l + ((t - tMin) / tRange) * plotW;
+  const yOf = (p) => pad.t + (1 - p / 100) * plotH;
+
+  /* Grid + axis labels (drawn first so the stack fills paint over them). */
+  ctx.font = "10px Inter, system-ui, sans-serif";
+  ctx.fillStyle = "rgba(220, 235, 245, 0.55)";
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+  ctx.lineWidth = 1;
+  for (let p = 0; p <= 100; p += 20) {
+    const y = yOf(p);
+    ctx.beginPath();
+    ctx.moveTo(pad.l, y);
+    ctx.lineTo(pad.l + plotW, y);
+    ctx.stroke();
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ctx.fillText(`${p}`, pad.l - 6, y);
+  }
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  for (let i = 0; i <= 4; i += 1) {
+    const t = tMin + ((tMax - tMin) * i) / 4;
+    ctx.fillText(t.toFixed(0), xOf(t), pad.t + plotH + 6);
+  }
+  /* Axis titles. */
+  ctx.save();
+  ctx.translate(10, pad.t + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("% of spill", 0, 0);
+  ctx.restore();
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText("Hours", pad.l + plotW / 2, cssH - 6);
+
+  /* Stack-order series — bottom-to-top in the legend's reading order. */
+  const series = [
+    { key: "surface", color: "rgba(255, 127, 0, 0.85)" },
+    { key: "evap",    color: "rgba(255, 160, 64, 0.78)" },
+    { key: "disp",    color: "rgba(0, 170, 231, 0.72)" },
+    { key: "beach",   color: "rgba(0, 129, 176, 0.72)" },
+    { key: "skim",    color: "rgba(0, 255, 204, 0.65)" },
+    { key: "burn",    color: "rgba(0, 18, 32, 0.78)" },
+  ];
+
+  const n = history.length;
+  const cum = new Array(n).fill(0);
+  for (const s of series) {
+    ctx.fillStyle = s.color;
+    ctx.beginPath();
+    for (let i = 0; i < n; i += 1) {
+      const v = Number(history[i][s.key]) || 0;
+      const x = xOf(history[i].t_h);
+      const y = yOf(cum[i] + v);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    for (let i = n - 1; i >= 0; i -= 1) {
+      ctx.lineTo(xOf(history[i].t_h), yOf(cum[i]));
+    }
+    ctx.closePath();
+    ctx.fill();
+    for (let i = 0; i < n; i += 1) cum[i] += Number(history[i][s.key]) || 0;
+  }
+
+  /* Plot frame. */
+  ctx.strokeStyle = "rgba(70, 236, 255, 0.18)";
+  ctx.strokeRect(pad.l, pad.t, plotW, plotH);
+}
+
 function renderOilBudgetPlot() {
   if (!oilBudgetModel || !oilBudgetModel.history.length) {
     els.oilBudgetCard.style.display = "none";
@@ -1444,27 +1547,11 @@ function renderOilBudgetPlot() {
   els.oilBudgetCard.style.display = "";
 
   const h = oilBudgetModel.history;
-  const x = h.map((s) => s.t_h);
-
-  const traces = [
-    { x, y: h.map((s) => s.surface), name: "Surface",    stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(255, 127, 0, 0.82)" },
-    { x, y: h.map((s) => s.evap),    name: "Evaporated", stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(255, 160, 64, 0.72)" },
-    { x, y: h.map((s) => s.disp),    name: "Dispersed",  stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(0, 170, 231, 0.68)" },
-    { x, y: h.map((s) => s.beach),   name: "Beached",    stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(0, 129, 176, 0.68)" },
-    { x, y: h.map((s) => s.skim),    name: "Skimmed",    stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(0, 255, 204, 0.62)" },
-    { x, y: h.map((s) => s.burn),    name: "Burned",     stackgroup: "one", line: { width: 0 }, fillcolor: "rgba(0, 18, 32, 0.72)" },
-  ];
-
-  Plotly.newPlot(els.oilBudgetPlot, traces, {
-    autosize: true,
-    margin: { l: 40, r: 14, t: 10, b: 36 },
-    paper_bgcolor: "rgba(255,255,255,0)",
-    plot_bgcolor: "rgba(255,255,255,0)",
-    font: { family: "Inter, sans-serif", color: "rgba(220,235,245,0.85)", size: 11 },
-    xaxis: { title: "Hours", showgrid: true, gridcolor: "rgba(255,255,255,0.08)", zeroline: false },
-    yaxis: { title: "% of spill", range: [0, 100], showgrid: true, gridcolor: "rgba(255,255,255,0.08)", zeroline: false },
-    legend: { orientation: "h", y: 1.14, x: 0, font: { size: 10 } },
-  }, { displayModeBar: false, responsive: true });
+  /* Plotly's SVG renderer is unreliable inside the side-panel's stacking
+     context (backdrop-filter + nested gradient backgrounds wipe paths from
+     paint). Draw the stacked-area chart directly on a 2-D canvas instead —
+     same data, far simpler, guaranteed to paint. */
+  drawOilBudgetCanvas(els.oilBudgetPlot, h);
 
   // Summary stats
   const final = oilBudgetModel.summary();
@@ -1672,7 +1759,7 @@ function clearRun() {
   els.oilBudgetCard.style.display = "none";
   els.exportBudgetCsvBtn.style.display = "none";
   els.oilBudgetInsights.innerHTML = "";
-  Plotly.purge(els.oilBudgetPlot);
+  if (els.oilBudgetPlot) els.oilBudgetPlot.innerHTML = "";
 }
 
 function buildAnalystSummary(metrics, frame) {
