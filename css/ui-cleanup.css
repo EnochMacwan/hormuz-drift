@@ -1847,3 +1847,68 @@ body:not(.compact-reference-ui) .sara-swatch-s  { background: var(--ui-cyan) !im
 body:not(.compact-reference-ui) .sara-swatch-a  { background: var(--ui-amber) !important; }
 body:not(.compact-reference-ui) .sara-swatch-r  { background: #ff7f50 !important; }
 body:not(.compact-reference-ui) .sara-swatch-as { background: #6d4c41 !important; }
+
+/* ── Native <select> theming — match the app's dark cyan glassmorphism ────
+   Strips browser-default styling and uses an inline-SVG caret so the
+   chevron stays crisp at any zoom level and tints the cyan accent. */
+body:not(.compact-reference-ui) #side select,
+body:not(.compact-reference-ui) #controls select {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  width: 100% !important;
+  min-height: 36px !important;
+  padding: 7px 36px 7px 12px !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(70, 236, 255, 0.28) !important;
+  background-color: rgba(4, 18, 33, 0.72) !important;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5 L6 6.5 L11 1.5' fill='none' stroke='%2323f8ff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 11px 7px !important;
+  color: rgba(244, 250, 255, 0.92) !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  cursor: pointer !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease !important;
+  /* Hide the native focus ring; we draw our own. */
+  outline: none !important;
+}
+
+body:not(.compact-reference-ui) #side select:hover,
+body:not(.compact-reference-ui) #controls select:hover {
+  border-color: rgba(35, 248, 255, 0.55) !important;
+  background-color: rgba(8, 28, 50, 0.85) !important;
+}
+
+body:not(.compact-reference-ui) #side select:focus-visible,
+body:not(.compact-reference-ui) #controls select:focus-visible {
+  border-color: var(--ui-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(35, 248, 255, 0.20) !important;
+}
+
+body:not(.compact-reference-ui) #side select:disabled,
+body:not(.compact-reference-ui) #controls select:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+}
+
+/* The <option> items the browser pops up. Styling is limited cross-browser
+   (Firefox + Chromium honor most of these; Safari ignores everything but
+   the system menu colors). Setting a dark base + light text keeps the
+   open menu legible in Chromium-based browsers, which is what the
+   target audience uses. */
+body:not(.compact-reference-ui) #side select option,
+body:not(.compact-reference-ui) #controls select option {
+  background: #06192b !important;
+  color: rgba(244, 250, 255, 0.92) !important;
+  padding: 6px 10px !important;
+}
+
+body:not(.compact-reference-ui) #side select option:checked,
+body:not(.compact-reference-ui) #controls select option:checked {
+  background: linear-gradient(rgba(35, 248, 255, 0.18), rgba(35, 248, 255, 0.18)) !important;
+  color: #ffffff !important;
+}
