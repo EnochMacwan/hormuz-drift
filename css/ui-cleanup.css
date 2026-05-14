@@ -164,8 +164,14 @@ body:not(.compact-reference-ui) .current-scenario-card strong {
   line-height: 1.1 !important;
 }
 
-body:not(.compact-reference-ui) .summary-chip-row {
+body:not(.compact-reference-ui) #side .summary-chip-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
   gap: 6px !important;
+}
+
+body:not(.compact-reference-ui) #side .summary-chip-row span {
+  display: inline-flex !important;
 }
 
 body:not(.compact-reference-ui) .summary-chip-row span,
@@ -522,6 +528,7 @@ body:not(.compact-reference-ui) #side .term-card span {
 
 body:not(.compact-reference-ui) #side .term-grid,
 body:not(.compact-reference-ui) #side .quality-grid {
+  display: grid !important;
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 7px !important;
 }
@@ -641,6 +648,28 @@ body:not(.compact-reference-ui) #side #sara-R {
 
 body:not(.compact-reference-ui) #side #sara-As {
   background: #f06292 !important;
+}
+
+/* ── Oil-budget card — restore flex/grid layouts killed by #side * rule ──── */
+body:not(.compact-reference-ui) #side .budget-header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+}
+
+body:not(.compact-reference-ui) #side .budget-legend {
+  display: flex !important;
+  flex-wrap: wrap !important;
+}
+
+body:not(.compact-reference-ui) #side .budget-summary-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+body:not(.compact-reference-ui) #side .budget-insights {
+  display: flex !important;
+  flex-wrap: wrap !important;
 }
 
 body:not(.compact-reference-ui) #side .label-visual,
@@ -1824,7 +1853,8 @@ body:not(.compact-reference-ui) .tuning-val {
    `#side * { display: block !important }` rule in style.css. */
 body:not(.compact-reference-ui) #side .sara-legend {
   display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-column: 1 / -1 !important;
   gap: 4px 8px !important;
   margin-top: 6px !important;
   font-size: 10px !important;
