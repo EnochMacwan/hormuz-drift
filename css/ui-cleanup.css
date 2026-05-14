@@ -1093,14 +1093,14 @@ body:not(.compact-reference-ui) #banner .partner-logo-inline {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  height: 26px !important;
-  padding: 1px 6px !important;
-  border-radius: 5px !important;
+  height: 36px !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
   background: rgba(255, 255, 255, 0.92) !important;
-  border: 1px solid rgba(70, 236, 255, 0.18) !important;
+  border: 0 !important;
   text-decoration: none !important;
   transition: transform 0.15s ease, opacity 0.15s ease !important;
-  opacity: 0.92 !important;
+  opacity: 0.95 !important;
 }
 
 body:not(.compact-reference-ui) #banner .partner-logo-inline:hover {
@@ -1109,7 +1109,7 @@ body:not(.compact-reference-ui) #banner .partner-logo-inline:hover {
 }
 
 body:not(.compact-reference-ui) #banner .partner-logo-inline img {
-  height: 18px !important;
+  height: 28px !important;
   width: auto !important;
   display: block !important;
 }
