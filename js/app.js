@@ -2482,14 +2482,19 @@ function updateOilProperties() {
     els.opEmuls.textContent = Number.isFinite(adiosOil.W_max) ? `${Math.round(adiosOil.W_max * 100)}%` : "—";
 
     const sara = [
-      ["saraS", adiosOil.saturates],
-      ["saraA", adiosOil.aromatics],
-      ["saraR", adiosOil.resins],
-      ["saraAs", adiosOil.asphaltenes],
+      ["saraS", "saraPctS", adiosOil.saturates],
+      ["saraA", "saraPctA", adiosOil.aromatics],
+      ["saraR", "saraPctR", adiosOil.resins],
+      ["saraAs", "saraPctAs", adiosOil.asphaltenes],
     ];
-    sara.forEach(([key, value]) => {
-      if (els[key]) {
-        els[key].style.width = `${Math.max(0, Math.min(100, (value || 0) * 100))}%`;
+    sara.forEach(([segKey, pctKey, value]) => {
+      const pct = Math.max(0, Math.min(100, (value || 0) * 100));
+      if (els[segKey]) {
+        els[segKey].style.width = `${pct}%`;
+      }
+      const pctEl = document.getElementById({ saraPctS: "sara-pct-S", saraPctA: "sara-pct-A", saraPctR: "sara-pct-R", saraPctAs: "sara-pct-As" }[pctKey]);
+      if (pctEl) {
+        pctEl.textContent = `${Math.round(pct)}%`;
       }
     });
     if (els.opSara) {
@@ -2506,6 +2511,10 @@ function updateOilProperties() {
     if (els[key]) {
       els[key].style.width = "25%";
     }
+  });
+  ["sara-pct-S", "sara-pct-A", "sara-pct-R", "sara-pct-As"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = "—";
   });
   if (els.opSara) {
     els.opSara.title = "Detailed SARA unavailable for this fallback oil preset.";

@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="icon" type="image/png" href="assets/tridel.png" />
   <link rel="stylesheet" href="css/style.css?v=48" />
-  <link rel="stylesheet" href="css/ui-cleanup.css?v=41" />
+  <link rel="stylesheet" href="css/ui-cleanup.css?v=42" />
 </head>
 
 <body>
@@ -316,6 +316,13 @@
                 <div id="sara-A" class="sara-seg" title="Aromatics"></div>
                 <div id="sara-R" class="sara-seg" title="Resins"></div>
                 <div id="sara-As" class="sara-seg" title="Asphaltenes"></div>
+              </div>
+              <!-- Percentage breakdown so users see the actual numbers -->
+              <div class="sara-legend">
+                <span class="sara-leg" title="Saturates — light alkanes, evaporate first"><i class="sara-swatch sara-swatch-s"></i>S <strong id="sara-pct-S">—</strong></span>
+                <span class="sara-leg" title="Aromatics — toxic, partly dissolve in water"><i class="sara-swatch sara-swatch-a"></i>A <strong id="sara-pct-A">—</strong></span>
+                <span class="sara-leg" title="Resins — polar, bind emulsions"><i class="sara-swatch sara-swatch-r"></i>R <strong id="sara-pct-R">—</strong></span>
+                <span class="sara-leg" title="Asphaltenes — heavy & sticky, drive mousse"><i class="sara-swatch sara-swatch-as"></i>As <strong id="sara-pct-As">—</strong></span>
               </div>
             </div>
           </div>
@@ -651,7 +658,7 @@
   <script src="js/field.js?v=9"></script>
   <script src="js/drift.js?v=4"></script>
   <script src="js/weathering.js?v=4"></script>
-  <script src="js/app.js?v=62"></script>
+  <script src="js/app.js?v=63"></script>
 </body>
 
 </html>

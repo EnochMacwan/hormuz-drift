@@ -1810,3 +1810,40 @@ body:not(.compact-reference-ui) .tuning-val {
   text-align: right !important;
   color: var(--ui-cyan) !important;
 }
+
+/* ── SARA — percentage legend row underneath the stacked bar ────────────── */
+body:not(.compact-reference-ui) .sara-legend {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 4px 8px !important;
+  margin-top: 6px !important;
+  font-size: 10px !important;
+  letter-spacing: 0.02em !important;
+  color: rgba(218, 232, 244, 0.65) !important;
+}
+
+body:not(.compact-reference-ui) .sara-leg {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
+}
+
+body:not(.compact-reference-ui) .sara-leg strong {
+  margin-left: 2px !important;
+  color: rgba(244, 250, 255, 0.92) !important;
+  font-family: "JetBrains Mono", "Fira Mono", "Consolas", monospace !important;
+  font-weight: 700 !important;
+}
+
+body:not(.compact-reference-ui) .sara-swatch {
+  display: inline-block !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 2px !important;
+}
+
+body:not(.compact-reference-ui) .sara-swatch-s  { background: var(--ui-cyan) !important; }
+body:not(.compact-reference-ui) .sara-swatch-a  { background: var(--ui-amber) !important; }
+body:not(.compact-reference-ui) .sara-swatch-r  { background: #ff7f50 !important; }
+body:not(.compact-reference-ui) .sara-swatch-as { background: #6d4c41 !important; }
