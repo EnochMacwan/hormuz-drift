@@ -3918,6 +3918,13 @@ body:not(.compact-reference-ui) #side {
   scrollbar-color: rgba(35, 248, 255, 0.32) transparent;
 }
 
+/* Inset the scrollbar track with vertical margin equal to the panel's
+   border-radius so the thumb never travels into the rounded-corner zone
+   (which is what made it look like it was "hanging outside" the border). */
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-track {
+  margin: 24px 0 !important;
+}
+
 body:not(.compact-reference-ui) #side::-webkit-scrollbar {
   width: 6px;
 }
