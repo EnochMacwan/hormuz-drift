@@ -142,15 +142,51 @@ window.Field = (() => {
     }
   };
 
-  /* Aggressive background prefetch: fire all unloaded chunks in parallel.
-     Each request is independent and idempotent thanks to chunk.promise; the
-     service worker mirrors successful responses into CacheStorage so the
-     dataset becomes instantly scrubbable for the rest of the session. */
-  F.prefetchAll = function(){
-    if (!F.chunked) return [];
-    return F.chunks
-      .filter((chunk) => !chunk.loaded && !chunk.promise)
-      .map((chunk) => _loadChunk(chunk).catch(() => {}));
+  /* Sequential, low-priority background warm-up. Fires one chunk at a time
+     so we don't burn 10× the memory by holding every chunk's float arrays
+     resident at once. The service worker caches the responses, so on the
+     NEXT scrub the chunk is fetched from disk and decoded just-in-time —
+     no permanent RAM cost. */
+  F.prefetchAll = async function(){
+    if (!F.chunked) return;
+    for (const chunk of F.chunks) {
+      if (chunk.loaded || chunk.promise) continue;
+      try {
+        await _loadChunk(chunk);
+      } catch (err) {
+        /* Network blip — skip and let on-demand loading retry later. */
+      }
+      /* Yield so the main thread can paint between chunks. */
+      await new Promise((res) => setTimeout(res, 50));
+    }
+  };
+
+  /* Evict chunks far from the current playback time to keep the heap small.
+     Keeps a hot window of [current - keepBack, current + keepAhead] chunks
+     resident; everything else is freed (the on-disk service-worker cache
+     still has the JSON, so loading back is fast). */
+  F.evictDistantChunks = function(currentTi, keepBack = 2, keepAhead = 2){
+    if (!F.chunked) return 0;
+    const idx = Math.max(0, Math.min(F.times.length - 1, Math.floor(currentTi)));
+    const current = _chunkForIndex(idx);
+    if (!current) return 0;
+    let freed = 0;
+    for (const chunk of F.chunks) {
+      if (!chunk.loaded) continue;
+      const dist = chunk.index - current.index;
+      if (dist >= -keepBack && dist <= keepAhead) continue;
+      /* Null out the float-array slots this chunk owns and let GC reclaim. */
+      for (let ti = chunk.start_index; ti < chunk.end_index; ti += 1) {
+        F.u[ti] = null;
+        F.v[ti] = null;
+        if (F.uw) F.uw[ti] = null;
+        if (F.vw) F.vw[ti] = null;
+      }
+      chunk.loaded = false;
+      chunk.promise = null;
+      freed += 1;
+    }
+    return freed;
   };
 
   F.slice = function(key, ti){

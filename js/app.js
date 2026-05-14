@@ -39,7 +39,7 @@ let tIdx = 0;
 let playing = true;
 let playSpeed = 1.5;
 let timelineStepHours = 3;
-let nParticles = 3200;
+let nParticles = 1800;
 let fieldLayer = null;
 let releasePoint = null;
 let activeScenario = "leeway";
@@ -841,6 +841,16 @@ function drawField() {
      once playback enters the last 25% of the current one. No-op if not needed. */
   if (Field.chunked && typeof Field.prefetchNext === "function") {
     Field.prefetchNext(ti1);
+  }
+
+  /* Memory hygiene — every so often, drop chunks far from the current
+     playback time. Service worker still has the JSON so reload is cheap. */
+  if (Field.chunked && typeof Field.evictDistantChunks === "function") {
+    if (!drawField._evictCounter) drawField._evictCounter = 0;
+    drawField._evictCounter += 1;
+    if (drawField._evictCounter % 120 === 0) {
+      Field.evictDistantChunks(ti0, 2, 2);
+    }
   }
 
   ctx.clearRect(0, 0, size.x, size.y);
