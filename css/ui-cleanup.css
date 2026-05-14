@@ -1052,9 +1052,18 @@ body:not(.compact-reference-ui) #banner {
 }
 
 body:not(.compact-reference-ui) #banner .brand-lockup {
+  display: inline-flex !important;
   gap: 10px !important;
   align-items: center !important;
   margin: 0 !important;
+  text-decoration: none !important;
+  color: inherit !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease !important;
+}
+
+body:not(.compact-reference-ui) #banner .brand-lockup:hover {
+  transform: translateY(-1px) !important;
 }
 
 /* Tridel = primary brand. Large logo + wordmark side-by-side. */
