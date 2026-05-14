@@ -162,9 +162,11 @@ window.ADIOS_OILS = {
   },
 
   condensate: {
-    label:       'Qatar Condensate (API 65)',
+    /* Reconciled: ASTM ρ = 141.5/(API+131.5)*1000 → ρ 738 ⇒ API ≈ 60.
+       Matches Ras Laffan / Qatar field condensate (API 58–62). */
+    label:       'Qatar Condensate (API 60)',
     adiosId:     'AD00600',
-    api:         65,
+    api:         60,
     rho:         738,
     nu15:        1e-6,
     nu25:        0.8e-6,
@@ -173,7 +175,8 @@ window.ADIOS_OILS = {
     f_max:       92,
     saturates:   0.85, aromatics: 0.13, resins: 0.02, asphaltenes: 0.00,
     K_e:         0.1e-6,
-    W_max:       0.10,
+    /* Asphaltene-free → no stable Mackay emulsion. */
+    W_max:       0.02,
     C_nd:        0.055,
     color:       '#fff176',
   },
@@ -190,7 +193,9 @@ window.ADIOS_OILS = {
     f_max:       78,
     saturates:   0.78, aromatics: 0.18, resins: 0.04, asphaltenes: 0.00,
     K_e:         0.5e-6,
-    W_max:       0.25,
+    /* Asphaltene-free refined distillate — only loose, short-lived
+       water dispersions in the field. */
+    W_max:       0.08,
     C_nd:        0.040,
     color:       '#ffe082',
   },
@@ -241,7 +246,8 @@ window.ADIOS_OILS = {
     f_max:       95,
     saturates:   0.82, aromatics: 0.17, resins: 0.01, asphaltenes: 0.00,
     K_e:         0.2e-6,
-    W_max:       0.15,
+    /* Kerosene-class distillate, asphaltene-free → no emulsion. */
+    W_max:       0.02,
     C_nd:        0.060,
     color:       '#fff59d',
   },
