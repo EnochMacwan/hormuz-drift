@@ -1814,8 +1814,10 @@ body:not(.compact-reference-ui) .tuning-val {
   color: var(--ui-cyan) !important;
 }
 
-/* ── SARA — percentage legend row underneath the stacked bar ────────────── */
-body:not(.compact-reference-ui) .sara-legend {
+/* ── SARA — percentage legend row underneath the stacked bar ──────────────
+   #side prefix on every selector is required to beat the universal
+   `#side * { display: block !important }` rule in style.css. */
+body:not(.compact-reference-ui) #side .sara-legend {
   display: grid !important;
   grid-template-columns: repeat(4, 1fr) !important;
   gap: 4px 8px !important;
@@ -1825,31 +1827,32 @@ body:not(.compact-reference-ui) .sara-legend {
   color: rgba(218, 232, 244, 0.65) !important;
 }
 
-body:not(.compact-reference-ui) .sara-leg {
+body:not(.compact-reference-ui) #side .sara-leg {
   display: inline-flex !important;
   align-items: center !important;
   gap: 4px !important;
   white-space: nowrap !important;
 }
 
-body:not(.compact-reference-ui) .sara-leg strong {
+body:not(.compact-reference-ui) #side .sara-leg strong {
   margin-left: 2px !important;
   color: rgba(244, 250, 255, 0.92) !important;
   font-family: "JetBrains Mono", "Fira Mono", "Consolas", monospace !important;
   font-weight: 700 !important;
 }
 
-body:not(.compact-reference-ui) .sara-swatch {
+body:not(.compact-reference-ui) #side .sara-swatch {
   display: inline-block !important;
   width: 8px !important;
   height: 8px !important;
   border-radius: 2px !important;
+  flex: 0 0 8px !important;
 }
 
-body:not(.compact-reference-ui) .sara-swatch-s  { background: var(--ui-cyan) !important; }
-body:not(.compact-reference-ui) .sara-swatch-a  { background: var(--ui-amber) !important; }
-body:not(.compact-reference-ui) .sara-swatch-r  { background: #ff7f50 !important; }
-body:not(.compact-reference-ui) .sara-swatch-as { background: #6d4c41 !important; }
+body:not(.compact-reference-ui) #side .sara-swatch-s  { background: var(--ui-cyan) !important; }
+body:not(.compact-reference-ui) #side .sara-swatch-a  { background: var(--ui-amber) !important; }
+body:not(.compact-reference-ui) #side .sara-swatch-r  { background: #ff7f50 !important; }
+body:not(.compact-reference-ui) #side .sara-swatch-as { background: #6d4c41 !important; }
 
 /* ── Native <select> theming — match the app's dark cyan glassmorphism ────
    Strips browser-default styling and uses an inline-SVG caret so the
