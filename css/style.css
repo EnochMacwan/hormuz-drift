@@ -3913,56 +3913,60 @@ body:not(.compact-reference-ui) #side {
   scrollbar-width: thin;
 }
 
+/* Slim cyan scrollbar — thin overlay-style for Firefox + modern Chromium. */
 body:not(.compact-reference-ui) #side {
   scrollbar-width: thin;
-  scrollbar-color: rgba(35, 248, 255, 0.32) transparent;
-}
-
-/* Inset the scrollbar track with vertical margin equal to the panel's
-   border-radius so the thumb never travels into the rounded-corner zone
-   (which is what made it look like it was "hanging outside" the border). */
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-track {
-  margin: 24px 0 !important;
+  scrollbar-color: rgba(35, 248, 255, 0.42) transparent;
 }
 
 body:not(.compact-reference-ui) #side::-webkit-scrollbar {
-  width: 6px;
+  width: 6px !important;
 }
 
 body:not(.compact-reference-ui) #side::-webkit-scrollbar-track {
-  background: transparent;
+  background: transparent !important;
+  margin: 24px 0 !important;
 }
 
 body:not(.compact-reference-ui) #side::-webkit-scrollbar-thumb {
-  border: 0;
-  border-radius: 999px;
-  background: rgba(35, 248, 255, 0.32);
-  transition: background 0.15s ease;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(35, 248, 255, 0.42) !important;
 }
 
 body:not(.compact-reference-ui) #side::-webkit-scrollbar-thumb:hover {
-  background: rgba(35, 248, 255, 0.55);
+  background: rgba(35, 248, 255, 0.65) !important;
 }
 
-/* Kill the native up/down arrow buttons WebKit adds at the ends.
-   `display: none` alone is not enough on some Chromium builds — also
-   zero the dimensions and explicitly target start/end pseudo-states. */
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-button,
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:start,
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:end,
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:vertical:start,
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:vertical:end,
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:vertical:start:decrement,
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:vertical:end:increment,
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:vertical:start:increment,
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:vertical:end:decrement,
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-corner {
-  display: none !important;
-  height: 0 !important;
-  width: 0 !important;
-  background: transparent !important;
-  background-image: none !important;
-  border: 0 !important;
+/* Chrome on Windows refuses to honor `display: none` on the scrollbar
+   buttons. Mask them with absolutely-positioned overlay caps painted
+   in the panel's glass color. The chevrons still render underneath but
+   are completely covered. The pseudo-elements stop pointer events so
+   the underlying scrollbar buttons remain clickable (just invisible). */
+body:not(.compact-reference-ui) #side {
+  position: absolute;  /* already is, but make sure for pseudo anchor */
+}
+
+body:not(.compact-reference-ui) #side::before,
+body:not(.compact-reference-ui) #side::after {
+  content: "";
+  position: absolute;
+  right: 1px;       /* sit inside the panel border */
+  width: 14px;      /* cover the full scrollbar gutter width */
+  height: 24px;     /* matches the rounded-corner radius */
+  pointer-events: none;
+  background: rgba(10, 25, 45, 0.92);
+  z-index: 5;
+}
+
+body:not(.compact-reference-ui) #side::before {
+  top: 1px;
+  border-top-right-radius: 19px;
+}
+
+body:not(.compact-reference-ui) #side::after {
+  bottom: 1px;
+  border-bottom-right-radius: 19px;
 }
 
 body:not(.compact-reference-ui) #side .section-card h3,
