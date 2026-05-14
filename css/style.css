@@ -3913,19 +3913,34 @@ body:not(.compact-reference-ui) #side {
   scrollbar-width: thin;
 }
 
+body:not(.compact-reference-ui) #side {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(35, 248, 255, 0.32) transparent;
+}
+
 body:not(.compact-reference-ui) #side::-webkit-scrollbar {
-  width: 10px;
+  width: 6px;
 }
 
 body:not(.compact-reference-ui) #side::-webkit-scrollbar-track {
-  border-radius: 999px;
-  background: rgba(7, 25, 44, 0.38);
+  background: transparent;
 }
 
 body:not(.compact-reference-ui) #side::-webkit-scrollbar-thumb {
-  border: 2px solid rgba(7, 25, 44, 0.38);
+  border: 0;
   border-radius: 999px;
-  background: linear-gradient(180deg, #23f8ff, #0aa2d2);
+  background: rgba(35, 248, 255, 0.32);
+  transition: background 0.15s ease;
+}
+
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-thumb:hover {
+  background: rgba(35, 248, 255, 0.55);
+}
+
+/* Kill the native up/down arrow buttons WebKit adds at the ends. */
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-button,
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-corner {
+  display: none;
 }
 
 body:not(.compact-reference-ui) #side .section-card h3,
