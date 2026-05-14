@@ -3796,6 +3796,12 @@ body:not(.compact-reference-ui) #side {
   border-radius: 22px !important;
 }
 
+/* Load-bearing override: counters the upstream `body:not(.show-full-dashboard)
+   #side * { display: none !important }` rule (style.css:3544-3547). Without
+   `#side *` here, EVERY descendant of the panel is hidden when the body
+   lacks the `.show-full-dashboard` class (which it normally does in this
+   project's default reference-map UI). Sub-layouts that need flex/grid
+   must override with higher specificity (include `#side` in the selector). */
 body:not(.compact-reference-ui) #side *,
 body:not(.compact-reference-ui) #side .side-header,
 body:not(.compact-reference-ui) #side #controls,

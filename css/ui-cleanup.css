@@ -259,7 +259,12 @@ body:not(.compact-reference-ui) #side .data-provenance-card {
   order: 230 !important;
 }
 
-body:not(.compact-reference-ui) #side * {
+/* Forces every flex-item child of the panel to fixed sizing so the cards
+   stack without growing/shrinking when the scroll wrapper is tall.
+   Tightly scoped to the direct children of .side-scroll only — narrower
+   than the original `#side *` which broke inner flex/grid layouts in
+   range inputs, SARA cells, tuning rows. */
+body:not(.compact-reference-ui) #side > .side-scroll > * {
   flex: 0 0 auto !important;
 }
 
