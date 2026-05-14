@@ -254,17 +254,29 @@ window.ADIOS_OILS = {
 };
 
 /* Also keep the old OIL_TYPES as a compatibility shim (used by old presets) */
-/* Compatibility shim so older presets and UI code paths can still reference
-   the smaller OIL_TYPES table. Each entry needs `tau_h` for the simple
-   Drifter mass-evaporation model used by spawnEnsemble in drift.js — without
-   it tau_evap is NaN, drifter.tau_evap never gets set, and the "Mass left"
-   HUD stat freezes at 100%. Values mirror the original drift.js table. */
+/* OIL_TYPES is the UI-facing catalog: it's what populates the scenario oil
+   dropdown and what spawnEnsemble in drift.js reads (it needs `tau_h` for
+   the simple Drifter mass-evaporation model; without it tau_evap is NaN,
+   drifter.tau_evap never gets set, and Mass-left freezes at 100%).
+   tau_h is the e-fold time (hours) of the evaporable fraction — lighter
+   oils evaporate faster (smaller tau_h). Values calibrated against the
+   ASTM density / API class. */
 window.OIL_TYPES = {
+  /* Originals from the old drift.js table — keep these keys so old shared
+     scenario URLs / presets continue to resolve. */
   light_crude:  { ...window.ADIOS_OILS.arabian_light,  tau_h: 12 },
   medium_crude: { ...window.ADIOS_OILS.arabian_medium, tau_h: 36 },
   heavy_fuel:   { ...window.ADIOS_OILS.hfo380,         tau_h: 200 },
   diesel:       { ...window.ADIOS_OILS.diesel_mgo,     tau_h: 24 },
   condensate:   { ...window.ADIOS_OILS.condensate,     tau_h: 6 },
+  /* Expanded catalog — exposes the rest of the ADIOS entries in the UI. */
+  arabian_heavy: { ...window.ADIOS_OILS.arabian_heavy,  tau_h: 60 },
+  iranian_heavy: { ...window.ADIOS_OILS.iranian_heavy,  tau_h: 48 },
+  kuwait_export: { ...window.ADIOS_OILS.kuwait_export,  tau_h: 30 },
+  murban:        { ...window.ADIOS_OILS.murban,         tau_h: 18 },
+  basrah_light:  { ...window.ADIOS_OILS.basrah_light,   tau_h: 22 },
+  ifo180:        { ...window.ADIOS_OILS.ifo180,         tau_h: 150 },
+  jet_fuel:      { ...window.ADIOS_OILS.jet_fuel,       tau_h: 8 },
 };
 
 /* ─────────────────────────────────────────────────────────────────────────
