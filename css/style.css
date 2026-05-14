@@ -964,7 +964,7 @@ img {
 }
 
 
-#side > * {
+#side * {
 
   pointer-events: auto;
 
@@ -3541,21 +3541,21 @@ body:not(.show-full-dashboard) #side {
   box-shadow: 0 18px 46px rgba(0, 0, 0, 0.48) !important;
 }
 
-body.reference-map-ui #side > *,
-body:not(.show-full-dashboard) #side > * {
+body.reference-map-ui #side *,
+body:not(.show-full-dashboard) #side * {
   display: none !important;
 }
 
-body.reference-map-ui #side > .side-header,
-body.reference-map-ui #side > #controls,
-body.reference-map-ui #side > .playback-tuning-card,
-body.reference-map-ui #side > .reference-telemetry-card,
-body.reference-map-ui #side > .visual-overlay-card,
-body:not(.show-full-dashboard) #side > .side-header,
-body:not(.show-full-dashboard) #side > #controls,
-body:not(.show-full-dashboard) #side > .playback-tuning-card,
-body:not(.show-full-dashboard) #side > .reference-telemetry-card,
-body:not(.show-full-dashboard) #side > .visual-overlay-card {
+body.reference-map-ui #side .side-header,
+body.reference-map-ui #side #controls,
+body.reference-map-ui #side .playback-tuning-card,
+body.reference-map-ui #side .reference-telemetry-card,
+body.reference-map-ui #side .visual-overlay-card,
+body:not(.show-full-dashboard) #side .side-header,
+body:not(.show-full-dashboard) #side #controls,
+body:not(.show-full-dashboard) #side .playback-tuning-card,
+body:not(.show-full-dashboard) #side .reference-telemetry-card,
+body:not(.show-full-dashboard) #side .visual-overlay-card {
   display: block !important;
 }
 
@@ -3796,25 +3796,25 @@ body:not(.compact-reference-ui) #side {
   border-radius: 22px !important;
 }
 
-body:not(.compact-reference-ui) #side > *,
-body:not(.compact-reference-ui) #side > .side-header,
-body:not(.compact-reference-ui) #side > #controls,
-body:not(.compact-reference-ui) #side > .section-card {
+body:not(.compact-reference-ui) #side *,
+body:not(.compact-reference-ui) #side .side-header,
+body:not(.compact-reference-ui) #side #controls,
+body:not(.compact-reference-ui) #side .section-card {
   display: block !important;
 }
 
-body:not(.compact-reference-ui) #side > .intro-card,
-body:not(.compact-reference-ui) #side > .tridel-area-card,
-body:not(.compact-reference-ui) #side > .marinetraffic-card,
-body:not(.compact-reference-ui) #side > .data-quality-card,
-body:not(.compact-reference-ui) #side > .scenario-card,
-body:not(.compact-reference-ui) #side > .release-physics-card,
-body:not(.compact-reference-ui) #side > .caveat-card,
-body:not(.compact-reference-ui) #side > .run-share-card,
-body:not(.compact-reference-ui) #side > .webgnome-card,
-body:not(.compact-reference-ui) #side > .data-provenance-card,
-body:not(.compact-reference-ui) #side > .science-roadmap-card,
-body:not(.compact-reference-ui) #side > #oil-budget-card {
+body:not(.compact-reference-ui) #side .intro-card,
+body:not(.compact-reference-ui) #side .tridel-area-card,
+body:not(.compact-reference-ui) #side .marinetraffic-card,
+body:not(.compact-reference-ui) #side .data-quality-card,
+body:not(.compact-reference-ui) #side .scenario-card,
+body:not(.compact-reference-ui) #side .release-physics-card,
+body:not(.compact-reference-ui) #side .caveat-card,
+body:not(.compact-reference-ui) #side .run-share-card,
+body:not(.compact-reference-ui) #side .webgnome-card,
+body:not(.compact-reference-ui) #side .data-provenance-card,
+body:not(.compact-reference-ui) #side .science-roadmap-card,
+body:not(.compact-reference-ui) #side #oil-budget-card {
   display: block !important;
 }
 
@@ -3824,8 +3824,8 @@ body:not(.compact-reference-ui) #side .map-polish-note {
   display: grid !important;
 }
 
-body:not(.compact-reference-ui) #app #side > .section-card,
-body:not(.compact-reference-ui) #app #side > a.section-card {
+body:not(.compact-reference-ui) #app #side .section-card,
+body:not(.compact-reference-ui) #app #side a.section-card {
   display: block !important;
 }
 
@@ -3913,60 +3913,56 @@ body:not(.compact-reference-ui) #side {
   scrollbar-width: thin;
 }
 
-/* Slim cyan scrollbar — thin overlay-style for Firefox + modern Chromium. */
-body:not(.compact-reference-ui) #side {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(35, 248, 255, 0.42) transparent;
-}
+/* Scroll happens on the inner .side-scroll wrapper. See the override
+   block at the very bottom of this file for the actual rules — they
+   need to be the LAST `#side` declarations so the cascade lets them
+   win over the half-dozen other `#side { padding: ...; overflow-y: auto }`
+   rules scattered through this file. */
 
-body:not(.compact-reference-ui) #side::-webkit-scrollbar {
-  width: 6px !important;
-}
-
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-track {
+body:not(.compact-reference-ui) #side .side-scroll {
+  width: 100% !important;
+  height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 24px !important;
+  box-sizing: border-box !important;
+  scrollbar-gutter: stable !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(35, 248, 255, 0.42) transparent !important;
+  /* Preserve flex/grid layout that the original #side used for ordering
+     section cards via the `order` property. The universal `#side *` rule
+     elsewhere forces `display: block !important` so we have to match. */
+  display: flex !important;
+  flex-direction: column !important;
+  /* Same gap the old #side had between cards. */
+  gap: 14px !important;
   background: transparent !important;
-  margin: 24px 0 !important;
-}
-
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-thumb {
   border: 0 !important;
-  border-radius: 999px !important;
-  background: rgba(35, 248, 255, 0.42) !important;
 }
 
-body:not(.compact-reference-ui) #side::-webkit-scrollbar-thumb:hover {
-  background: rgba(35, 248, 255, 0.65) !important;
+body:not(.compact-reference-ui) #side .side-scroll::-webkit-scrollbar {
+  width: 6px;
 }
 
-/* Chrome on Windows refuses to honor `display: none` on the scrollbar
-   buttons. Mask them with absolutely-positioned overlay caps painted
-   in the panel's glass color. The chevrons still render underneath but
-   are completely covered. The pseudo-elements stop pointer events so
-   the underlying scrollbar buttons remain clickable (just invisible). */
-body:not(.compact-reference-ui) #side {
-  position: absolute;  /* already is, but make sure for pseudo anchor */
+body:not(.compact-reference-ui) #side .side-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 12px 0;
 }
 
-body:not(.compact-reference-ui) #side::before,
-body:not(.compact-reference-ui) #side::after {
-  content: "";
-  position: absolute;
-  right: 1px;       /* sit inside the panel border */
-  width: 14px;      /* cover the full scrollbar gutter width */
-  height: 24px;     /* matches the rounded-corner radius */
-  pointer-events: none;
-  background: rgba(10, 25, 45, 0.92);
-  z-index: 5;
+body:not(.compact-reference-ui) #side .side-scroll::-webkit-scrollbar-thumb {
+  border: 0;
+  border-radius: 999px;
+  background: rgba(35, 248, 255, 0.42);
 }
 
-body:not(.compact-reference-ui) #side::before {
-  top: 1px;
-  border-top-right-radius: 19px;
+body:not(.compact-reference-ui) #side .side-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(35, 248, 255, 0.65);
 }
 
-body:not(.compact-reference-ui) #side::after {
-  bottom: 1px;
-  border-bottom-right-radius: 19px;
+body:not(.compact-reference-ui) #side .side-scroll::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
 }
 
 body:not(.compact-reference-ui) #side .section-card h3,
@@ -5066,4 +5062,61 @@ body:not(.compact-reference-ui) #side .visual-overlay-card .hint {
   margin-top: 8px !important;
   font-size: 11px !important;
   line-height: 1.3 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   END-OF-FILE OVERRIDE: side panel scroll wrapper. MUST stay last.
+   ══════════════════════════════════════════════════════════════════════════
+   .side-scroll is the inner element (injected at boot) that actually
+   scrolls; #side becomes a non-scrolling rounded clip container whose
+   border-radius eats any native scrollbar arrow buttons Chrome insists
+   on painting. */
+
+body:not(.compact-reference-ui) #side {
+  overflow: hidden !important;
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  padding: 0 !important;
+}
+
+body:not(.compact-reference-ui) #side .side-scroll {
+  width: 100% !important;
+  height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 18px !important;
+  box-sizing: border-box !important;
+  scrollbar-gutter: stable !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(35, 248, 255, 0.42) transparent !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+body:not(.compact-reference-ui) #side .side-scroll::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+body:not(.compact-reference-ui) #side .side-scroll::-webkit-scrollbar-track {
+  background: transparent !important;
+  margin: 6px 0 !important;
+}
+
+body:not(.compact-reference-ui) #side .side-scroll::-webkit-scrollbar-thumb {
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(35, 248, 255, 0.42) !important;
+}
+
+body:not(.compact-reference-ui) #side .side-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(35, 248, 255, 0.65) !important;
+}
+
+body:not(.compact-reference-ui) #side .side-scroll::-webkit-scrollbar-button {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
 }

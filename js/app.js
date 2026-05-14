@@ -3136,8 +3136,22 @@ function wireUi() {
 
 /* One-time startup orchestration for map, data, controls, legend, and the
    initial background animation. */
+/* Wrap every direct child of #side inside a .side-scroll container so the
+   inner element handles scrolling and the outer #side stays overflow:hidden
+   (whose border-radius cleanly clips anything inside — including the
+   scrollbar buttons Chrome on Windows insists on painting). */
+function wrapSidePanelForScroll() {
+  const side = document.getElementById("side");
+  if (!side || side.querySelector(":scope > .side-scroll")) return;
+  const wrap = document.createElement("div");
+  wrap.className = "side-scroll";
+  while (side.firstChild) wrap.appendChild(side.firstChild);
+  side.appendChild(wrap);
+}
+
 async function boot() {
   collectDomRefs();
+  wrapSidePanelForScroll();
   wireUi();
   /* Register the chunk-caching service worker; ignore failures (some browsers
      block sw on insecure contexts and Safari Private Mode). */
