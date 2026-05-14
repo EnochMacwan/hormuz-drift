@@ -1554,11 +1554,11 @@ function drawOilBudgetCanvas(container, history) {
 
 function renderOilBudgetPlot() {
   if (!oilBudgetModel || !oilBudgetModel.history.length) {
-    els.oilBudgetCard.style.display = "none";
+    els.oilBudgetCard.style.setProperty("display", "none", "important");
     els.oilBudgetInsights.innerHTML = "";
     return;
   }
-  els.oilBudgetCard.style.display = "";
+  els.oilBudgetCard.style.removeProperty("display");
 
   const h = oilBudgetModel.history;
   /* Plotly's SVG renderer is unreliable inside the side-panel's stacking
@@ -1599,7 +1599,7 @@ function renderOilBudgetPlot() {
     : "";
 
   // Show export button
-  els.exportBudgetCsvBtn.style.display = "";
+  els.exportBudgetCsvBtn.style.removeProperty("display");
 }
 
 /* Main simulation entry point.
@@ -1740,8 +1740,8 @@ async function runEnsemble() {
         renderOilBudgetPlot();
       } else {
         oilBudgetModel = null;
-        els.oilBudgetCard.style.display = "none";
-        els.exportBudgetCsvBtn.style.display = "none";
+        els.oilBudgetCard.style.setProperty("display", "none", "important");
+        els.exportBudgetCsvBtn.style.setProperty("display", "none", "important");
         els.oilBudgetInsights.innerHTML = "";
       }
 
@@ -1770,8 +1770,8 @@ function clearRun() {
   updateResultsPanel(true);
   renderResultsPlot();
   updateStoryCard();
-  els.oilBudgetCard.style.display = "none";
-  els.exportBudgetCsvBtn.style.display = "none";
+  els.oilBudgetCard.style.setProperty("display", "none", "important");
+  els.exportBudgetCsvBtn.style.setProperty("display", "none", "important");
   els.oilBudgetInsights.innerHTML = "";
   if (els.oilBudgetPlot) els.oilBudgetPlot.innerHTML = "";
 }
@@ -2593,12 +2593,20 @@ function setScenario(scenario, preservePreset) {
   document.querySelectorAll(".scenario-tabs button").forEach((button) => {
     button.classList.toggle("active", button.dataset.scenario === scenario);
   });
-  els.leewayParams.style.display = scenario === "leeway" ? "" : "none";
-  els.oilParams.style.display = scenario === "oil" ? "" : "none";
+  /* style.css has `#side * { display: block !important }`. Plain inline
+     `style.display = "none"` loses to that. Use setProperty with the
+     `important` priority flag so the inline rule wins. */
   if (scenario === "leeway") {
-    if (els.oilBudgetCard) els.oilBudgetCard.style.display = "none";
-    if (els.exportBudgetCsvBtn) els.exportBudgetCsvBtn.style.display = "none";
-    if (els.responseCard) els.responseCard.style.display = "none";
+    els.leewayParams.style.setProperty("display", "block", "important");
+    els.oilParams.style.setProperty("display", "none", "important");
+  } else {
+    els.leewayParams.style.setProperty("display", "none", "important");
+    els.oilParams.style.setProperty("display", "block", "important");
+  }
+  if (scenario === "leeway") {
+    if (els.oilBudgetCard) els.oilBudgetCard.style.setProperty("display", "none", "important");
+    if (els.exportBudgetCsvBtn) els.exportBudgetCsvBtn.style.setProperty("display", "none", "important");
+    if (els.responseCard) els.responseCard.style.setProperty("display", "none", "important");
   }
   buildPresetOptions(preservePreset ? els.scenarioPreset.value : null);
   updateScenarioBadges();
@@ -3083,9 +3091,9 @@ function wireUi() {
     tab.onclick = () => {
       document.querySelectorAll(".resp-tab").forEach((t) => t.classList.remove("active"));
       tab.classList.add("active");
-      document.querySelectorAll(".resp-panel").forEach((p) => p.style.display = "none");
+      document.querySelectorAll(".resp-panel").forEach((p) => p.style.setProperty("display", "none", "important"));
       const target = document.getElementById(`resp-${tab.dataset.resp}`);
-      if (target) target.style.display = "";
+      if (target) target.style.removeProperty("display");
     };
   });
   els.exportCsvBtn.onclick = () => { exportRunCsv(); els.exportMenu.open = false; };
