@@ -3937,10 +3937,25 @@ body:not(.compact-reference-ui) #side::-webkit-scrollbar-thumb:hover {
   background: rgba(35, 248, 255, 0.55);
 }
 
-/* Kill the native up/down arrow buttons WebKit adds at the ends. */
+/* Kill the native up/down arrow buttons WebKit adds at the ends.
+   `display: none` alone is not enough on some Chromium builds — also
+   zero the dimensions and explicitly target start/end pseudo-states. */
 body:not(.compact-reference-ui) #side::-webkit-scrollbar-button,
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:start,
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:end,
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:vertical:start,
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:vertical:end,
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:vertical:start:decrement,
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:vertical:end:increment,
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:vertical:start:increment,
+body:not(.compact-reference-ui) #side::-webkit-scrollbar-button:vertical:end:decrement,
 body:not(.compact-reference-ui) #side::-webkit-scrollbar-corner {
-  display: none;
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
 }
 
 body:not(.compact-reference-ui) #side .section-card h3,
