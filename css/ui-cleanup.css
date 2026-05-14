@@ -1093,14 +1093,14 @@ body:not(.compact-reference-ui) #banner .partner-logo-inline {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  height: 44px !important;
+  height: 48px !important;
   padding: 0 !important;
   background: transparent !important;
   border: 0 !important;
   border-radius: 0 !important;
   text-decoration: none !important;
   transition: transform 0.15s ease, opacity 0.15s ease !important;
-  opacity: 0.92 !important;
+  opacity: 0.95 !important;
 }
 
 body:not(.compact-reference-ui) #banner .partner-logo-inline:hover {
@@ -1109,13 +1109,9 @@ body:not(.compact-reference-ui) #banner .partner-logo-inline:hover {
 }
 
 body:not(.compact-reference-ui) #banner .partner-logo-inline img {
-  height: 36px !important;
+  height: 44px !important;
   width: auto !important;
   display: block !important;
-  /* Logo is solid black on transparent — invert to pure white silhouette
-     so it reads cleanly against the dark glassmorphism banner. */
-  filter: brightness(0) invert(1) !important;
-  -webkit-filter: brightness(0) invert(1) !important;
 }
 
 body:not(.compact-reference-ui) #banner .banner-copy {
